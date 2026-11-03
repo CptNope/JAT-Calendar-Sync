@@ -282,6 +282,9 @@ final class JATCS_Frontend {
 
 		$widget = self::render( array( 'heading' => '' ), true );
 		$bodyc  = function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ? 'jatcs-preview wp-site-blocks' : 'jatcs-preview';
+		wp_register_style( 'jatcs-preview-page', false, array(), JATCS_VERSION );
+		wp_enqueue_style( 'jatcs-preview-page' );
+		wp_add_inline_style( 'jatcs-preview-page', 'html { margin-top: 0 !important; } body.jatcs-preview-body { margin: 0; } .jatcs-preview { padding: 8px 24px 32px; } .jatcs-preview .jatcs { margin-top: 0; }' );
 		status_header( 200 );
 		?>
 <!doctype html>
@@ -290,12 +293,6 @@ final class JATCS_Frontend {
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 		<?php wp_head(); ?>
-<style>
-	html { margin-top: 0 !important; }
-	body.jatcs-preview-body { margin: 0; }
-	.jatcs-preview { padding: 8px 24px 32px; }
-	.jatcs-preview .jatcs { margin-top: 0; }
-</style>
 </head>
 <body <?php body_class( 'jatcs-preview-body' ); ?>>
 <div class="<?php echo esc_attr( $bodyc ); ?>">
@@ -303,25 +300,7 @@ final class JATCS_Frontend {
 		<?php echo $widget; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts in render(). ?>
 </main>
 </div>
-<script>
-/* Live updates from the settings screen (same origin only). */
-window.addEventListener( 'message', function ( e ) {
-	if ( e.origin !== window.location.origin || ! e.data || e.data.type !== 'jatcs-style' ) { return; }
-	var el = document.querySelector( '.jatcs' );
-	if ( ! el ) { return; }
-	el.style.cssText = e.data.style;
-	el.className = 'jatcs jatcs--ready ' + e.data.classes.join( ' ' );
-	var submit = el.querySelector( '.jatcs__submit' );
-	if ( submit ) { submit.classList.toggle( 'wp-element-button', e.data.classes.indexOf( 'jatcs--buttons-theme' ) !== -1 && e.data.classes.indexOf( 'jatcs--wp-buttons' ) !== -1 ); }
-	if ( window.JATCSBooking ) { window.JATCSBooking.probe( el ); }
-	if ( typeof e.data.css !== 'string' ) { return; }
-	var css = document.getElementById( 'jatcs-preview-custom-css' );
-	if ( ! css ) { css = document.createElement( 'style' ); css.id = 'jatcs-preview-custom-css'; document.head.appendChild( css ); }
-	var inline = document.getElementById( 'jatcs-booking-inline-css' );
-	if ( inline ) { inline.disabled = true; }
-	css.textContent = e.data.css || '';
-} );
-</script>
+		<?php wp_print_inline_script_tag( self::preview_script() ); ?>
 		<?php wp_footer(); ?>
 </body>
 </html>
@@ -390,6 +369,33 @@ window.addEventListener( 'message', function ( e ) {
 			'payNote'       => __( 'You’ll pay %s on Stripe’s secure checkout. Your time is held for 30 minutes while you pay.', 'jat-calendar-sync' ),
 			'redirecting'   => __( 'Taking you to secure payment…', 'jat-calendar-sync' ),
 		);
+	}
+
+	/**
+	 * Script for the appearance preview: applies live changes sent from the settings screen (same origin only).
+	 *
+	 * @return string
+	 */
+	private static function preview_script() {
+		return <<<'JS'
+/* Live updates from the settings screen (same origin only). */
+window.addEventListener( 'message', function ( e ) {
+	if ( e.origin !== window.location.origin || ! e.data || e.data.type !== 'jatcs-style' ) { return; }
+	var el = document.querySelector( '.jatcs' );
+	if ( ! el ) { return; }
+	el.style.cssText = e.data.style;
+	el.className = 'jatcs jatcs--ready ' + e.data.classes.join( ' ' );
+	var submit = el.querySelector( '.jatcs__submit' );
+	if ( submit ) { submit.classList.toggle( 'wp-element-button', e.data.classes.indexOf( 'jatcs--buttons-theme' ) !== -1 && e.data.classes.indexOf( 'jatcs--wp-buttons' ) !== -1 ); }
+	if ( window.JATCSBooking ) { window.JATCSBooking.probe( el ); }
+	if ( typeof e.data.css !== 'string' ) { return; }
+	var css = document.getElementById( 'jatcs-preview-custom-css' );
+	if ( ! css ) { css = document.createElement( 'style' ); css.id = 'jatcs-preview-custom-css'; document.head.appendChild( css ); }
+	var inline = document.getElementById( 'jatcs-booking-inline-css' );
+	if ( inline ) { inline.disabled = true; }
+	css.textContent = e.data.css || '';
+} );
+JS;
 	}
 
 	/**
@@ -541,6 +547,7 @@ window.addEventListener( 'message', function ( e ) {
 
 		$style = JATCS_Style::resolve();
 		wp_enqueue_style( 'jatcs-booking' );
+		wp_add_inline_style( 'jatcs-booking', 'html { margin-top: 0 !important; }' );
 		show_admin_bar( false );
 		add_filter( 'wp_robots', 'wp_robots_no_robots' );
 		status_header( 200 );
@@ -552,7 +559,6 @@ window.addEventListener( 'message', function ( e ) {
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 		<?php wp_head(); // Loads the theme's fonts, colors and button styles so the page looks like the site. ?>
-<style>html { margin-top: 0 !important; }</style>
 </head>
 <body <?php body_class( 'jatcs-cancel-page' ); ?>>
 <main class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>" style="<?php echo esc_attr( JATCS_Style::inline( $style['vars'] ) ); ?>">

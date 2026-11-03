@@ -208,6 +208,14 @@ $jatcs_has_secret = $secret_locked || '' !== JATCS_Settings::client_secret();
 						<?php if ( ! $jatcs_writable ) : ?>
 							<p class="jatcs-error"><?php esc_html_e( 'Connect Google Calendar, Outlook, or a CalDAV account such as iCloud above, then choose the calendar new bookings are added to.', 'jat-calendar-sync' ); ?></p>
 						<?php else : ?>
+							<?php if ( ! JATCS_Calendars::ready() ) : ?>
+								<p class="jatcs-error">
+									<?php
+									/* translators: %s: calendar name */
+									echo esc_html( sprintf( __( 'Bookings are set to go to “%s”, which can’t be used right now (its service isn’t connected or can’t add events), so visitors can’t book. Choose another calendar and save, or reconnect.', 'jat-calendar-sync' ), JATCS_Calendars::label( JATCS_Calendars::booking_ref() ) ) );
+									?>
+								</p>
+							<?php endif; ?>
 							<select id="jatcs-booking-calendar" name="jatcs[booking_calendar]">
 								<?php
 								$jatcs_group = '';
@@ -226,7 +234,7 @@ $jatcs_has_secret = $secret_locked || '' !== JATCS_Settings::client_secret();
 							</select>
 							<p class="description"><?php esc_html_e( 'New appointments are created here, and its busy times always block slots. Video calls: Google Meet in Google Calendar, Microsoft Teams in Outlook work and school accounts.', 'jat-calendar-sync' ); ?></p>
 							<?php if ( 'ms' === JATCS_Calendars::booking_service() && JATCS_Microsoft::is_connected() && ! JATCS_Microsoft::can_write() ) : ?>
-								<p class="jatcs-error"><?php esc_html_e( 'Outlook was connected with read-only access. Disconnect and connect Outlook again to let bookings be added to it.', 'jat-calendar-sync' ); ?></p>
+								<p class="jatcs-error"><?php esc_html_e( 'Outlook was connected with read-only access. Click “Allow adding bookings to Outlook” in the Outlook section to let bookings be added to it.', 'jat-calendar-sync' ); ?></p>
 							<?php endif; ?>
 						<?php endif; ?>
 					</td>

@@ -397,7 +397,7 @@ final class JATCS_ICal {
 	 * @param DateTimeZone|null $default_tz Zone for floating times / all-day dates (default UTC).
 	 * @return array|false List of events, or false when the input is not iCalendar data.
 	 */
-	public static function parse( $ics, DateTimeZone $default_tz = null ) {
+	public static function parse( $ics, ?DateTimeZone $default_tz = null ) {
 		self::$last_error = '';
 		if ( null === $default_tz ) {
 			$default_tz = self::zone( 'UTC' );
@@ -414,6 +414,14 @@ final class JATCS_ICal {
 		}
 		if ( false === stripos( $ics, 'BEGIN:VCALENDAR' ) && false === stripos( $ics, 'BEGIN:VEVENT' ) ) {
 			return self::fail( self::t( 'The data is not an iCalendar feed (no BEGIN:VCALENDAR found).' ) );
+		}
+		// A cut-off download must never pass as a complete calendar: events after the cut would be missing.
+		$begin_ev = preg_match_all( '/^BEGIN:VEVENT\s*$/mi', $ics );
+		$end_ev   = preg_match_all( '/^END:VEVENT\s*$/mi', $ics );
+		$begin_ca = preg_match_all( '/^BEGIN:VCALENDAR\s*$/mi', $ics );
+		$end_ca   = preg_match_all( '/^END:VCALENDAR\s*$/mi', $ics );
+		if ( $begin_ev !== $end_ev || $begin_ca !== $end_ca ) {
+			return self::fail( self::t( 'The calendar data is incomplete (it may have been cut off).' ) );
 		}
 
 		$cals = self::scan( explode( "\n", $ics ) );

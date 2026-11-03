@@ -293,8 +293,7 @@ final class JATCS_CalDAV_Store {
 		if ( '' === $ics ) {
 			return new WP_Error( 'jatcs_caldav_parse', __( 'The event in your CalDAV calendar couldn’t be updated.', 'jat-calendar-sync' ) );
 		}
-		$uid = basename( (string) wp_parse_url( $href, PHP_URL_PATH ), '.ics' );
-		$put = $client->put_event( $url, rawurldecode( $uid ), $ics, (string) $current['etag'] );
+		$put = $client->update_event( $href, $ics, (string) $current['etag'] );
 		return is_wp_error( $put ) ? $put : true;
 	}
 
@@ -311,17 +310,19 @@ final class JATCS_CalDAV_Store {
 		$ics   = preg_replace( "/\n[ \t]/", '', $ics ); // Unfold.
 		$lines = explode( "\n", $ics );
 		$out   = array();
+		$depth = 0;     // Nesting inside our VEVENT (VALARM etc.): their DURATION/TRIGGER stay untouched.
 		$in    = false;
 		$seen  = false;
 		$stamp = gmdate( 'Ymd\THis\Z' );
 		foreach ( $lines as $line ) {
-			if ( 'BEGIN:VEVENT' === strtoupper( trim( $line ) ) && ! $seen ) {
+			$upper = strtoupper( trim( $line ) );
+			if ( ! $in && ! $seen && 'BEGIN:VEVENT' === $upper ) {
 				$in    = true;
 				$seen  = true;
 				$out[] = 'BEGIN:VEVENT';
 				continue;
 			}
-			if ( $in && 'END:VEVENT' === strtoupper( trim( $line ) ) ) {
+			if ( $in && 0 === $depth && 'END:VEVENT' === $upper ) {
 				$in    = false;
 				$out[] = 'DTSTART:' . gmdate( 'Ymd\THis\Z', $start );
 				$out[] = 'DTEND:' . gmdate( 'Ymd\THis\Z', $end );
@@ -329,7 +330,11 @@ final class JATCS_CalDAV_Store {
 				$out[] = 'END:VEVENT';
 				continue;
 			}
-			if ( $in ) {
+			if ( $in && 0 === strpos( $upper, 'BEGIN:' ) ) {
+				++$depth;
+			} elseif ( $in && 0 === strpos( $upper, 'END:' ) && $depth > 0 ) {
+				--$depth;
+			} elseif ( $in && 0 === $depth ) {
 				$name = strtoupper( (string) strtok( $line, ':;' ) );
 				if ( in_array( $name, array( 'DTSTART', 'DTEND', 'DURATION', 'DTSTAMP' ), true ) ) {
 					continue;

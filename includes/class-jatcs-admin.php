@@ -227,7 +227,7 @@ final class JATCS_Admin {
 		$credentials_changed = $new['client_id'] !== $cur['client_id'] || ! empty( $in['client_secret'] );
 
 		if ( isset( $in['booking_calendar'] ) ) {
-			$new['booking_calendar'] = sanitize_text_field( $in['booking_calendar'] );
+			$new['booking_calendar'] = JATCS_Calendars::sanitize_ref( $in['booking_calendar'] );
 		}
 		if ( isset( $in['calendars_present'] ) ) {
 			$new['conflict_calendars'] = isset( $in['conflict_calendars'] ) && is_array( $in['conflict_calendars'] )
@@ -246,7 +246,7 @@ final class JATCS_Admin {
 			}
 		}
 		if ( isset( $in['routing_present'] ) ) {
-			$new['schedule_calendar'] = isset( $in['schedule_calendar'] ) ? sanitize_text_field( $in['schedule_calendar'] ) : '';
+			$new['schedule_calendar'] = isset( $in['schedule_calendar'] ) ? JATCS_Calendars::sanitize_ref( $in['schedule_calendar'] ) : '';
 			$new['schedule_week']     = empty( $in['schedule_week'] ) ? 0 : 1;
 			$new['schedule_buffer']   = isset( $in['schedule_buffer'] ) ? max( 0, min( 480, (int) $in['schedule_buffer'] ) ) : (int) $cur['schedule_buffer'];
 		}
@@ -413,7 +413,14 @@ final class JATCS_Admin {
 	public static function disconnect() {
 		self::guard( 'jatcs_disconnect' );
 		JATCS_Google::disconnect();
-		self::back( 'success', __( 'Google Calendar disconnected. Visitors can no longer book until you connect again.', 'jat-calendar-sync' ) );
+		$s                       = JATCS_Settings::all();
+		$s['conflict_calendars'] = array();
+		JATCS_Settings::save( $s );
+		JATCS_Availability::bust_cache();
+		$message = 'google' === JATCS_Calendars::booking_service()
+			? __( 'Google Calendar disconnected. Bookings were going to Google, so visitors can’t book until you connect it again or choose another booking calendar under “Where bookings go”.', 'jat-calendar-sync' )
+			: __( 'Google Calendar disconnected. Its calendars no longer block times.', 'jat-calendar-sync' );
+		self::back( 'success', $message );
 	}
 
 	/**
@@ -515,7 +522,8 @@ final class JATCS_Admin {
 		}
 		$state = wp_generate_password( 32, false );
 		set_transient( 'jatcs_ms_state_' . get_current_user_id(), $state, 15 * MINUTE_IN_SECONDS );
-		wp_redirect( JATCS_Microsoft::auth_url( $state ) ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Microsoft sign-in.
+		$write = ! empty( $_POST['write'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- verified in guard().
+		wp_redirect( JATCS_Microsoft::auth_url( $state, $write ) ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Microsoft sign-in.
 		exit;
 	}
 

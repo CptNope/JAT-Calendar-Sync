@@ -48,7 +48,12 @@ $jatcs_ms_cals      = $jatcs_ms_connected ? JATCS_Microsoft::calendars( isset( $
 			</fieldset>
 			<p class="description"><?php esc_html_e( 'Events shown as Busy, Tentative or Out of office block times; Free and Working elsewhere don’t. Recurring meetings are included.', 'jat-calendar-sync' ); ?></p>
 		<?php endif; ?>
-		<p><button type="submit" form="jatcs-ms-disconnect" class="button"><?php esc_html_e( 'Disconnect Outlook', 'jat-calendar-sync' ); ?></button></p>
+		<p>
+			<?php if ( ! JATCS_Microsoft::can_write() ) : ?>
+				<button type="submit" form="jatcs-ms-connect" name="write" value="1" class="button"><?php esc_html_e( 'Allow adding bookings to Outlook', 'jat-calendar-sync' ); ?></button>
+			<?php endif; ?>
+			<button type="submit" form="jatcs-ms-disconnect" class="button"><?php esc_html_e( 'Disconnect Outlook', 'jat-calendar-sync' ); ?></button>
+		</p>
 	<?php else : ?>
 		<details class="jatcs-steps">
 			<summary><?php esc_html_e( 'How to connect Outlook (about 5 minutes)', 'jat-calendar-sync' ); ?></summary>
@@ -96,7 +101,11 @@ $jatcs_ms_cals      = $jatcs_ms_connected ? JATCS_Microsoft::calendars( isset( $
 			</tr>
 		</table>
 		<?php if ( JATCS_Microsoft::has_credentials() ) : ?>
-			<p><button type="submit" form="jatcs-ms-connect" class="button button-primary"><?php esc_html_e( 'Connect Outlook', 'jat-calendar-sync' ); ?></button></p>
+			<p>
+				<button type="submit" form="jatcs-ms-connect" class="button button-primary"><?php esc_html_e( 'Connect Outlook to block times', 'jat-calendar-sync' ); ?></button>
+				<button type="submit" form="jatcs-ms-connect" name="write" value="1" class="button"><?php esc_html_e( 'Connect and allow adding bookings', 'jat-calendar-sync' ); ?></button>
+			</p>
+			<p class="description"><?php esc_html_e( 'Adding bookings needs permission to create events (Calendars.ReadWrite). Some work accounts need an administrator to approve that.', 'jat-calendar-sync' ); ?></p>
 		<?php endif; ?>
 	<?php endif; ?>
 </div>

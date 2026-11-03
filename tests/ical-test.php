@@ -390,6 +390,13 @@ $unfolded = str_replace( "\r\n ", '', $m[1] );
 eq( 'build: description round-trip', $unfolded, $desc );
 eq( 'build: invalid input returns empty string', JATCS_ICal::build_event( array( 'start' => 100, 'end' => 50 ) ), '' );
 
+// Truncated data (a download cut off part-way) must be refused, not half-read.
+$full = $built;
+check( 'truncated: mid-event cut refused', false === JATCS_ICal::parse( substr( $full, 0, (int) ( strlen( $full ) * 0.6 ) ) ) );
+check( 'truncated: missing END:VCALENDAR refused', false === JATCS_ICal::parse( str_replace( "END:VCALENDAR\r\n", '', $full ) ) );
+check( 'truncated: busy() returns false', false === JATCS_ICal::busy( substr( $full, 0, 200 ), 0, 2000000000, new DateTimeZone( 'UTC' ) ) );
+check( 'complete data still parses', is_array( JATCS_ICal::parse( $full ) ) );
+
 // Summary.
 if ( ! empty( $GLOBALS['jatcs_warnings'] ) ) {
 	check( 'no stray PHP warnings', false );

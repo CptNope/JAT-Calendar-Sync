@@ -374,12 +374,12 @@ Without the webhook, paid bookings still confirm when the visitor returns from S
 | --- | --- | --- |
 | 1 | [Microsoft Entra](https://entra.microsoft.com/) → App registrations | **New registration**, accounts in any organizational directory **and** personal Microsoft accounts |
 | 2 | Redirect URI | Platform **Web**: `https://your-site/wp-admin/admin-post.php?action=jatcs_ms_oauth` |
-| 3 | API permissions | Microsoft Graph, delegated: `Calendars.ReadWrite`, `User.Read`, `offline_access` (ReadWrite lets Outlook be the booking calendar) |
+| 3 | API permissions | Microsoft Graph, delegated: `Calendars.Read` (or `Calendars.ReadWrite` to add bookings), `User.Read`, `offline_access` |
 | 4 | Certificates & secrets | New client secret; note its expiry (24 months at most) |
-| 5 | Appointments → Settings → Outlook | Paste the Application (client) ID and secret value, **Connect Outlook**, tick calendars that block times |
+| 5 | Appointments → Settings → Outlook | Paste the Application (client) ID and secret value, then **Connect Outlook to block times** (read only) or **Connect and allow adding bookings** (read and write); tick calendars that block times |
 | 6 | Where bookings go | Optional: choose an Outlook calendar as the booking calendar (Teams links on work and school accounts) |
 
-Connections made before 2.0 were read-only; disconnect and connect again to let bookings go to Outlook.
+Read-only connections (including ones made before 2.0) show **Allow adding bookings to Outlook** to upgrade. Some work tenants need an administrator to approve write access.
 
 ### 5. iCloud, Fastmail, Nextcloud and other CalDAV calendars (optional)
 

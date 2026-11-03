@@ -47,6 +47,26 @@ final class JATCS_Calendars {
 	}
 
 	/**
+	 * Clean a submitted calendar reference. CalDAV addresses keep their %-encoding.
+	 *
+	 * @param string $ref Raw reference.
+	 * @return string
+	 */
+	public static function sanitize_ref( $ref ) {
+		$ref = trim( (string) $ref );
+		if ( '' === $ref ) {
+			return '';
+		}
+		list( $service, $id ) = self::parse( $ref );
+		if ( 'caldav' === $service ) {
+			$url = esc_url_raw( $id, array( 'https', 'http' ) );
+			return '' !== $url ? 'caldav:' . $url : '';
+		}
+		$id = sanitize_text_field( $id );
+		return 'google' === $service && 0 !== strpos( $ref, 'google:' ) ? $id : $service . ':' . $id;
+	}
+
+	/**
 	 * Where new bookings go.
 	 *
 	 * @return string Canonical reference.
@@ -213,15 +233,24 @@ final class JATCS_Calendars {
 			'caldav' => array(),
 			'ics'    => array(),
 		);
-		foreach ( (array) JATCS_Settings::get( 'conflict_calendars' ) as $ref ) {
-			list( $service, $id ) = self::parse( (string) $ref );
-			$groups[ $service ][] = $id;
+		// Ticked calendars of a service that is no longer connected are ignored (they can't be
+		// unticked while it's disconnected). The booking and schedule calendars below are not:
+		// if their service breaks, no times are offered, rather than booking over hidden events.
+		if ( JATCS_Google::is_connected() ) {
+			foreach ( (array) JATCS_Settings::get( 'conflict_calendars' ) as $ref ) {
+				list( $service, $id ) = self::parse( (string) $ref );
+				$groups[ $service ][] = $id;
+			}
 		}
-		foreach ( (array) JATCS_Settings::get( 'ms_calendars' ) as $id ) {
-			$groups['ms'][] = (string) $id;
+		if ( JATCS_Microsoft::is_connected() ) {
+			foreach ( (array) JATCS_Settings::get( 'ms_calendars' ) as $id ) {
+				$groups['ms'][] = (string) $id;
+			}
 		}
-		foreach ( (array) JATCS_Settings::get( 'caldav_calendars' ) as $url ) {
-			$groups['caldav'][] = (string) $url;
+		if ( JATCS_CalDAV_Store::is_connected() ) {
+			foreach ( (array) JATCS_Settings::get( 'caldav_calendars' ) as $url ) {
+				$groups['caldav'][] = (string) $url;
+			}
 		}
 		foreach ( JATCS_Feeds::all() as $id => $feed ) {
 			if ( ! empty( $feed['block'] ) ) {

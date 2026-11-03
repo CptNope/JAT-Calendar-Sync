@@ -24,6 +24,7 @@ final class JATCS_Feeds {
 	const STALE_FOR    = 21600; // If the feed can't be reached, use the last copy for up to 6 hours.
 	const MAX_BYTES    = 5242880;
 	const MAX_FEEDS    = 20;
+	const RETRY_AFTER  = 300;   // After a failed fetch, wait 5 minutes before trying again.
 
 	/**
 	 * All feeds (addresses stay encrypted).
@@ -186,8 +187,13 @@ final class JATCS_Feeds {
 			/* translators: %d: HTTP status code */
 			return new WP_Error( 'jatcs_feed_http', sprintf( __( 'The calendar feed answered with an error (HTTP %d). The link may have expired or been reset.', 'jat-calendar-sync' ), $code ) );
 		}
+		$body = (string) wp_remote_retrieve_body( $response );
+		if ( strlen( $body ) >= self::MAX_BYTES ) {
+			// The download stopped at the size limit, so the rest of the calendar is missing.
+			return new WP_Error( 'jatcs_feed_too_big', __( 'The calendar feed is larger than 5 MB, so it can’t be read completely. Use a feed with fewer past events (for example a calendar subscription instead of a full export).', 'jat-calendar-sync' ) );
+		}
 		return array(
-			'body'         => (string) wp_remote_retrieve_body( $response ),
+			'body'         => $body,
 			'etag'         => (string) wp_remote_retrieve_header( $response, 'etag' ),
 			'modified'     => (string) wp_remote_retrieve_header( $response, 'last-modified' ),
 			'not_modified' => false,
@@ -230,6 +236,13 @@ final class JATCS_Feeds {
 		if ( ! $force && $age < self::FRESH_FOR && isset( $cache['body'] ) ) {
 			return (string) $cache['body'];
 		}
+		// Recently failed: don't make every visitor wait for an unreachable server.
+		if ( ! $force && ! empty( $cache['failed_at'] ) && time() - (int) $cache['failed_at'] < self::RETRY_AFTER ) {
+			if ( isset( $cache['body'] ) && $age < self::STALE_FOR ) {
+				return (string) $cache['body'];
+			}
+			return new WP_Error( 'jatcs_feed_http', ! empty( $cache['error'] ) ? (string) $cache['error'] : __( 'The calendar feed couldn’t be read.', 'jat-calendar-sync' ) );
+		}
 		$headers = array();
 		if ( ! empty( $cache['etag'] ) ) {
 			$headers['If-None-Match'] = $cache['etag'];
@@ -250,10 +263,14 @@ final class JATCS_Feeds {
 			self::store_cache( $id, $got );
 			return $got['body'];
 		}
+		if ( is_wp_error( $got ) ) {
+			JATCS_Google::log( 'iCal feed ' . $feeds[ $id ]['name'], $got->get_error_message() );
+			$cache              = is_array( $cache ) ? $cache : array();
+			$cache['failed_at'] = time();
+			$cache['error']     = $got->get_error_message();
+			update_option( self::CACHE_PREFIX . $id, $cache, false );
+		}
 		if ( isset( $cache['body'] ) && $age < self::STALE_FOR ) {
-			if ( is_wp_error( $got ) ) {
-				JATCS_Google::log( 'iCal feed ' . $feeds[ $id ]['name'], $got->get_error_message() );
-			}
 			return (string) $cache['body'];
 		}
 		return is_wp_error( $got ) ? $got : new WP_Error( 'jatcs_feed_http', __( 'The calendar feed couldn’t be read.', 'jat-calendar-sync' ) );

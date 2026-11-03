@@ -68,14 +68,28 @@ final class JATCS_Legacy {
 		if ( ! self::pending() ) {
 			return false;
 		}
-		// One request at a time.
-		if ( ! add_option( 'jatcs_migrating', time(), '', false ) ) {
-			if ( (int) get_option( 'jatcs_migrating' ) > time() - 5 * MINUTE_IN_SECONDS ) {
+		// One request at a time (atomic INSERT IGNORE lock), and check again once we hold it.
+		if ( ! JATCS_Bookings::acquire_named( 'migrate', 10 * MINUTE_IN_SECONDS ) ) {
+			return false;
+		}
+		try {
+			wp_cache_delete( 'alloptions', 'options' );
+			wp_cache_delete( self::DONE_OPTION, 'options' );
+			wp_cache_delete( 'aab_settings', 'options' );
+			if ( ! self::pending() ) {
 				return false;
 			}
-			update_option( 'jatcs_migrating', time(), false );
+			self::migrate();
+		} finally {
+			JATCS_Bookings::release_named( 'migrate' );
 		}
+		return true;
+	}
 
+	/**
+	 * The move itself.
+	 */
+	private static function migrate() {
 		global $wpdb;
 		$report = array(
 			'at'       => time(),
@@ -87,6 +101,7 @@ final class JATCS_Legacy {
 		);
 
 		// Settings and the rest, moved (not copied): the old plugin's uninstall then finds nothing to revoke.
+		// Values encrypted by the old plugin are re-encrypted with this plugin's key.
 		$backup = array();
 		foreach ( self::$options as $old => $new ) {
 			$value = get_option( $old, null );
@@ -95,15 +110,18 @@ final class JATCS_Legacy {
 			}
 			if ( 'aab_settings' === $old && is_array( $value ) ) {
 				$value = self::rename_settings( $value );
+				foreach ( array( 'client_secret', 'stripe_secret', 'stripe_webhook_secret', 'ms_client_secret' ) as $secret ) {
+					if ( isset( $value[ $secret ] ) ) {
+						$value[ $secret ] = JATCS_Crypto::upgrade( $value[ $secret ] );
+					}
+				}
+			}
+			if ( in_array( $old, array( 'aab_google', 'aab_ms' ), true ) && is_array( $value ) && ! empty( $value['refresh_token'] ) ) {
+				$report[ 'aab_google' === $old ? 'google' : 'outlook' ] = true;
+				$value['refresh_token']                                 = JATCS_Crypto::upgrade( $value['refresh_token'] );
 			}
 			if ( in_array( $old, array( 'aab_settings', 'aab_types' ), true ) ) {
 				$backup[ $old ] = $value;
-			}
-			if ( 'aab_google' === $old && is_array( $value ) && ! empty( $value['refresh_token'] ) ) {
-				$report['google'] = true;
-			}
-			if ( 'aab_ms' === $old && is_array( $value ) && ! empty( $value['refresh_token'] ) ) {
-				$report['outlook'] = true;
 			}
 			update_option( $new, $value, in_array( $new, array( 'jatcs_settings', 'jatcs_types' ), true ) );
 		}
@@ -121,10 +139,21 @@ final class JATCS_Legacy {
 			update_option( 'jatcs_legacy_ms_redirect', 1, false );
 		}
 
-		// Bookings and their details.
+		// Bookings, then their details (only booking meta: other plugins' "_aab_" keys are left alone).
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-time bulk rename.
+		$ids                = array_map( 'intval', (array) $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type = %s", 'aab_booking' ) ) );
 		$report['bookings'] = (int) $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->posts} SET post_type = %s WHERE post_type = %s", 'jatcs_booking', 'aab_booking' ) );
-		$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->postmeta} SET meta_key = CONCAT( %s, SUBSTRING( meta_key, 6 ) ) WHERE meta_key LIKE %s", '_jatcs_', $wpdb->esc_like( '_aab_' ) . '%' ) );
+		$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->postmeta} SET meta_key = CONCAT( %s, SUBSTRING( meta_key, 6 ) ) WHERE meta_key LIKE %s AND post_id IN ( SELECT ID FROM {$wpdb->posts} WHERE post_type = %s )", '_jatcs_', $wpdb->esc_like( '_aab_' ) . '%', 'jatcs_booking' ) );
+		// Manage links in sent emails are kept encrypted per booking: re-encrypt them too.
+		foreach ( $ids as $id ) {
+			$enc = (string) get_post_meta( $id, '_jatcs_cancel_enc', true );
+			if ( '' !== $enc ) {
+				$upgraded = JATCS_Crypto::upgrade( $enc );
+				if ( $upgraded !== $enc ) {
+					update_post_meta( $id, '_jatcs_cancel_enc', $upgraded );
+				}
+			}
+		}
 
 		// Booking blocks and shortcodes in pages, posts, templates and patterns (the old names keep working either way).
 		$report['pages'] = (int) $wpdb->query(
@@ -139,15 +168,22 @@ final class JATCS_Legacy {
 			)
 		);
 		// phpcs:enable
+		// Cached copies of renamed posts would still say aab_booking: drop them.
+		foreach ( $ids as $id ) {
+			clean_post_cache( $id );
+		}
 		if ( function_exists( 'wp_cache_supports' ) && wp_cache_supports( 'flush_group' ) ) {
 			wp_cache_flush_group( 'posts' );
 			wp_cache_flush_group( 'post_meta' );
+		} else {
+			wp_cache_flush();
 		}
 
-		// The old plugin: off, its schedule cleared, its leftovers gone.
+		// The old plugin: off (also when network-active), its schedule cleared, its leftovers gone.
 		$report['plugins'] = self::deactivate_old_plugin();
 		wp_clear_scheduled_hook( 'aab_hourly' );
-		foreach ( array_keys( self::$options ) as $old ) {
+		// Tokens first, settings last: if this stops part-way, the old plugin can't later revoke a token in use here.
+		foreach ( array( 'aab_google', 'aab_ms', 'aab_google_error', 'aab_ms_error', 'aab_log', 'aab_busy_generation', 'aab_last_run', 'aab_installed', 'aab_types', 'aab_settings' ) as $old ) {
 			delete_option( $old );
 		}
 		foreach ( array( 'aab_access_token', 'aab_calendars', 'aab_ms_access', 'aab_ms_calendars' ) as $transient ) {
@@ -156,12 +192,16 @@ final class JATCS_Legacy {
 
 		update_option( self::DONE_OPTION, $report, false );
 		update_option( self::NOTICE_OPTION, 1, false );
-		delete_option( 'jatcs_migrating' );
 		JATCS_Settings::flush();
 		if ( class_exists( 'JATCS_Maintenance' ) ) {
 			JATCS_Maintenance::schedule();
 		}
-		return true;
+		/**
+		 * Fires after a site moves over from Anderson Appointment Booking (purge page caches here).
+		 *
+		 * @param array $report What moved.
+		 */
+		do_action( 'jatcs_migrated', $report );
 	}
 
 	/**
@@ -194,6 +234,18 @@ final class JATCS_Legacy {
 		}
 		if ( $old ) {
 			deactivate_plugins( $old, true );
+		}
+		if ( is_multisite() ) {
+			$network = array();
+			foreach ( array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) ) as $file ) {
+				if ( 'anderson-appointment-booking.php' === basename( (string) $file ) ) {
+					$network[] = (string) $file;
+				}
+			}
+			if ( $network ) {
+				deactivate_plugins( $network, true, true );
+				$old = array_merge( $old, $network );
+			}
 		}
 		return $old;
 	}

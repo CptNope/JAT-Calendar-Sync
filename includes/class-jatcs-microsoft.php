@@ -24,13 +24,18 @@ final class JATCS_Microsoft {
 	const GRAPH         = 'https://graph.microsoft.com/v1.0';
 
 	/**
-	 * Delegated scopes asked for when connecting: calendars (read and write, so Outlook can be the
-	 * booking calendar), stay signed in, know who connected.
+	 * Delegated scopes asked for when connecting: calendars, stay signed in, know who connected.
+	 * Write access only when Outlook should receive bookings: some work tenants don't let
+	 * users grant it, and reading busy times doesn't need it.
 	 *
+	 * @param bool|null $write Ask for write access (null: what this sign-in asked for).
 	 * @return string
 	 */
-	public static function scopes() {
-		return 'offline_access User.Read Calendars.ReadWrite';
+	public static function scopes( $write = null ) {
+		if ( null === $write ) {
+			$write = (bool) get_transient( 'jatcs_ms_write_' . get_current_user_id() );
+		}
+		return 'offline_access User.Read ' . ( $write ? 'Calendars.ReadWrite' : 'Calendars.Read' );
 	}
 
 	/**
@@ -122,9 +127,11 @@ final class JATCS_Microsoft {
 	 * Sign-in URL.
 	 *
 	 * @param string $state Anti-CSRF state.
+	 * @param bool   $write Ask for permission to add bookings.
 	 * @return string
 	 */
-	public static function auth_url( $state ) {
+	public static function auth_url( $state, $write = false ) {
+		set_transient( 'jatcs_ms_write_' . get_current_user_id(), $write ? 1 : 0, 15 * MINUTE_IN_SECONDS );
 		return add_query_arg(
 			rawurlencode_deep(
 				array(
@@ -132,7 +139,7 @@ final class JATCS_Microsoft {
 					'response_type' => 'code',
 					'redirect_uri'  => self::redirect_uri(),
 					'response_mode' => 'query',
-					'scope'         => self::scopes(),
+					'scope'         => self::scopes( (bool) $write ),
 					'state'         => $state,
 					'prompt'        => 'select_account',
 				)
@@ -443,7 +450,7 @@ final class JATCS_Microsoft {
 				'&',
 				PHP_QUERY_RFC3986
 			);
-			for ( $page = 0; $next && $page < 10; $page++ ) {
+			for ( $page = 0; $next && $page < 25; $page++ ) {
 				$body = self::request( $next );
 				if ( is_wp_error( $body ) ) {
 					/* translators: %s: error */
@@ -461,6 +468,10 @@ final class JATCS_Microsoft {
 					}
 				}
 				$next = isset( $body['@odata.nextLink'] ) ? (string) $body['@odata.nextLink'] : '';
+			}
+			if ( '' !== $next ) {
+				// More pages than we read: some busy times would be missing, so don't guess.
+				return new WP_Error( 'jatcs_ms_busy', __( 'Your Outlook calendar has too many events in this period to read completely.', 'jat-calendar-sync' ) );
 			}
 			$map[ $cal_id ] = $busy;
 		}

@@ -444,6 +444,48 @@ class JATCS_CalDAV {
 	}
 
 	/**
+	 * Replace an existing event at its stored address.
+	 *
+	 * With an ETag the write only succeeds if nobody changed the event since it was read;
+	 * servers that don't send ETags get an unconditional write (never a create-only one).
+	 *
+	 * @param string $href Event URL.
+	 * @param string $ics  iCalendar data.
+	 * @param string $etag ETag from the last read ('' if the server sent none).
+	 * @return array|WP_Error [ 'href', 'etag' ].
+	 */
+	public function update_event( $href, $ics, $etag = '' ) {
+		if ( $this->init_error ) {
+			return $this->init_error;
+		}
+		$headers = array( 'Content-Type' => 'text/calendar; charset=utf-8' );
+		if ( '' !== (string) $etag ) {
+			$headers['If-Match'] = (string) $etag;
+		}
+		$res = $this->request( 'PUT', (string) $href, $headers, (string) $ics );
+		if ( self::is_error( $res ) ) {
+			return $res;
+		}
+		if ( 412 === $res['code'] ) {
+			return $this->error(
+				'jatcs_caldav_conflict',
+				__( 'The event was changed on the calendar since it was last read.', 'jat-calendar-sync' ),
+				array(
+					'href'   => $href,
+					'status' => 412,
+				)
+			);
+		}
+		if ( $res['code'] < 200 || $res['code'] > 299 ) {
+			return $this->status_error( $res['code'], 'PUT' );
+		}
+		return array(
+			'href' => (string) $href,
+			'etag' => isset( $res['headers']['etag'] ) ? trim( $res['headers']['etag'] ) : '',
+		);
+	}
+
+	/**
 	 * Create or update an event.
 	 *
 	 * Without $etag: create with If-None-Match: * (412 -> jatcs_caldav_exists, data['href']).

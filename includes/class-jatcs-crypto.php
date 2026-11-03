@@ -41,7 +41,8 @@ final class JATCS_Crypto {
 	 */
 	private static function key( $legacy = false ) {
 		if ( $legacy ) {
-			$salt = defined( 'AAB_ENCRYPTION_KEY' ) ? AAB_ENCRYPTION_KEY : ( defined( 'JATCS_ENCRYPTION_KEY' ) ? JATCS_ENCRYPTION_KEY : wp_salt( 'auth' ) );
+			// Exactly what the old plugin used: its own constant, otherwise the auth salt.
+			$salt = defined( 'AAB_ENCRYPTION_KEY' ) ? AAB_ENCRYPTION_KEY : wp_salt( 'auth' );
 			return hash( 'sha256', 'anderson-appointment-booking|' . $salt, true );
 		}
 		$salt = defined( 'JATCS_ENCRYPTION_KEY' ) ? JATCS_ENCRYPTION_KEY : wp_salt( 'auth' );
@@ -70,6 +71,22 @@ final class JATCS_Crypto {
 			return '';
 		}
 		return self::PREFIX . base64_encode( $iv . $tag . $cipher ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+	}
+
+	/**
+	 * Re-encrypt a value written under the plugin's earlier name with the current key.
+	 * Anything else is returned unchanged.
+	 *
+	 * @param string $encoded Encoded value.
+	 * @return string
+	 */
+	public static function upgrade( $encoded ) {
+		$encoded = (string) $encoded;
+		if ( 0 !== strpos( $encoded, self::LEGACY_PREFIX ) ) {
+			return $encoded;
+		}
+		$plain = self::decrypt( $encoded );
+		return '' !== $plain ? self::encrypt( $plain ) : $encoded;
 	}
 
 	/**

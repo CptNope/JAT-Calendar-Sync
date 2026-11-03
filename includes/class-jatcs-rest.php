@@ -25,24 +25,34 @@ final class JATCS_Rest {
 	}
 
 	/**
+	 * Register a route under the current namespace and the one used before the rename
+	 * (aab/v1), so Stripe webhooks and booking pages cached before the switch keep working.
+	 *
+	 * @param string $ns   Namespace (self::NS).
+	 * @param string $path      Route.
+	 * @param array  $args      Route arguments.
+	 */
+	private static function route( $ns, $path, array $args ) {
+		register_rest_route( $ns, $path, $args );
+		register_rest_route( 'aab/v1', $path, $args );
+	}
+
+	/**
 	 * Register routes.
 	 */
 	public static function routes() {
 		self::reschedule_route();
-		// aab/v1/stripe: the webhook address registered in Stripe before the rename.
-		foreach ( array( self::NS, 'aab/v1' ) as $jatcs_ns ) {
-			register_rest_route(
-				$jatcs_ns,
-				'/stripe',
-				array(
-					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => array( __CLASS__, 'stripe_webhook' ),
-					// Authenticated by Stripe's signature, checked in the callback.
-					'permission_callback' => '__return_true',
-				)
-			);
-		}
-		register_rest_route(
+		self::route(
+			self::NS,
+			'/stripe',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( __CLASS__, 'stripe_webhook' ),
+				// Authenticated by Stripe's signature, checked in the callback.
+				'permission_callback' => '__return_true',
+			)
+		);
+		self::route(
 			self::NS,
 			'/availability',
 			array(
@@ -73,7 +83,7 @@ final class JATCS_Rest {
 				),
 			)
 		);
-		register_rest_route(
+		self::route(
 			self::NS,
 			'/bookings',
 			array(
@@ -130,7 +140,7 @@ final class JATCS_Rest {
 	 * Register the reschedule route (called from routes()).
 	 */
 	private static function reschedule_route() {
-		register_rest_route(
+		self::route(
 			self::NS,
 			'/bookings/(?P<id>\d+)/reschedule',
 			array(

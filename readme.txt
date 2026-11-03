@@ -80,7 +80,7 @@ This plugin connects only to the calendar and payment services you set up yourse
 3. Under “Where bookings go”, choose the calendar new appointments are added to, and set your hours.
 4. Add the Appointment Booking block or the `[jat_booking]` shortcode to a page.
 
-Moving from Anderson Appointment Booking? Install and activate JAT Calendar Sync: your settings, appointment types, bookings, calendar connections and booking pages carry over automatically, and the old plugin is switched off.
+Moving from Anderson Appointment Booking? Install and activate JAT Calendar Sync: your settings, appointment types, bookings, calendar connections and booking pages carry over automatically, and the old plugin is switched off. The move is one-way, so back up your site first if you might want to return to the old plugin. Afterwards the old plugin can be deleted safely.
 
 == Frequently Asked Questions ==
 
@@ -143,7 +143,7 @@ Yes. Times are loaded when the page opens, so cached pages still show current av
 == Upgrade Notice ==
 
 = 2.0.0 =
-Anderson Appointment Booking is now JAT Calendar Sync, with Outlook, iCloud, CalDAV and iCal feed support. Settings, bookings and connections move over automatically.
+Anderson Appointment Booking is now JAT Calendar Sync, with Outlook, iCloud, CalDAV and iCal feed support. Settings, bookings and connections move over automatically. The move is one-way: take a backup first if you might go back.
 
 == Changelog ==
 
