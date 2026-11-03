@@ -497,14 +497,24 @@ final class JATCS_Rest {
 	 * @return bool True when over the limit.
 	 */
 	private static function rate_limited( $bucket, $limit, $window, $hit = false ) {
-		$ip    = self::client_ip();
-		$key   = 'jatcs_rl_' . $bucket . '_' . substr( hash_hmac( 'sha256', $ip, wp_salt( 'nonce' ) ), 0, 20 );
-		$count = (int) get_transient( $key );
-		if ( $count >= $limit ) {
+		$ip  = self::client_ip();
+		$key = 'jatcs_rl_' . $bucket . '_' . substr( hash_hmac( 'sha256', $ip, wp_salt( 'nonce' ) ), 0, 20 );
+		// Fixed window: the count and when its window ends are stored together, so later hits
+		// don't keep extending the window (a steady trickle would otherwise never reset).
+		$data = get_transient( $key );
+		$now  = time();
+		if ( ! is_array( $data ) || empty( $data['until'] ) || (int) $data['until'] <= $now ) {
+			$data = array(
+				'count' => 0,
+				'until' => $now + (int) $window,
+			);
+		}
+		if ( (int) $data['count'] >= $limit ) {
 			return true;
 		}
 		if ( $hit || 'avail' === $bucket ) {
-			set_transient( $key, $count + 1, $window );
+			++$data['count'];
+			set_transient( $key, $data, max( 1, (int) $data['until'] - $now ) );
 		}
 		return false;
 	}

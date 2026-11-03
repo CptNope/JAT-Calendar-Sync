@@ -74,7 +74,7 @@ $jatcs_ms_cals      = $jatcs_ms_connected ? JATCS_Microsoft::calendars( isset( $
 					</span>
 				</li>
 				<li><?php esc_html_e( 'Under API permissions, add Microsoft Graph delegated permissions Calendars.ReadWrite, User.Read and offline_access.', 'jat-calendar-sync' ); ?></li>
-				<li><?php esc_html_e( 'Under Certificates & secrets, create a client secret. Paste the Application (client) ID and the secret’s Value below, save, then click Connect Outlook. Secrets expire (24 months at most), so note the date.', 'jat-calendar-sync' ); ?></li>
+				<li><?php esc_html_e( 'Under Certificates & secrets, create a client secret. Paste the Application (client) ID and the secret’s Value below and save. Then click “Connect Outlook to block times”, or “Connect and allow adding bookings” if bookings should go to Outlook. Secrets expire (24 months at most), so note the date.', 'jat-calendar-sync' ); ?></li>
 			</ol>
 		</details>
 		<table class="form-table" role="presentation">

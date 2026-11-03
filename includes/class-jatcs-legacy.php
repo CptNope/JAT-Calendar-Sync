@@ -211,8 +211,8 @@ final class JATCS_Legacy {
 	 * @return array
 	 */
 	private static function rename_settings( array $settings ) {
-		if ( ! empty( $settings['style_css'] ) && is_string( $settings['style_css'] ) ) {
-			$settings['style_css'] = str_replace( array( '--aab-', '.aab__', '.aab--', '.aab' ), array( '--jatcs-', '.jatcs__', '.jatcs--', '.jatcs' ), $settings['style_css'] );
+		if ( ! empty( $settings['custom_css'] ) && is_string( $settings['custom_css'] ) ) {
+			$settings['custom_css'] = str_replace( array( '--aab-', '.aab__', '.aab--', '.aab' ), array( '--jatcs-', '.jatcs__', '.jatcs--', '.jatcs' ), $settings['custom_css'] );
 		}
 		return $settings;
 	}

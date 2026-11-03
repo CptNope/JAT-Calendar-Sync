@@ -2,8 +2,8 @@
 /**
  * Background upkeep (hourly) and Site Health checks.
  *
- * Every hour, while Google Calendar is connected:
- * - Sync: upcoming bookings whose event was deleted in Google Calendar are cancelled here,
+ * Every hour, while the booking calendar (Google, Outlook or CalDAV) is connected:
+ * - Sync: upcoming bookings whose event was deleted in the calendar are cancelled here,
  *   and ones moved to a new time are updated, with an email to the visitor either way.
  * - Reminders: visitors get a reminder email N hours before (setting; 0 turns it off).
  * - Retention: booking records older than N days are deleted (setting; 0 keeps them).
@@ -249,15 +249,15 @@ final class JATCS_Maintenance {
 			'test'  => array( __CLASS__, 'test_google' ),
 		);
 		$tests['direct']['jatcs_outlook']  = array(
-			'label' => __( 'Appointment booking: Outlook calendars', 'jat-calendar-sync' ),
+			'label' => __( 'JAT Calendar Sync: Outlook calendars', 'jat-calendar-sync' ),
 			'test'  => array( __CLASS__, 'test_outlook' ),
 		);
 		$tests['direct']['jatcs_cron']     = array(
-			'label' => __( 'Appointment booking: background tasks', 'jat-calendar-sync' ),
+			'label' => __( 'JAT Calendar Sync: background tasks', 'jat-calendar-sync' ),
 			'test'  => array( __CLASS__, 'test_cron' ),
 		);
 		$tests['direct']['jatcs_timezone'] = array(
-			'label' => __( 'Appointment booking: timezone', 'jat-calendar-sync' ),
+			'label' => __( 'JAT Calendar Sync: timezone', 'jat-calendar-sync' ),
 			'test'  => array( __CLASS__, 'test_timezone' ),
 		);
 		return $tests;

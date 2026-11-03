@@ -313,11 +313,16 @@ final class JATCS_Feeds {
 		if ( is_wp_error( $data ) ) {
 			return $data;
 		}
-		$end = JATCS_ICal::last_event_end( $data, time(), wp_timezone(), max( 1, (int) $days_ahead ) );
-		if ( false === $end ) {
+		// Busy events only (like the other services): cancelled and "Free" events aren't shifts.
+		$busy = JATCS_ICal::busy( $data, time(), time() + max( 1, (int) $days_ahead ) * DAY_IN_SECONDS, wp_timezone(), array( 'merge' => false ) );
+		if ( false === $busy ) {
 			return new WP_Error( 'jatcs_feed_parse', __( 'The calendar feed couldn’t be read.', 'jat-calendar-sync' ) );
 		}
-		return (int) $end;
+		$latest = 0;
+		foreach ( $busy as $range ) {
+			$latest = max( $latest, (int) $range[1] );
+		}
+		return $latest;
 	}
 
 	/**

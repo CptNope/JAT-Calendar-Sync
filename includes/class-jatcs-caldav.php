@@ -124,7 +124,7 @@ class JATCS_CalDAV {
 			'icloud'      => array(
 				'name' => 'iCloud',
 				'url'  => 'https://caldav.icloud.com/',
-				'help' => __( 'Use your Apple ID email and an app-specific password created at appleid.apple.com (Sign-In and Security > App-Specific Passwords).', 'jat-calendar-sync' ),
+				'help' => __( 'Use your Apple ID email and an app-specific password created at account.apple.com (Sign-In and Security > App-Specific Passwords).', 'jat-calendar-sync' ),
 			),
 			'fastmail'    => array(
 				'name' => 'Fastmail',
