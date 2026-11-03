@@ -1,6 +1,6 @@
 # JAT Calendar Sync
 
-[![CI](https://github.com/CptNope/WordPress-Calendar-Sync-Plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/CptNope/WordPress-Calendar-Sync-Plugin/actions/workflows/ci.yml)
+[![CI](https://github.com/CptNope/JAT-Calendar-Sync/actions/workflows/ci.yml/badge.svg)](https://github.com/CptNope/JAT-Calendar-Sync/actions/workflows/ci.yml)
 ![WordPress 6.2+](https://img.shields.io/badge/WordPress-6.2%2B-21759b)
 ![PHP 7.4–8.4](https://img.shields.io/badge/PHP-7.4%E2%80%938.4-777bb4)
 ![License: GPLv2 or later](https://img.shields.io/badge/license-GPLv2%2B-blue)

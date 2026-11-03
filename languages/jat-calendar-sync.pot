@@ -23,7 +23,7 @@ msgstr ""
 
 #. Plugin URI of the plugin
 #: jat-calendar-sync.php
-msgid "https://github.com/CptNope/WordPress-Calendar-Sync-Plugin"
+msgid "https://github.com/CptNope/JAT-Calendar-Sync"
 msgstr ""
 
 #. Description of the plugin

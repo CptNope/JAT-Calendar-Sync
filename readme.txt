@@ -52,7 +52,7 @@ JAT Calendar Sync puts a booking calendar on your site that knows when you are a
 * Calendar passwords, tokens and feed links are encrypted at rest.
 * Retention setting, WordPress personal-data export and erase, CSV export.
 
-Built by [Jeremy Anderson Tech](https://jeremyanderson.tech). Development happens on [GitHub](https://github.com/CptNope/WordPress-Calendar-Sync-Plugin).
+Built by [Jeremy Anderson Tech](https://jeremyanderson.tech). Development happens on [GitHub](https://github.com/CptNope/JAT-Calendar-Sync).
 
 == External services ==
 

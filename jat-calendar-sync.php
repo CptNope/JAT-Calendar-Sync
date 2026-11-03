@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       JAT Calendar Sync
- * Plugin URI:        https://github.com/CptNope/WordPress-Calendar-Sync-Plugin
+ * Plugin URI:        https://github.com/CptNope/JAT-Calendar-Sync
  * Description:       Free appointment booking that syncs with Google Calendar, Outlook / Microsoft 365, iCloud and any CalDAV or iCal calendar, matches your theme and never double-books.
  * Version:           2.0.0
  * Requires at least: 6.2
