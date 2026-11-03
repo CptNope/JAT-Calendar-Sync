@@ -219,7 +219,7 @@ stateDiagram-v2
 
 ```mermaid
 flowchart TD
-    A["Date range requested<br/>(one month at a time)"] --> B["Clamp to booking window<br/>today … today + N days"]
+    A["Date range requested<br/>(one month at a time)"] --> B["Clamp to booking window<br/>today … today + N days,<br/>or the last posted shift if sooner"]
     B --> C{"Day off?"}
     C -->|yes| X["No times that day"]
     C -->|no| D["Type's hours or your usual hours<br/>e.g. 09:00-12:00, 13:00-17:00"]
@@ -418,6 +418,7 @@ Types share buffers and limits because one calendar holds one appointment at a t
 | Free time before / after | 0 / 15 min | Applied around new bookings and kept around existing ones |
 | Minimum notice | 12 h | |
 | Book up to | 30 days ahead | |
+| Open booking only as far as | Off | Shift-work mode: the last upcoming event on a schedule calendar (e.g. Sling), optionally through that Sunday. Closed when nothing is posted or the calendar can't be read |
 | Most bookings per day | 0 (no limit) | Counts payment holds |
 | Upcoming bookings per person | 2 | By email address |
 | Changes allowed until | 0 h before | Reschedule and cancel cut-off for visitors |

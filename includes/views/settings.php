@@ -208,6 +208,38 @@ $aab_has_secret = $secret_locked || '' !== AAB_Settings::client_secret();
 								</p>
 							</td>
 						</tr>
+						<tr>
+							<th scope="row"><label for="aab-schedule-calendar"><?php esc_html_e( 'Open booking only as far as', 'anderson-appointment-booking' ); ?></label></th>
+							<td>
+								<select id="aab-schedule-calendar" name="aab[schedule_calendar]">
+									<option value=""><?php esc_html_e( 'My “Book up to” limit (no work schedule)', 'anderson-appointment-booking' ); ?></option>
+									<?php foreach ( $calendars as $cal ) : ?>
+										<?php $aab_value = $cal['primary'] ? 'primary' : $cal['id']; ?>
+										<option value="<?php echo esc_attr( $aab_value ); ?>" <?php selected( in_array( $s['schedule_calendar'], array( $aab_value, $cal['id'] ), true ) ); ?>>
+											<?php
+											/* translators: %s: calendar name */
+											echo esc_html( sprintf( __( 'my posted schedule on “%s”', 'anderson-appointment-booking' ), $cal['summary'] ) );
+											?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<p><label><input type="checkbox" name="aab[schedule_week]" value="1" <?php checked( ! empty( $s['schedule_week'] ) ); ?>> <?php esc_html_e( 'and the rest of that week, through Sunday', 'anderson-appointment-booking' ); ?></label></p>
+								<p class="description"><?php esc_html_e( 'For shift work (Sling, When I Work, Deputy…): booking opens only up to your last posted shift, so nobody books a time that may still become a shift. When the next schedule appears in Google Calendar, those days open automatically. If nothing is posted, nothing can be booked. Also tick this calendar above so shifts block their own times.', 'anderson-appointment-booking' ); ?></p>
+								<?php
+								$aab_horizon = '' !== (string) $s['schedule_calendar'] && AAB_Google::is_connected() ? AAB_Availability::schedule_horizon() : null;
+								if ( null !== $aab_horizon ) :
+									?>
+									<p class="description"><strong>
+										<?php
+										echo $aab_horizon < wp_date( 'Y-m-d' )
+											? esc_html__( 'Right now: no upcoming schedule found, so booking is closed.', 'anderson-appointment-booking' )
+											/* translators: %s: date */
+											: esc_html( sprintf( __( 'Right now: booking is open through %s.', 'anderson-appointment-booking' ), wp_date( get_option( 'date_format' ), strtotime( $aab_horizon . ' 12:00' ) ) ) );
+										?>
+									</strong></p>
+								<?php endif; ?>
+							</td>
+						</tr>
 					</table>
 				<?php endif; ?>
 			</div>

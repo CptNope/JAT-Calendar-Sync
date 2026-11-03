@@ -507,6 +507,52 @@ final class AAB_Google {
 	}
 
 	/**
+	 * When the last upcoming event on a calendar ends (e.g. the last shift of a posted work schedule).
+	 *
+	 * Reads only start/end times. Cancelled events are ignored.
+	 *
+	 * @param string $calendar_id Calendar ID.
+	 * @param int    $days_ahead  How far ahead to look.
+	 * @return int|WP_Error Unix time, or 0 when nothing is scheduled.
+	 */
+	public static function last_event_end( $calendar_id, $days_ahead = 120 ) {
+		$latest = 0;
+		$token  = '';
+		for ( $page = 0; $page < 10; $page++ ) {
+			$query = array(
+				'timeMin'      => gmdate( 'c', time() ),
+				'timeMax'      => gmdate( 'c', time() + max( 1, (int) $days_ahead ) * DAY_IN_SECONDS ),
+				'singleEvents' => 'true',
+				'showDeleted'  => 'false',
+				'maxResults'   => 2500,
+				'fields'       => 'nextPageToken,items(status,start,end)',
+			);
+			if ( '' !== $token ) {
+				$query['pageToken'] = $token;
+			}
+			$result = self::request( 'GET', '/calendars/' . rawurlencode( $calendar_id ) . '/events', null, $query );
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
+			foreach ( isset( $result['items'] ) ? (array) $result['items'] : array() as $item ) {
+				if ( isset( $item['status'] ) && 'cancelled' === $item['status'] ) {
+					continue;
+				}
+				$end = isset( $item['end']['dateTime'] ) ? strtotime( $item['end']['dateTime'] )
+					: ( isset( $item['end']['date'] ) ? ( new DateTimeImmutable( $item['end']['date'], wp_timezone() ) )->getTimestamp() : false );
+				if ( $end && $end > $latest ) {
+					$latest = (int) $end;
+				}
+			}
+			$token = isset( $result['nextPageToken'] ) ? (string) $result['nextPageToken'] : '';
+			if ( '' === $token ) {
+				break;
+			}
+		}
+		return $latest;
+	}
+
+	/**
 	 * Create an event.
 	 *
 	 * @param string $calendar_id  Calendar ID.

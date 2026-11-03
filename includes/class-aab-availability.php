@@ -59,7 +59,52 @@ final class AAB_Availability {
 		$tz    = wp_timezone();
 		$today = new DateTimeImmutable( 'today', $tz );
 		$days  = max( 1, (int) AAB_Settings::get( 'max_days' ) );
-		return array( $today->format( 'Y-m-d' ), $today->modify( '+' . ( $days - 1 ) . ' days' )->format( 'Y-m-d' ) );
+		$last  = $today->modify( '+' . ( $days - 1 ) . ' days' )->format( 'Y-m-d' );
+		$until = self::schedule_horizon();
+		if ( null !== $until && $until < $last ) {
+			$last = $until;
+		}
+		return array( $today->format( 'Y-m-d' ), $last );
+	}
+
+	/**
+	 * Last bookable date allowed by a posted schedule (e.g. Sling shifts in Google Calendar).
+	 *
+	 * Booking opens only as far as the last upcoming event on the chosen calendar, optionally
+	 * through the Sunday of that week. Nothing posted, or the calendar can't be read: closed
+	 * (yesterday), so nobody books a time that may still become a shift.
+	 *
+	 * @return string|null Y-m-d, or null when the setting is off.
+	 */
+	public static function schedule_horizon() {
+		$calendar = (string) AAB_Settings::get( 'schedule_calendar' );
+		if ( '' === $calendar ) {
+			return null;
+		}
+		$week = (int) AAB_Settings::get( 'schedule_week' );
+		$key  = 'aab_horizon_' . md5( $calendar . '|' . $week . '|' . (int) get_option( self::GENERATION_OPTION, 0 ) );
+		$hit  = get_transient( $key );
+		if ( is_string( $hit ) && '' !== $hit ) {
+			return $hit;
+		}
+		$tz     = wp_timezone();
+		$closed = ( new DateTimeImmutable( 'yesterday', $tz ) )->format( 'Y-m-d' );
+		$end    = AAB_Google::last_event_end( $calendar, max( 31, (int) AAB_Settings::get( 'max_days' ) + 7 ) );
+		if ( is_wp_error( $end ) ) {
+			set_transient( $key, $closed, 2 * MINUTE_IN_SECONDS );
+			return $closed;
+		}
+		if ( ! $end ) {
+			$until = $closed;
+		} else {
+			$day = ( new DateTimeImmutable( '@' . ( $end - 1 ) ) )->setTimezone( $tz );
+			if ( $week ) {
+				$day = $day->modify( '+' . ( ( 7 - (int) $day->format( 'N' ) ) % 7 ) . ' days' );
+			}
+			$until = $day->format( 'Y-m-d' );
+		}
+		set_transient( $key, $until, 15 * MINUTE_IN_SECONDS );
+		return $until;
 	}
 
 	/**
