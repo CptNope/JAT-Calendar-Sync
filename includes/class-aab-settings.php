@@ -51,6 +51,7 @@ final class AAB_Settings {
 			'conflict_calendars'   => array(),
 			'schedule_calendar'    => '', // Open booking only as far as the latest event on this calendar ('' = off).
 			'schedule_week'        => 1,  // ...and through the end of that week (Sunday).
+			'schedule_buffer'      => 60, // Minutes kept free before and after each shift on that calendar.
 			'hours'                => array(
 				'mon' => '09:00-17:00',
 				'tue' => '09:00-17:00',

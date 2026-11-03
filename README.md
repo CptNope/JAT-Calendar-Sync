@@ -418,7 +418,7 @@ Types share buffers and limits because one calendar holds one appointment at a t
 | Free time before / after | 0 / 15 min | Applied around new bookings and kept around existing ones |
 | Minimum notice | 12 h | |
 | Book up to | 30 days ahead | |
-| Open booking only as far as | Off | Shift-work mode: the last upcoming event on a schedule calendar (e.g. Sling), optionally through that Sunday. Closed when nothing is posted or the calendar can't be read |
+| Open booking only as far as | Off | Shift-work mode: the last upcoming event on a schedule calendar (e.g. Sling), optionally through that Sunday. Closed when nothing is posted or the calendar can't be read. Shifts always block, with 60 min kept free before and after (adjustable; doesn't stack with your usual free time) |
 | Most bookings per day | 0 (no limit) | Counts payment holds |
 | Upcoming bookings per person | 2 | By email address |
 | Changes allowed until | 0 h before | Reschedule and cancel cut-off for visitors |
