@@ -6,7 +6,7 @@
  * alone does not expose your Google credentials. If the salts in wp-config.php
  * change, stored secrets can no longer be read and you will need to reconnect.
  *
- * @package AndersonAppointmentBooking
+ * @package JATCalendarSync
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -14,9 +14,15 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Small symmetric-encryption helper.
  */
-final class AAB_Crypto {
+final class JATCS_Crypto {
 
-	const PREFIX = 'aab1:';
+	const PREFIX = 'jcs1:';
+
+	/**
+	 * Marker of values written by the plugin's earlier name (Anderson Appointment Booking).
+	 * They are read with the original key, so a migrated site keeps its connections.
+	 */
+	const LEGACY_PREFIX = 'aab1:';
 
 	/**
 	 * Whether real encryption is available on this server.
@@ -30,11 +36,17 @@ final class AAB_Crypto {
 	/**
 	 * Derive the encryption key.
 	 *
+	 * @param bool $legacy Key used by the plugin's earlier name.
 	 * @return string Raw 32-byte key.
 	 */
-	private static function key() {
-		$salt = defined( 'AAB_ENCRYPTION_KEY' ) ? AAB_ENCRYPTION_KEY : wp_salt( 'auth' );
-		return hash( 'sha256', 'anderson-appointment-booking|' . $salt, true );
+	private static function key( $legacy = false ) {
+		if ( $legacy ) {
+			// Exactly what the old plugin used: its own constant, otherwise the auth salt.
+			$salt = defined( 'AAB_ENCRYPTION_KEY' ) ? AAB_ENCRYPTION_KEY : wp_salt( 'auth' );
+			return hash( 'sha256', 'anderson-appointment-booking|' . $salt, true );
+		}
+		$salt = defined( 'JATCS_ENCRYPTION_KEY' ) ? JATCS_ENCRYPTION_KEY : wp_salt( 'auth' );
+		return hash( 'sha256', 'jat-calendar-sync|' . $salt, true );
 	}
 
 	/**
@@ -62,6 +74,22 @@ final class AAB_Crypto {
 	}
 
 	/**
+	 * Re-encrypt a value written under the plugin's earlier name with the current key.
+	 * Anything else is returned unchanged.
+	 *
+	 * @param string $encoded Encoded value.
+	 * @return string
+	 */
+	public static function upgrade( $encoded ) {
+		$encoded = (string) $encoded;
+		if ( 0 !== strpos( $encoded, self::LEGACY_PREFIX ) ) {
+			return $encoded;
+		}
+		$plain = self::decrypt( $encoded );
+		return '' !== $plain ? self::encrypt( $plain ) : $encoded;
+	}
+
+	/**
 	 * Decrypt a string produced by encrypt().
 	 *
 	 * @param string $encoded Encoded cipher text.
@@ -75,7 +103,8 @@ final class AAB_Crypto {
 		if ( 0 === strpos( $encoded, 'plain:' ) ) {
 			return (string) base64_decode( substr( $encoded, 6 ), true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
 		}
-		if ( 0 !== strpos( $encoded, self::PREFIX ) || ! self::available() ) {
+		$legacy = 0 === strpos( $encoded, self::LEGACY_PREFIX );
+		if ( ( ! $legacy && 0 !== strpos( $encoded, self::PREFIX ) ) || ! self::available() ) {
 			return '';
 		}
 		$raw = base64_decode( substr( $encoded, strlen( self::PREFIX ) ), true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
@@ -85,7 +114,7 @@ final class AAB_Crypto {
 		$iv     = substr( $raw, 0, 12 );
 		$tag    = substr( $raw, 12, 16 );
 		$cipher = substr( $raw, 28 );
-		$plain  = openssl_decrypt( $cipher, 'aes-256-gcm', self::key(), OPENSSL_RAW_DATA, $iv, $tag );
+		$plain  = openssl_decrypt( $cipher, 'aes-256-gcm', self::key( $legacy ), OPENSSL_RAW_DATA, $iv, $tag );
 		return false === $plain ? '' : $plain;
 	}
 }

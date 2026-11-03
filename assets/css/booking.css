@@ -1,97 +1,97 @@
 /*
- * Anderson Appointment Booking – visitor widget.
+ * JAT Calendar Sync – visitor widget.
  *
- * Everything visual is driven by CSS custom properties on .aab, so you can restyle
+ * Everything visual is driven by CSS custom properties on .jatcs, so you can restyle
  * the widget from your theme without touching this file:
  *
- *   .aab {
- *     --aab-accent: #0b5fff;        selected day, day bars, links, plugin-style button
- *     --aab-on-accent: #fff;        text on the accent
- *     --aab-radius: 12px;           outer corners (controls use a smaller derived radius)
- *     --aab-space: 1;               spacing multiplier (0.75 compact … 1.3 roomy)
- *     --aab-surface: transparent;   background of the calendar box
- *     --aab-text: inherit;          text color
- *     --aab-line: …;                borders and dividers
- *     --aab-soft: …;                open-day background
- *     --aab-muted: …;               secondary text
- *     --aab-tint: …;                hover / focus tint
- *     --aab-error: #c0392b;
- *     --aab-heading-font: inherit;
- *     --aab-max-width: 760px;
+ *   .jatcs {
+ *     --jatcs-accent: #0b5fff;        selected day, day bars, links, plugin-style button
+ *     --jatcs-on-accent: #fff;        text on the accent
+ *     --jatcs-radius: 12px;           outer corners (controls use a smaller derived radius)
+ *     --jatcs-space: 1;               spacing multiplier (0.75 compact … 1.3 roomy)
+ *     --jatcs-surface: transparent;   background of the calendar box
+ *     --jatcs-text: inherit;          text color
+ *     --jatcs-line: …;                borders and dividers
+ *     --jatcs-soft: …;                open-day background
+ *     --jatcs-muted: …;               secondary text
+ *     --jatcs-tint: …;                hover / focus tint
+ *     --jatcs-error: #c0392b;
+ *     --jatcs-heading-font: inherit;
+ *     --jatcs-max-width: 760px;
  *   }
  *
- * Defaults are declared with :where() (zero specificity), so any `.aab { … }` rule in
+ * Defaults are declared with :where() (zero specificity), so any `.jatcs { … }` rule in
  * your theme wins. Values chosen in Appointments → Settings → Appearance are applied
  * inline on each widget.
  */
 
-:where(.aab) {
-	--aab-accent: #2e7d4f;
-	--aab-on-accent: #fff;
-	--aab-radius: 10px;
-	--aab-space: 1;
-	--aab-surface: transparent;
-	--aab-text: inherit;
-	--aab-line: rgba(127, 127, 127, 0.28);
-	--aab-soft: rgba(127, 127, 127, 0.08);
-	--aab-muted: rgba(127, 127, 127, 0.9);
-	--aab-tint: rgba(127, 127, 127, 0.12);
-	--aab-error: #c0392b;
-	--aab-heading-font: inherit;
-	--aab-max-width: 760px;
+:where(.jatcs) {
+	--jatcs-accent: #2e7d4f;
+	--jatcs-on-accent: #fff;
+	--jatcs-radius: 10px;
+	--jatcs-space: 1;
+	--jatcs-surface: transparent;
+	--jatcs-text: inherit;
+	--jatcs-line: rgba(127, 127, 127, 0.28);
+	--jatcs-soft: rgba(127, 127, 127, 0.08);
+	--jatcs-muted: rgba(127, 127, 127, 0.9);
+	--jatcs-tint: rgba(127, 127, 127, 0.12);
+	--jatcs-error: #c0392b;
+	--jatcs-heading-font: inherit;
+	--jatcs-max-width: 760px;
 }
 
 @supports (color: color-mix(in srgb, red, blue)) {
-	:where(.aab) {
-		--aab-line: color-mix(in srgb, currentColor 18%, transparent);
-		--aab-soft: color-mix(in srgb, currentColor 5%, transparent);
-		--aab-muted: color-mix(in srgb, currentColor 62%, transparent);
-		--aab-tint: color-mix(in srgb, var(--aab-accent) 12%, transparent);
+	:where(.jatcs) {
+		--jatcs-line: color-mix(in srgb, currentColor 18%, transparent);
+		--jatcs-soft: color-mix(in srgb, currentColor 5%, transparent);
+		--jatcs-muted: color-mix(in srgb, currentColor 62%, transparent);
+		--jatcs-tint: color-mix(in srgb, var(--jatcs-accent) 12%, transparent);
 	}
 }
 
-.aab {
+.jatcs {
 	/* Derived sizes. Outer corners are capped so pill-shaped theme buttons don't turn the box into a capsule. */
-	--aab-r-box: min(var(--aab-radius), 24px);
-	--aab-r-ctl: min(var(--aab-radius), 12px);
-	--aab-r-day: min(var(--aab-radius), 10px);
-	--aab-pad: calc(18px * var(--aab-space));
-	--aab-gap: calc(8px * var(--aab-space));
+	--jatcs-r-box: min(var(--jatcs-radius), 24px);
+	--jatcs-r-ctl: min(var(--jatcs-radius), 12px);
+	--jatcs-r-day: min(var(--jatcs-radius), 10px);
+	--jatcs-pad: calc(18px * var(--jatcs-space));
+	--jatcs-gap: calc(8px * var(--jatcs-space));
 
 	box-sizing: border-box;
-	max-width: var(--aab-max-width);
+	max-width: var(--jatcs-max-width);
 	margin-block: 1.5em;
-	color: var(--aab-text);
+	color: var(--jatcs-text);
 	line-height: 1.45;
 	container-type: inline-size;
 }
 
-.alignwide > .aab,
-.alignfull > .aab {
-	--aab-max-width: none;
+.alignwide > .jatcs,
+.alignfull > .jatcs {
+	--jatcs-max-width: none;
 }
 
-:where(.aab) *,
-:where(.aab) *::before,
-:where(.aab) *::after {
+:where(.jatcs) *,
+:where(.jatcs) *::before,
+:where(.jatcs) *::after {
 	box-sizing: inherit;
 }
 
-.aab :focus-visible {
-	outline: 2px solid var(--aab-accent);
+.jatcs :focus-visible {
+	outline: 2px solid var(--jatcs-accent);
 	outline-offset: 2px;
 }
 
 /*
  * Buttons inside the calendar (days, times, arrows, text links) are reset with an
- * ID-level selector (:not(#aab-x) matches everything) so even very specific theme
+ * ID-level selector (:not(#jatcs-x) matches everything) so even very specific theme
  * rules such as `.site button:not(:hover):not(.has-background)` don't leak into the grid. The booking button and the form
  * fields are deliberately left to the theme in "Match my theme" mode.
  */
-.aab:not(#aab-x) .aab__day,
-.aab:not(#aab-x) .aab__time,
-.aab:not(#aab-x) .aab__nav,
-.aab:not(#aab-x) .aab__link {
+.jatcs:not(#jatcs-x) .jatcs__day,
+.jatcs:not(#jatcs-x) .jatcs__time,
+.jatcs:not(#jatcs-x) .jatcs__nav,
+.jatcs:not(#jatcs-x) .jatcs__link {
 	margin: 0;
 	font: inherit;
 	color: inherit;
@@ -108,40 +108,40 @@
 	appearance: none;
 }
 
-.aab .aab__heading {
+.jatcs .jatcs__heading {
 	margin: 0 0 0.75em;
-	font-family: var(--aab-heading-font);
+	font-family: var(--jatcs-heading-font);
 }
 
-.aab .aab__body {
+.jatcs .jatcs__body {
 	display: grid;
 	grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-	border: 1px solid var(--aab-line);
-	border-radius: var(--aab-r-box);
-	background: var(--aab-surface);
+	border: 1px solid var(--jatcs-line);
+	border-radius: var(--jatcs-r-box);
+	background: var(--jatcs-surface);
 	overflow: hidden;
 }
 
 /* Calendar ---------------------------------------------------------------- */
 
-.aab .aab__cal {
-	padding: var(--aab-pad) var(--aab-pad) calc(var(--aab-pad) + 2px);
-	border-right: 1px solid var(--aab-line);
+.jatcs .jatcs__cal {
+	padding: var(--jatcs-pad) var(--jatcs-pad) calc(var(--jatcs-pad) + 2px);
+	border-right: 1px solid var(--jatcs-line);
 }
 
-.aab .aab__month {
+.jatcs .jatcs__month {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 8px;
-	margin-bottom: calc(12px * var(--aab-space));
+	margin-bottom: calc(12px * var(--jatcs-space));
 }
 
-.aab .aab__month-label,
-.aab .aab__panel-title {
+.jatcs .jatcs__month-label,
+.jatcs .jatcs__panel-title {
 	margin: 0;
 	padding: 0;
-	font-family: var(--aab-heading-font);
+	font-family: var(--jatcs-heading-font);
 	font-size: 1.05em;
 	font-weight: 600;
 	line-height: 1.3;
@@ -149,46 +149,46 @@
 	text-transform: none;
 }
 
-.aab:not(#aab-x) .aab__nav {
+.jatcs:not(#jatcs-x) .jatcs__nav {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	width: 34px;
 	height: 34px;
 	padding: 0;
-	border: 1px solid var(--aab-line);
+	border: 1px solid var(--jatcs-line);
 	border-radius: 50%;
 	background: transparent;
 	font-size: 1.25em;
 	line-height: 1;
 }
 
-.aab:not(#aab-x) .aab__nav:hover:not(:disabled) {
-	border-color: var(--aab-accent);
-	color: var(--aab-accent);
+.jatcs:not(#jatcs-x) .jatcs__nav:hover:not(:disabled) {
+	border-color: var(--jatcs-accent);
+	color: var(--jatcs-accent);
 	background: transparent;
 }
 
-.aab:not(#aab-x) .aab__nav:disabled {
+.jatcs:not(#jatcs-x) .jatcs__nav:disabled {
 	opacity: 0.3;
 	cursor: default;
 }
 
-.aab .aab__grid {
+.jatcs .jatcs__grid {
 	display: grid;
 	grid-template-columns: repeat(7, minmax(0, 1fr));
-	gap: calc(4px * var(--aab-space));
+	gap: calc(4px * var(--jatcs-space));
 }
 
-.aab .aab__wd {
+.jatcs .jatcs__wd {
 	padding-bottom: 6px;
 	text-align: center;
 	font-size: 0.78em;
-	color: var(--aab-muted);
+	color: var(--jatcs-muted);
 }
 
 /* Each open day carries a small bar: longer means more open times that day. */
-.aab:not(#aab-x) .aab__day {
+.jatcs:not(#jatcs-x) .jatcs__day {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -198,38 +198,38 @@
 	min-height: 38px;
 	padding: 4px;
 	border: 0;
-	border-radius: var(--aab-r-day);
+	border-radius: var(--jatcs-r-day);
 	background: transparent;
 	font-variant-numeric: tabular-nums;
 }
 
-.aab:not(#aab-x) .aab__day:disabled {
-	color: var(--aab-muted);
+.jatcs:not(#jatcs-x) .jatcs__day:disabled {
+	color: var(--jatcs-muted);
 	opacity: 0.45;
 	cursor: default;
 }
 
-.aab:not(#aab-x) .aab__day.is-open {
-	background: var(--aab-soft);
+.jatcs:not(#jatcs-x) .jatcs__day.is-open {
+	background: var(--jatcs-soft);
 	font-weight: 600;
 }
 
-.aab:not(#aab-x) .aab__day.is-open:hover {
-	background: var(--aab-tint);
+.jatcs:not(#jatcs-x) .jatcs__day.is-open:hover {
+	background: var(--jatcs-tint);
 	color: inherit;
 }
 
-.aab:not(#aab-x) .aab__day.is-selected,
-.aab:not(#aab-x) .aab__day.is-selected:hover {
-	background: var(--aab-accent);
-	color: var(--aab-on-accent);
+.jatcs:not(#jatcs-x) .jatcs__day.is-selected,
+.jatcs:not(#jatcs-x) .jatcs__day.is-selected:hover {
+	background: var(--jatcs-accent);
+	color: var(--jatcs-on-accent);
 }
 
-.aab .aab__num {
+.jatcs .jatcs__num {
 	line-height: 1;
 }
 
-.aab .aab__bar {
+.jatcs .jatcs__bar {
 	display: block;
 	width: 60%;
 	height: 3px;
@@ -237,129 +237,129 @@
 	overflow: hidden;
 }
 
-.aab:not(#aab-x) .aab__day.is-open .aab__bar {
-	background: var(--aab-line);
+.jatcs:not(#jatcs-x) .jatcs__day.is-open .jatcs__bar {
+	background: var(--jatcs-line);
 }
 
-.aab .aab__bar i {
+.jatcs .jatcs__bar i {
 	display: block;
 	height: 100%;
 	border-radius: inherit;
-	background: var(--aab-accent);
+	background: var(--jatcs-accent);
 }
 
-.aab:not(#aab-x) .aab__day.is-selected .aab__bar {
+.jatcs:not(#jatcs-x) .jatcs__day.is-selected .jatcs__bar {
 	background: rgba(255, 255, 255, 0.35);
-	background: color-mix(in srgb, var(--aab-on-accent) 35%, transparent);
+	background: color-mix(in srgb, var(--jatcs-on-accent) 35%, transparent);
 }
 
-.aab:not(#aab-x) .aab__day.is-selected .aab__bar i {
-	background: var(--aab-on-accent);
+.jatcs:not(#jatcs-x) .jatcs__day.is-selected .jatcs__bar i {
+	background: var(--jatcs-on-accent);
 }
 
-.aab--loading .aab__grid {
+.jatcs--loading .jatcs__grid {
 	opacity: 0.5;
 	transition: opacity 0.2s;
 }
 
 /* Panel: times, form, confirmation ---------------------------------------- */
 
-.aab .aab__panel {
+.jatcs .jatcs__panel {
 	min-width: 0;
-	padding: var(--aab-pad) calc(var(--aab-pad) + 2px) calc(var(--aab-pad) + 4px);
+	padding: var(--jatcs-pad) calc(var(--jatcs-pad) + 2px) calc(var(--jatcs-pad) + 4px);
 }
 
-.aab .aab__duration {
-	margin: 2px 0 calc(14px * var(--aab-space));
+.jatcs .jatcs__duration {
+	margin: 2px 0 calc(14px * var(--jatcs-space));
 	font-size: 0.875em;
-	color: var(--aab-muted);
+	color: var(--jatcs-muted);
 }
 
-.aab .aab__times {
+.jatcs .jatcs__times {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-	gap: var(--aab-gap);
+	gap: var(--jatcs-gap);
 	max-height: 340px;
 	overflow-y: auto;
 	padding: 2px;
 }
 
-.aab:not(#aab-x) .aab__time {
-	padding: calc(9px * var(--aab-space)) 4px;
-	border: 1px solid var(--aab-line);
-	border-radius: var(--aab-r-ctl);
+.jatcs:not(#jatcs-x) .jatcs__time {
+	padding: calc(9px * var(--jatcs-space)) 4px;
+	border: 1px solid var(--jatcs-line);
+	border-radius: var(--jatcs-r-ctl);
 	background: transparent;
 	font-variant-numeric: tabular-nums;
 	text-align: center;
 	white-space: nowrap;
 }
 
-.aab:not(#aab-x) .aab__time:hover {
-	border-color: var(--aab-accent);
-	background: var(--aab-tint);
+.jatcs:not(#jatcs-x) .jatcs__time:hover {
+	border-color: var(--jatcs-accent);
+	background: var(--jatcs-tint);
 	color: inherit;
 }
 
-.aab .aab__message {
+.jatcs .jatcs__message {
 	margin: 0 0 12px;
 }
 
-.aab .aab__message--quiet {
-	color: var(--aab-muted);
+.jatcs .jatcs__message--quiet {
+	color: var(--jatcs-muted);
 }
 
-.aab .aab__message--error {
+.jatcs .jatcs__message--error {
 	padding: 10px 12px;
-	border-left: 3px solid var(--aab-error);
-	border-radius: min(var(--aab-radius), 4px);
+	border-left: 3px solid var(--jatcs-error);
+	border-radius: min(var(--jatcs-radius), 4px);
 	background: rgba(192, 57, 43, 0.08);
-	background: color-mix(in srgb, var(--aab-error) 9%, transparent);
+	background: color-mix(in srgb, var(--jatcs-error) 9%, transparent);
 }
 
-.aab:not(#aab-x) .aab__link {
+.jatcs:not(#jatcs-x) .jatcs__link {
 	padding: 0;
 	border: 0;
 	background: none;
-	color: var(--aab-accent);
+	color: var(--jatcs-accent);
 	text-decoration: underline;
 	text-underline-offset: 2px;
 }
 
-.aab:not(#aab-x) .aab__link:hover {
+.jatcs:not(#jatcs-x) .jatcs__link:hover {
 	background: none;
-	color: var(--aab-accent);
+	color: var(--jatcs-accent);
 	text-decoration: underline;
 	text-decoration-thickness: 2px;
 }
 
-.aab .aab__summary {
+.jatcs .jatcs__summary {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 4px 12px;
-	margin-bottom: calc(14px * var(--aab-space));
-	padding-bottom: calc(12px * var(--aab-space));
-	border-bottom: 1px solid var(--aab-line);
+	margin-bottom: calc(14px * var(--jatcs-space));
+	padding-bottom: calc(12px * var(--jatcs-space));
+	border-bottom: 1px solid var(--jatcs-line);
 }
 
-.aab .aab__back {
+.jatcs .jatcs__back {
 	font-size: 0.875em;
 }
 
-.aab .aab__field {
-	margin-bottom: calc(12px * var(--aab-space));
+.jatcs .jatcs__field {
+	margin-bottom: calc(12px * var(--jatcs-space));
 }
 
-.aab .aab__field > label {
+.jatcs .jatcs__field > label {
 	display: block;
 	margin-bottom: 4px;
 	font-size: 0.9em;
 	font-weight: 600;
 }
 
-.aab .aab__input,
-.aab .aab__submit {
+.jatcs .jatcs__input,
+.jatcs .jatcs__submit {
 	width: 100%;
 	max-width: 100%;
 }
@@ -369,63 +369,63 @@
  * Fallback styles have zero specificity, so in "Match my theme" mode the theme's own
  * input and button styles win wherever it defines them.
  */
-:where(.aab .aab__input) {
+:where(.jatcs .jatcs__input) {
 	display: block;
 	padding: 9px 11px;
-	border: 1px solid var(--aab-line);
-	border-radius: var(--aab-r-ctl);
+	border: 1px solid var(--jatcs-line);
+	border-radius: var(--jatcs-r-ctl);
 	background: transparent;
 	color: inherit;
 	font: inherit;
 }
 
-:where(.aab .aab__input:focus) {
-	border-color: var(--aab-accent);
+:where(.jatcs .jatcs__input:focus) {
+	border-color: var(--jatcs-accent);
 	outline: none;
-	box-shadow: 0 0 0 3px var(--aab-tint);
+	box-shadow: 0 0 0 3px var(--jatcs-tint);
 }
 
-:where(.aab .aab__submit) {
+:where(.jatcs .jatcs__submit) {
 	display: block;
-	padding: calc(11px * var(--aab-space)) 16px;
+	padding: calc(11px * var(--jatcs-space)) 16px;
 	border: 0;
-	border-radius: var(--aab-r-ctl);
-	background: var(--aab-accent);
-	color: var(--aab-on-accent);
+	border-radius: var(--jatcs-r-ctl);
+	background: var(--jatcs-accent);
+	color: var(--jatcs-on-accent);
 	font: inherit;
 	font-weight: 600;
 	cursor: pointer;
 }
 
 /* "Plugin style": the widget's own controls, whatever the theme does. */
-.aab--buttons-plugin .aab__input {
+.jatcs--buttons-plugin .jatcs__input {
 	display: block;
 	margin: 0;
 	padding: 9px 11px;
-	border: 1px solid var(--aab-line);
-	border-radius: var(--aab-r-ctl);
+	border: 1px solid var(--jatcs-line);
+	border-radius: var(--jatcs-r-ctl);
 	background: transparent;
 	color: inherit;
 	font: inherit;
 	box-shadow: none;
 }
 
-.aab--buttons-plugin .aab__input:focus {
-	border-color: var(--aab-accent);
+.jatcs--buttons-plugin .jatcs__input:focus {
+	border-color: var(--jatcs-accent);
 	outline: none;
-	box-shadow: 0 0 0 3px var(--aab-tint);
+	box-shadow: 0 0 0 3px var(--jatcs-tint);
 }
 
-.aab--buttons-plugin .aab__submit,
-.aab--buttons-plugin .aab__submit:hover,
-.aab--buttons-plugin .aab__submit:focus {
+.jatcs--buttons-plugin .jatcs__submit,
+.jatcs--buttons-plugin .jatcs__submit:hover,
+.jatcs--buttons-plugin .jatcs__submit:focus {
 	display: block;
 	margin: 0;
-	padding: calc(11px * var(--aab-space)) 16px;
+	padding: calc(11px * var(--jatcs-space)) 16px;
 	border: 0;
-	border-radius: var(--aab-r-ctl);
-	background: var(--aab-accent);
-	color: var(--aab-on-accent);
+	border-radius: var(--jatcs-r-ctl);
+	background: var(--jatcs-accent);
+	color: var(--jatcs-on-accent);
 	font: inherit;
 	font-weight: 600;
 	letter-spacing: normal;
@@ -435,51 +435,51 @@
 	cursor: pointer;
 }
 
-.aab--buttons-plugin .aab__submit:hover:not(:disabled) {
+.jatcs--buttons-plugin .jatcs__submit:hover:not(:disabled) {
 	filter: brightness(1.08);
 }
 
-.aab .aab__submit:disabled {
+.jatcs .jatcs__submit:disabled {
 	opacity: 0.65;
 	cursor: progress;
 }
 
-.aab .aab__input[aria-invalid="true"] {
-	border-color: var(--aab-error);
+.jatcs .jatcs__input[aria-invalid="true"] {
+	border-color: var(--jatcs-error);
 }
 
-.aab .aab__field-error {
+.jatcs .jatcs__field-error {
 	display: block;
 	margin-top: 4px;
 	font-size: 0.85em;
-	color: var(--aab-error);
+	color: var(--jatcs-error);
 }
 
-.aab .aab__field-error:empty {
+.jatcs .jatcs__field-error:empty {
 	display: none;
 }
 
-.aab .aab__field--check {
+.jatcs .jatcs__field--check {
 	display: grid;
 	grid-template-columns: auto 1fr;
 	gap: 4px 8px;
 	align-items: start;
 }
 
-.aab .aab__field--check input {
+.jatcs .jatcs__field--check input {
 	margin: 0.3em 0 0;
 }
 
-.aab .aab__field--check > label {
+.jatcs .jatcs__field--check > label {
 	margin: 0;
 	font-weight: normal;
 }
 
-.aab .aab__field--check .aab__field-error {
+.jatcs .jatcs__field--check .jatcs__field-error {
 	grid-column: 2;
 }
 
-.aab .aab__hp {
+.jatcs .jatcs__hp {
 	position: absolute !important;
 	left: -9999px !important;
 	width: 1px;
@@ -487,24 +487,24 @@
 	overflow: hidden;
 }
 
-.aab .aab__done:focus {
+.jatcs .jatcs__done:focus {
 	outline: none;
 }
 
-.aab .aab__done-badge {
+.jatcs .jatcs__done-badge {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
 	margin: 0 0 10px;
 	padding: 3px 10px 3px 8px;
 	border-radius: 99px;
-	background: var(--aab-tint);
-	color: var(--aab-accent);
+	background: var(--jatcs-tint);
+	color: var(--jatcs-accent);
 	font-size: 0.85em;
 	font-weight: 600;
 }
 
-.aab .aab__done-badge::before {
+.jatcs .jatcs__done-badge::before {
 	content: "";
 	width: 12px;
 	height: 6px;
@@ -514,22 +514,22 @@
 	transform: rotate(-45deg);
 }
 
-.aab .aab__done-text {
+.jatcs .jatcs__done-text {
 	margin: 8px 0 14px;
 }
 
-.aab .aab__tz {
+.jatcs .jatcs__tz {
 	margin: 8px 2px 0;
 	font-size: 0.82em;
-	color: var(--aab-muted);
+	color: var(--jatcs-muted);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-	.aab .aab__done {
-		animation: aab-in 0.25s ease-out;
+	.jatcs .jatcs__done {
+		animation: jatcs-in 0.25s ease-out;
 	}
 
-	@keyframes aab-in {
+	@keyframes jatcs-in {
 		from {
 			opacity: 0;
 			transform: translateY(4px);
@@ -539,115 +539,115 @@
 
 /* One column based on the widget's own width, so it also fits sidebars and narrow columns. */
 @container (max-width: 600px) {
-	.aab .aab__body {
+	.jatcs .jatcs__body {
 		grid-template-columns: minmax(0, 1fr);
 	}
 
-	.aab .aab__cal {
+	.jatcs .jatcs__cal {
 		border-right: 0;
-		border-bottom: 1px solid var(--aab-line);
+		border-bottom: 1px solid var(--jatcs-line);
 	}
 
-	.aab .aab__panel {
+	.jatcs .jatcs__panel {
 		scroll-margin-top: 16px;
 	}
 
-	.aab .aab__times {
+	.jatcs .jatcs__times {
 		max-height: none;
 	}
 }
 
 @supports not (container-type: inline-size) {
 	@media (max-width: 640px) {
-		.aab .aab__body {
+		.jatcs .jatcs__body {
 			grid-template-columns: minmax(0, 1fr);
 		}
 
-		.aab .aab__cal {
+		.jatcs .jatcs__cal {
 			border-right: 0;
-			border-bottom: 1px solid var(--aab-line);
+			border-bottom: 1px solid var(--jatcs-line);
 		}
 	}
 }
 
 /* Standalone cancel page (it loads the theme's global styles too) ---------- */
 
-.aab-cancel-page {
+.jatcs-cancel-page {
 	margin: 0;
 	padding: 48px 16px;
 }
 
-.aab.aab-cancel {
-	--aab-max-width: 480px;
+.jatcs.jatcs-cancel {
+	--jatcs-max-width: 480px;
 	margin: 0 auto;
-	padding: calc(28px * var(--aab-space));
-	border: 1px solid var(--aab-line);
-	border-radius: var(--aab-r-box);
-	background: var(--aab-surface);
+	padding: calc(28px * var(--jatcs-space));
+	border: 1px solid var(--jatcs-line);
+	border-radius: var(--jatcs-r-box);
+	background: var(--jatcs-surface);
 	container-type: normal;
 }
 
-.aab-cancel h1 {
+.jatcs-cancel h1 {
 	margin: 0 0 12px;
-	font-family: var(--aab-heading-font);
+	font-family: var(--jatcs-heading-font);
 	font-size: 1.5em;
 }
 
-.aab-cancel .aab-cancel__site {
+.jatcs-cancel .jatcs-cancel__site {
 	margin: 0 0 4px;
-	color: var(--aab-muted);
+	color: var(--jatcs-muted);
 	font-size: 0.9em;
 }
 
-:where(.aab-cancel .aab-cancel__button) {
+:where(.jatcs-cancel .jatcs-cancel__button) {
 	padding: 10px 18px;
 	border: 0;
-	border-radius: var(--aab-r-ctl);
-	background: var(--aab-accent);
-	color: var(--aab-on-accent);
+	border-radius: var(--jatcs-r-ctl);
+	background: var(--jatcs-accent);
+	color: var(--jatcs-on-accent);
 	font: inherit;
 	font-weight: 600;
 	cursor: pointer;
 }
 
-.aab-cancel .aab-cancel__keep a,
-.aab-cancel .aab-cancel__home {
-	color: var(--aab-accent);
+.jatcs-cancel .jatcs-cancel__keep a,
+.jatcs-cancel .jatcs-cancel__home {
+	color: var(--jatcs-accent);
 }
 
 /* Appointment type picker --------------------------------------------------- */
 
-.aab .aab__types {
+.jatcs .jatcs__types {
 	display: grid;
-	gap: var(--aab-gap);
+	gap: var(--jatcs-gap);
 }
 
-.aab .aab__types[hidden],
-.aab .aab__typebar[hidden],
-.aab .aab__body[hidden],
-.aab .aab__tz[hidden] {
+.jatcs .jatcs__types[hidden],
+.jatcs .jatcs__typebar[hidden],
+.jatcs .jatcs__body[hidden],
+.jatcs .jatcs__tz[hidden] {
 	display: none;
 }
 
-.aab .aab__types-title {
+.jatcs .jatcs__types-title {
 	margin: 0 0 4px;
-	font-family: var(--aab-heading-font);
+	font-family: var(--jatcs-heading-font);
 	font-size: 1.05em;
 	font-weight: 600;
 	letter-spacing: normal;
 	text-transform: none;
 }
 
-.aab:not(#aab-x) .aab__type {
+.jatcs:not(#jatcs-x) .jatcs__type {
 	display: grid;
 	gap: 3px;
 	width: 100%;
 	margin: 0;
-	padding: calc(14px * var(--aab-space)) calc(16px * var(--aab-space));
-	border: 1px solid var(--aab-line);
-	border-left: 3px solid var(--aab-accent);
-	border-radius: var(--aab-r-ctl);
-	background: var(--aab-surface);
+	padding: calc(14px * var(--jatcs-space)) calc(16px * var(--jatcs-space));
+	border: 1px solid var(--jatcs-line);
+	border-left: 3px solid var(--jatcs-accent);
+	border-radius: var(--jatcs-r-ctl);
+	background: var(--jatcs-surface);
 	color: inherit;
 	font: inherit;
 	line-height: 1.35;
@@ -661,43 +661,43 @@
 	appearance: none;
 }
 
-.aab:not(#aab-x) .aab__type:hover {
-	border-color: var(--aab-accent);
-	background: var(--aab-tint);
+.jatcs:not(#jatcs-x) .jatcs__type:hover {
+	border-color: var(--jatcs-accent);
+	background: var(--jatcs-tint);
 	color: inherit;
 }
 
-.aab .aab__type-head {
+.jatcs .jatcs__type-head {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 12px;
 }
 
-.aab .aab__type-name {
-	font-family: var(--aab-heading-font);
+.jatcs .jatcs__type-name {
+	font-family: var(--jatcs-heading-font);
 	font-weight: 600;
 }
 
-.aab .aab__type-len {
+.jatcs .jatcs__type-len {
 	flex: none;
 	font-variant-numeric: tabular-nums;
-	color: var(--aab-muted);
+	color: var(--jatcs-muted);
 	font-size: 0.9em;
 }
 
-.aab .aab__type-where,
-.aab .aab__type-desc {
-	color: var(--aab-muted);
+.jatcs .jatcs__type-where,
+.jatcs .jatcs__type-desc {
+	color: var(--jatcs-muted);
 	font-size: 0.9em;
 }
 
-.aab .aab__type-desc {
+.jatcs .jatcs__type-desc {
 	color: inherit;
 	opacity: 0.85;
 }
 
-.aab .aab__typebar {
+.jatcs .jatcs__typebar {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: baseline;
@@ -705,107 +705,107 @@
 	margin-bottom: 10px;
 }
 
-.aab .aab__typebar-name {
+.jatcs .jatcs__typebar-name {
 	font-weight: 600;
 }
 
-.aab .aab__month-label:focus {
+.jatcs .jatcs__month-label:focus {
 	outline: none;
 }
 
 /* Rescheduling -------------------------------------------------------------- */
 
-.aab:not(#aab-x) .aab__time:disabled {
+.jatcs:not(#jatcs-x) .jatcs__time:disabled {
 	border-style: dashed;
-	color: var(--aab-muted);
+	color: var(--jatcs-muted);
 	background: transparent;
 	cursor: default;
 }
 
-.aab .aab__was {
-	margin: 0 0 calc(14px * var(--aab-space));
-	color: var(--aab-muted);
+.jatcs .jatcs__was {
+	margin: 0 0 calc(14px * var(--jatcs-space));
+	color: var(--jatcs-muted);
 	font-size: 0.9em;
 }
 
-.aab .aab__field select.aab__input {
+.jatcs .jatcs__field select.jatcs__input {
 	min-height: 2.5em;
 }
 
 /* Manage page ------------------------------------------------------------------ */
 
-.aab.aab-manage--wide {
-	--aab-max-width: 820px;
+.jatcs.jatcs-manage--wide {
+	--jatcs-max-width: 820px;
 	border: 0;
 	background: transparent;
 	padding: 0;
 }
 
-.aab-manage .aab-manage__details {
+.jatcs-manage .jatcs-manage__details {
 	display: grid;
 	grid-template-columns: max-content minmax(0, 1fr);
 	gap: 6px 16px;
 	margin: 0 0 20px;
 }
 
-.aab-manage .aab-manage__details dt {
-	color: var(--aab-muted);
+.jatcs-manage .jatcs-manage__details dt {
+	color: var(--jatcs-muted);
 }
 
-.aab-manage .aab-manage__details dd {
+.jatcs-manage .jatcs-manage__details dd {
 	margin: 0;
 	overflow-wrap: anywhere;
 }
 
-.aab-manage .aab-manage__actions {
+.jatcs-manage .jatcs-manage__actions {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 12px 20px;
 }
 
-.aab-manage a.aab-manage__primary {
+.jatcs-manage a.jatcs-manage__primary {
 	display: inline-block;
 	text-decoration: none;
 }
 
-.aab-manage .aab-manage__secondary {
-	color: var(--aab-error);
+.jatcs-manage .jatcs-manage__secondary {
+	color: var(--jatcs-error);
 }
 
-.aab-manage .aab-manage__current {
+.jatcs-manage .jatcs-manage__current {
 	margin: -4px 0 16px;
-	color: var(--aab-muted);
+	color: var(--jatcs-muted);
 }
 
-.aab-manage .aab {
+.jatcs-manage .jatcs {
 	margin-top: 0;
 }
 
-.aab-manage a.aab-manage__primary:not(.wp-element-button) {
+.jatcs-manage a.jatcs-manage__primary:not(.wp-element-button) {
 	padding: 10px 18px;
-	border-radius: var(--aab-r-ctl);
-	background: var(--aab-accent);
-	color: var(--aab-on-accent);
+	border-radius: var(--jatcs-r-ctl);
+	background: var(--jatcs-accent);
+	color: var(--jatcs-on-accent);
 	font-weight: 600;
 }
 
 /* Paid appointments -------------------------------------------------------- */
 
-.aab .aab__type-price {
+.jatcs .jatcs__type-price {
 	justify-self: start;
 	margin-top: 2px;
 	padding: 1px 8px;
 	border-radius: 99px;
-	background: var(--aab-tint);
-	color: var(--aab-accent);
+	background: var(--jatcs-tint);
+	color: var(--jatcs-accent);
 	font-size: 0.85em;
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
 }
 
-.aab .aab__pay-note {
+.jatcs .jatcs__pay-note {
 	margin: 0 0 10px;
-	color: var(--aab-muted);
+	color: var(--jatcs-muted);
 	font-size: 0.875em;
 }

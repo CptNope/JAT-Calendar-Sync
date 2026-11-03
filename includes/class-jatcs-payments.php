@@ -12,7 +12,7 @@
  * 3. Unpaid holds expire and free the slot. Cancelling a paid booking refunds it when the
  *    owner cancels, or when the visitor cancels before the refund cut-off.
  *
- * @package AndersonAppointmentBooking
+ * @package JATCalendarSync
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Payment flow.
  */
-final class AAB_Payments {
+final class JATCS_Payments {
 
 	const HOLD_MINUTES = 30;
 
@@ -30,7 +30,7 @@ final class AAB_Payments {
 	 * @return string
 	 */
 	public static function currency() {
-		$c = strtolower( (string) AAB_Settings::get( 'currency' ) );
+		$c = strtolower( (string) JATCS_Settings::get( 'currency' ) );
 		return preg_match( '/^[a-z]{3}$/', $c ) ? $c : 'usd';
 	}
 
@@ -60,7 +60,7 @@ final class AAB_Payments {
 	 * @return bool
 	 */
 	public static function ready() {
-		return AAB_Stripe::enabled();
+		return JATCS_Stripe::enabled();
 	}
 
 	/**
@@ -71,7 +71,7 @@ final class AAB_Payments {
 	 * @return string
 	 */
 	private static function manage_url( $id, $token ) {
-		return AAB_Bookings::cancel_url( $id, $token );
+		return JATCS_Bookings::cancel_url( $id, $token );
 	}
 
 	/**
@@ -84,50 +84,50 @@ final class AAB_Payments {
 	 */
 	public static function start_checkout( $start, array $visitor, array $type ) {
 		if ( ! self::ready() ) {
-			return new WP_Error( 'aab_payments_off', __( 'Online payment isn’t available right now, so this appointment can’t be booked online. Please get in touch another way.', 'anderson-appointment-booking' ), array( 'status' => 503 ) );
+			return new WP_Error( 'jatcs_payments_off', __( 'Online payment isn’t available right now, so this appointment can’t be booked online. Please get in touch another way.', 'jat-calendar-sync' ), array( 'status' => 503 ) );
 		}
 		$amount   = self::price( $type );
 		$currency = self::currency();
 		$expires  = time() + self::HOLD_MINUTES * MINUTE_IN_SECONDS + 60;
 
-		$post_id = AAB_Bookings::store(
+		$post_id = JATCS_Bookings::store(
 			$start,
 			$visitor,
 			$type,
 			'awaiting_payment',
 			array(
-				'_aab_amount'     => $amount,
-				'_aab_currency'   => $currency,
+				'_jatcs_amount'     => $amount,
+				'_jatcs_currency'   => $currency,
 				// A few minutes of grace beyond Stripe's expiry, so a last-second payment still finds its slot.
-				'_aab_hold_until' => $expires + 5 * MINUTE_IN_SECONDS,
+				'_jatcs_hold_until' => $expires + 5 * MINUTE_IN_SECONDS,
 				// The page the visitor booked from, to send them back if they don't pay.
-				'_aab_page'       => esc_url_raw( wp_validate_redirect( (string) wp_get_raw_referer(), home_url( '/' ) ) ),
+				'_jatcs_page'       => esc_url_raw( wp_validate_redirect( (string) wp_get_raw_referer(), home_url( '/' ) ) ),
 			)
 		);
 		if ( is_wp_error( $post_id ) ) {
 			return $post_id;
 		}
-		$booking = AAB_Bookings::get( $post_id );
-		$manage  = AAB_Bookings::cancel_url_for( $booking );
-		$session = AAB_Stripe::create_session(
+		$booking = JATCS_Bookings::get( $post_id );
+		$manage  = JATCS_Bookings::cancel_url_for( $booking );
+		$session = JATCS_Stripe::create_session(
 			$booking,
 			$amount,
 			$currency,
 			// Stripe fills in {CHECKOUT_SESSION_ID}; the braces must stay unencoded.
-			$manage . '&aab_paid=1&session_id={CHECKOUT_SESSION_ID}',
-			add_query_arg( 'aab_do', 'abandon', $manage ),
+			$manage . '&jatcs_paid=1&session_id={CHECKOUT_SESSION_ID}',
+			add_query_arg( 'jatcs_do', 'abandon', $manage ),
 			$expires
 		);
 		if ( is_wp_error( $session ) || empty( $session['url'] ) || empty( $session['id'] ) ) {
 			wp_delete_post( $post_id, true );
-			AAB_Availability::bust_cache();
-			return new WP_Error( 'aab_payments_failed', __( 'Payment couldn’t be started. Try again in a minute.', 'anderson-appointment-booking' ), array( 'status' => 502 ) );
+			JATCS_Availability::bust_cache();
+			return new WP_Error( 'jatcs_payments_failed', __( 'Payment couldn’t be started. Try again in a minute.', 'jat-calendar-sync' ), array( 'status' => 502 ) );
 		}
-		update_post_meta( $post_id, '_aab_session_id', sanitize_text_field( $session['id'] ) );
-		update_post_meta( $post_id, '_aab_checkout_url', esc_url_raw( $session['url'] ) );
-		AAB_Availability::bust_cache();
+		update_post_meta( $post_id, '_jatcs_session_id', sanitize_text_field( $session['id'] ) );
+		update_post_meta( $post_id, '_jatcs_checkout_url', esc_url_raw( $session['url'] ) );
+		JATCS_Availability::bust_cache();
 
-		$booking                 = AAB_Bookings::get( $post_id );
+		$booking                 = JATCS_Bookings::get( $post_id );
 		$booking['checkout_url'] = (string) $session['url'];
 		return $booking;
 	}
@@ -139,10 +139,10 @@ final class AAB_Payments {
 	 * @return array|WP_Error|null Booking, an error, or null if the session isn't paid yet.
 	 */
 	public static function confirm_from_session( array $session ) {
-		$id      = isset( $session['metadata']['aab_booking_id'] ) ? (int) $session['metadata']['aab_booking_id'] : 0;
-		$booking = $id ? AAB_Bookings::get( $id ) : null;
+		$id      = self::booking_id_of( $session );
+		$booking = $id ? JATCS_Bookings::get( $id ) : null;
 		if ( ! $booking || (string) $booking['session'] !== (string) $session['id'] ) {
-			return new WP_Error( 'aab_payment_unknown', 'Session does not match a booking' );
+			return new WP_Error( 'jatcs_payment_unknown', 'Session does not match a booking' );
 		}
 		if ( 'confirmed' === $booking['status'] ) {
 			return $booking;
@@ -152,31 +152,31 @@ final class AAB_Payments {
 		}
 		// Make sure what was paid is what was asked for.
 		if ( (int) $session['amount_total'] !== $booking['amount'] || strtolower( (string) $session['currency'] ) !== $booking['currency'] ) {
-			AAB_Google::log( 'Stripe payment', 'Amount mismatch for booking ' . $id );
-			return new WP_Error( 'aab_payment_mismatch', 'Amount mismatch' );
+			JATCS_Google::log( 'Stripe payment', 'Amount mismatch for booking ' . $id );
+			return new WP_Error( 'jatcs_payment_mismatch', 'Amount mismatch' );
 		}
 
 		if ( ! $booking['paid_at'] ) {
-			update_post_meta( $id, '_aab_paid_at', time() );
-			update_post_meta( $id, '_aab_payment_intent', sanitize_text_field( (string) ( isset( $session['payment_intent'] ) ? $session['payment_intent'] : '' ) ) );
+			update_post_meta( $id, '_jatcs_paid_at', time() );
+			update_post_meta( $id, '_jatcs_payment_intent', sanitize_text_field( (string) ( isset( $session['payment_intent'] ) ? $session['payment_intent'] : '' ) ) );
 			if ( 'cancelled' === $booking['status'] || 'expired' === $booking['status'] ) {
 				// Paid after the hold lapsed (rare): refund rather than double-book.
-				update_post_meta( $id, '_aab_status', 'expired' );
-				$refund = AAB_Stripe::refund( (string) $session['payment_intent'], $id );
+				update_post_meta( $id, '_jatcs_status', 'expired' );
+				$refund = JATCS_Stripe::refund( (string) $session['payment_intent'], $id );
 				if ( ! is_wp_error( $refund ) ) {
-					update_post_meta( $id, '_aab_refunded_at', time() );
+					update_post_meta( $id, '_jatcs_refunded_at', time() );
 				}
-				self::email_late_payment( AAB_Bookings::get( $id ), ! is_wp_error( $refund ) );
-				return new WP_Error( 'aab_payment_late', 'Paid after the hold expired; refunded' );
+				self::email_late_payment( JATCS_Bookings::get( $id ), ! is_wp_error( $refund ) );
+				return new WP_Error( 'jatcs_payment_late', 'Paid after the hold expired; refunded' );
 			}
 		}
 
-		$confirmed = AAB_Bookings::finalize( $id );
-		if ( is_wp_error( $confirmed ) && 'aab_busy' !== $confirmed->get_error_code() ) {
+		$confirmed = JATCS_Bookings::finalize( $id );
+		if ( is_wp_error( $confirmed ) && 'jatcs_busy' !== $confirmed->get_error_code() ) {
 			// Paid, but Google is unreachable: the slot stays held and the hourly task retries.
-			if ( ! get_post_meta( $id, '_aab_owner_alerted', true ) ) {
-				update_post_meta( $id, '_aab_owner_alerted', time() );
-				self::email_owner_retry( AAB_Bookings::get( $id ) );
+			if ( ! get_post_meta( $id, '_jatcs_owner_alerted', true ) ) {
+				update_post_meta( $id, '_jatcs_owner_alerted', time() );
+				self::email_owner_retry( JATCS_Bookings::get( $id ) );
 			}
 		}
 		return $confirmed;
@@ -189,11 +189,11 @@ final class AAB_Payments {
 	 * @return array|WP_Error|null
 	 */
 	public static function check( $id ) {
-		$booking = AAB_Bookings::get( $id );
+		$booking = JATCS_Bookings::get( $id );
 		if ( ! $booking || '' === $booking['session'] ) {
 			return null;
 		}
-		$session = AAB_Stripe::get_session( $booking['session'] );
+		$session = JATCS_Stripe::get_session( $booking['session'] );
 		if ( is_wp_error( $session ) ) {
 			return $session;
 		}
@@ -207,16 +207,16 @@ final class AAB_Payments {
 	 * @param string $status 'expired' or 'cancelled'.
 	 */
 	public static function release( $id, $status = 'expired' ) {
-		$booking = AAB_Bookings::get( $id );
+		$booking = JATCS_Bookings::get( $id );
 		if ( ! $booking || 'awaiting_payment' !== $booking['status'] || $booking['paid_at'] ) {
 			return;
 		}
 		if ( '' !== $booking['session'] ) {
-			AAB_Stripe::expire_session( $booking['session'] ); // Best effort; an already-expired session is fine.
+			JATCS_Stripe::expire_session( $booking['session'] ); // Best effort; an already-expired session is fine.
 		}
-		update_post_meta( $id, '_aab_status', 'cancelled' === $status ? 'cancelled' : 'expired' );
-		delete_post_meta( $id, '_aab_hold_until' );
-		AAB_Availability::bust_cache();
+		update_post_meta( $id, '_jatcs_status', 'cancelled' === $status ? 'cancelled' : 'expired' );
+		delete_post_meta( $id, '_jatcs_hold_until' );
+		JATCS_Availability::bust_cache();
 	}
 
 	/**
@@ -233,14 +233,14 @@ final class AAB_Payments {
 		if ( 'visitor' === $by && ! self::visitor_gets_refund( $booking ) ) {
 			return 'not_refunded';
 		}
-		$refund = AAB_Stripe::refund( $booking['payment'], $booking['id'] );
+		$refund = JATCS_Stripe::refund( $booking['payment'], $booking['id'] );
 		if ( is_wp_error( $refund ) ) {
-			update_post_meta( $booking['id'], '_aab_refund_error', sanitize_text_field( $refund->get_error_message() ) );
+			update_post_meta( $booking['id'], '_jatcs_refund_error', sanitize_text_field( $refund->get_error_message() ) );
 			self::email_owner_refund_failed( $booking, $refund->get_error_message() );
 			return 'failed';
 		}
-		update_post_meta( $booking['id'], '_aab_refunded_at', time() );
-		update_post_meta( $booking['id'], '_aab_refund_id', sanitize_text_field( (string) $refund['id'] ) );
+		update_post_meta( $booking['id'], '_jatcs_refunded_at', time() );
+		update_post_meta( $booking['id'], '_jatcs_refund_id', sanitize_text_field( (string) $refund['id'] ) );
 		return 'refunded';
 	}
 
@@ -251,7 +251,7 @@ final class AAB_Payments {
 	 * @return bool
 	 */
 	public static function visitor_gets_refund( array $booking ) {
-		$hours = (int) AAB_Settings::get( 'refund_cutoff' );
+		$hours = (int) JATCS_Settings::get( 'refund_cutoff' );
 		return $booking['start'] - $hours * HOUR_IN_SECONDS > time();
 	}
 
@@ -267,25 +267,25 @@ final class AAB_Payments {
 		);
 		$ids = get_posts(
 			array(
-				'post_type'      => AAB_Bookings::POST_TYPE,
+				'post_type'      => JATCS_Bookings::POST_TYPE,
 				'post_status'    => 'publish',
 				'posts_per_page' => 100,
 				'fields'         => 'ids',
 				'no_found_rows'  => true,
-				'meta_key'       => '_aab_status', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'       => '_jatcs_status', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'     => 'awaiting_payment', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);
 		foreach ( $ids as $id ) {
-			$b = AAB_Bookings::get( $id );
+			$b = JATCS_Bookings::get( $id );
 			if ( $b['paid_at'] ) {
 				// Paid but Google was down: try again.
-				if ( ! is_wp_error( AAB_Bookings::finalize( $id ) ) ) {
+				if ( ! is_wp_error( JATCS_Bookings::finalize( $id ) ) ) {
 					++$out['confirmed'];
 				}
 				continue;
 			}
-			if ( ! AAB_Stripe::enabled() ) {
+			if ( ! JATCS_Stripe::enabled() ) {
 				if ( $b['hold_until'] < time() ) {
 					self::release( $id );
 					++$out['expired'];
@@ -304,6 +304,21 @@ final class AAB_Payments {
 	}
 
 	/**
+	 * The booking a Checkout Session belongs to (sessions started under the plugin's earlier name used aab_booking_id).
+	 *
+	 * @param array $session Session.
+	 * @return int
+	 */
+	private static function booking_id_of( array $session ) {
+		foreach ( array( 'jatcs_booking_id', 'aab_booking_id' ) as $key ) {
+			if ( ! empty( $session['metadata'][ $key ] ) ) {
+				return (int) $session['metadata'][ $key ];
+			}
+		}
+		return 0;
+	}
+
+	/**
 	 * Handle a Stripe webhook (already signature-checked).
 	 *
 	 * @param array $event Event.
@@ -312,7 +327,7 @@ final class AAB_Payments {
 	public static function handle_event( array $event ) {
 		$type    = isset( $event['type'] ) ? (string) $event['type'] : '';
 		$session = isset( $event['data']['object'] ) && is_array( $event['data']['object'] ) ? $event['data']['object'] : array();
-		if ( empty( $session['metadata']['aab_booking_id'] ) ) {
+		if ( ! self::booking_id_of( $session ) ) {
 			return 'ignored';
 		}
 		switch ( $type ) {
@@ -322,7 +337,7 @@ final class AAB_Payments {
 				return is_array( $result ) ? 'confirmed' : ( null === $result ? 'pending' : 'error' );
 			case 'checkout.session.expired':
 			case 'checkout.session.async_payment_failed':
-				self::release( (int) $session['metadata']['aab_booking_id'] );
+				self::release( self::booking_id_of( $session ) );
 				return 'released';
 		}
 		return 'ignored';
@@ -334,7 +349,7 @@ final class AAB_Payments {
 	 * @param array $booking Booking.
 	 */
 	private static function email_owner_retry( array $booking ) {
-		$to = AAB_Bookings::notify_email();
+		$to = JATCS_Bookings::notify_email();
 		if ( '' === $to ) {
 			return;
 		}
@@ -342,12 +357,12 @@ final class AAB_Payments {
 		wp_mail(
 			$to,
 			/* translators: %s: site name */
-			sprintf( __( '[%s] Paid booking waiting for Google Calendar', 'anderson-appointment-booking' ), $site ),
+			sprintf( __( '[%s] Paid booking waiting for your calendar', 'jat-calendar-sync' ), $site ),
 			sprintf(
 				/* translators: 1: visitor name, 2: date and time */
-				__( "%1\$s paid for an appointment on %2\$s, but Google Calendar couldn't be reached to add it. The time stays reserved and the plugin retries every hour; the visitor gets their confirmation as soon as it goes through.\n\nIf this keeps happening, check the Google Calendar connection under Appointments → Settings.", 'anderson-appointment-booking' ),
+				__( "%1\$s paid for an appointment on %2\$s, but your calendar couldn't be reached to add it. The time stays reserved and the plugin retries every hour; the visitor gets their confirmation as soon as it goes through.\n\nIf this keeps happening, check the Google Calendar connection under Appointments → Settings.", 'jat-calendar-sync' ),
 				$booking['name'],
-				AAB_Bookings::format_time( $booking['start'] )
+				JATCS_Bookings::format_time( $booking['start'] )
 			)
 		);
 	}
@@ -359,7 +374,7 @@ final class AAB_Payments {
 	 * @param string $error   Stripe error.
 	 */
 	private static function email_owner_refund_failed( array $booking, $error ) {
-		$to = AAB_Bookings::notify_email();
+		$to = JATCS_Bookings::notify_email();
 		if ( '' === $to ) {
 			return;
 		}
@@ -367,13 +382,13 @@ final class AAB_Payments {
 		wp_mail(
 			$to,
 			/* translators: %s: site name */
-			sprintf( __( '[%s] Refund needed', 'anderson-appointment-booking' ), $site ),
+			sprintf( __( '[%s] Refund needed', 'jat-calendar-sync' ), $site ),
 			sprintf(
 				/* translators: 1: visitor name, 2: email, 3: amount, 4: error */
-				__( "The appointment for %1\$s (%2\$s) was cancelled, but the automatic refund of %3\$s failed: %4\$s\n\nPlease refund it in your Stripe dashboard.", 'anderson-appointment-booking' ),
+				__( "The appointment for %1\$s (%2\$s) was cancelled, but the automatic refund of %3\$s failed: %4\$s\n\nPlease refund it in your Stripe dashboard.", 'jat-calendar-sync' ),
 				$booking['name'],
 				$booking['email'],
-				AAB_Stripe::format( $booking['amount'], $booking['currency'] ),
+				JATCS_Stripe::format( $booking['amount'], $booking['currency'] ),
 				$error
 			)
 		);
@@ -390,10 +405,10 @@ final class AAB_Payments {
 		wp_mail(
 			$booking['email'],
 			/* translators: %s: site name */
-			sprintf( __( '[%s] Your payment arrived after the time was released', 'anderson-appointment-booking' ), $site ),
+			sprintf( __( '[%s] Your payment arrived after the time was released', 'jat-calendar-sync' ), $site ),
 			$refunded
-				? __( "Your payment came through after the reserved time had expired, so it wasn't booked and your payment has been refunded. Please book again.", 'anderson-appointment-booking' )
-				: __( "Your payment came through after the reserved time had expired, so it wasn't booked. We'll refund you; reply to this email if you have questions.", 'anderson-appointment-booking' )
+				? __( "Your payment came through after the reserved time had expired, so it wasn't booked and your payment has been refunded. Please book again.", 'jat-calendar-sync' )
+				: __( "Your payment came through after the reserved time had expired, so it wasn't booked. We'll refund you; reply to this email if you have questions.", 'jat-calendar-sync' )
 		);
 		if ( ! $refunded ) {
 			self::email_owner_refund_failed( $booking, 'late payment' );

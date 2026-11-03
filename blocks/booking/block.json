@@ -1,19 +1,19 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "anderson-appointment-booking/booking",
+	"name": "jat-calendar-sync/booking",
 	"version": "1.3.0",
 	"title": "Appointment Booking",
 	"category": "widgets",
 	"icon": "calendar-alt",
-	"description": "Let visitors pick an open time from your Google Calendar and book it.",
+	"description": "Let visitors pick an open time from your calendar (Google, Outlook, iCloud, CalDAV) and book it.",
 	"keywords": [
 		"booking",
 		"appointment",
 		"calendar",
 		"schedule"
 	],
-	"textdomain": "anderson-appointment-booking",
+	"textdomain": "jat-calendar-sync",
 	"attributes": {
 		"heading": {
 			"type": "string",
@@ -71,5 +71,5 @@
 		}
 	},
 	"editorScript": "file:./index.js",
-	"style": "aab-booking"
+	"style": "jatcs-booking"
 }

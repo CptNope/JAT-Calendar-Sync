@@ -1,11 +1,13 @@
-# Anderson Appointment Booking
+# JAT Calendar Sync
 
-[![CI](https://github.com/CptNope/WordPress-Calendar-Sync-Plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/CptNope/WordPress-Calendar-Sync-Plugin/actions/workflows/ci.yml)
+[![CI](https://github.com/CptNope/JAT-Calendar-Sync/actions/workflows/ci.yml/badge.svg)](https://github.com/CptNope/JAT-Calendar-Sync/actions/workflows/ci.yml)
 ![WordPress 6.2+](https://img.shields.io/badge/WordPress-6.2%2B-21759b)
 ![PHP 7.4–8.4](https://img.shields.io/badge/PHP-7.4%E2%80%938.4-777bb4)
-![License: MIT](https://img.shields.io/badge/license-MIT-green)
+![License: GPLv2 or later](https://img.shields.io/badge/license-GPLv2%2B-blue)
 
-Let visitors book appointments with you on your own WordPress site. Open times come live from your Google Calendar (and optionally Outlook), every booking lands in Google Calendar with a Meet link and invite, paid sessions go through Stripe, and the booking calendar looks like it was built for your theme.
+Let visitors book appointments with you on your own WordPress site. Open times come live from **Google Calendar, Outlook / Microsoft 365, iCloud and any CalDAV server, and any iCal feed** (Sling and other shift apps included). Every booking lands in the calendar you choose with a Meet or Teams link and an invite, paid sessions go through Stripe, and the booking calendar looks like it was built for your theme.
+
+*Formerly Anderson Appointment Booking. Existing sites move over automatically: see [Moving from Anderson Appointment Booking](#moving-from-anderson-appointment-booking).*
 
 **Every feature is free. No add-ons, no SaaS in the middle, no build step.**
 
@@ -21,8 +23,10 @@ Let visitors book appointments with you on your own WordPress site. Open times c
   - [How open times are calculated](#how-open-times-are-calculated)
   - [Rescheduling](#rescheduling)
   - [Hourly background tasks](#hourly-background-tasks)
+- [Calendar services](#calendar-services)
 - [Requirements](#requirements)
 - [Setup](#setup)
+- [Moving from Anderson Appointment Booking](#moving-from-anderson-appointment-booking)
 - [Appointment types](#appointment-types)
 - [Settings reference](#settings-reference)
 - [Styling](#styling)
@@ -39,29 +43,31 @@ Built for solo professionals and small businesses who live in Google Calendar: c
 
 | | This plugin | Typical WordPress booking plugins (Oct 2026) |
 | --- | --- | --- |
-| Two-way Google Calendar | Free: live free/busy, events created, moves and deletions in Google mirrored back | Often paid: Amelia Pro, Bookly add-on, LatePoint paid tiers, Booknetic add-on |
+| Two-way calendar sync | Free for Google, Outlook / Microsoft 365, iCloud and any CalDAV server: live busy times, events created, moves and deletions mirrored back | Often paid and usually Google-only: Amelia Pro, Bookly add-on, LatePoint paid tiers, Booknetic add-on |
+| iCal feeds and shift schedules | Free: any ICS feed blocks times; booking can follow a posted work schedule (Sling, When I Work, Deputy) with free time around shifts | Rare |
 | Stripe payments | Free, hosted Checkout, automatic refunds | Often an add-on or higher tier |
 | Looks like your site | Reads your theme's colors, buttons, fonts and corners automatically | Plugin-styled widget; custom CSS expected |
 | Double-booking protection | Atomic lock and live re-check at the moment of booking | Rarely documented |
-| Outlook / Microsoft 365 conflicts | Free, recurring meetings included | Varies; often paid |
-| Where your data lives | Your WordPress database and your Google account | Same for plugins; SaaS tools (Calendly, Cal.com) keep it on their servers |
+| Outlook / Microsoft 365 | Free: conflicts or the booking calendar, Teams links, recurring meetings included | Varies; often paid |
+| Where your data lives | Your WordPress database and your own calendar account | Same for plugins; SaaS tools (Calendly, Cal.com) keep it on their servers |
 | Weight on the page | About 14 KB of JavaScript and CSS (gzipped), no libraries, loaded only where the calendar appears | Varies; many ship their own frameworks |
 
 ## Features
 
 | Area | What you get |
 | --- | --- |
-| **Availability** | Live free/busy from Google Calendar (several calendars), optional Outlook / Microsoft 365 calendars, weekly hours with breaks, days off, buffers before and after, minimum notice, booking window, daily cap |
+| **Availability** | Live busy times from any mix of Google, Outlook / Microsoft 365, CalDAV (iCloud, Fastmail, Nextcloud…) calendars and iCal feeds; weekly hours with breaks, days off, buffers before and after, minimum notice, booking window, daily cap |
+| **Shift-work mode** | Booking opens only as far as your posted work schedule (any calendar or feed), optionally through that Sunday, with free time kept before and after every shift; new weeks open automatically |
 | **Appointment types** | Each with its own length, start-time spacing, hours, location, Google Meet setting, price and booking questions; visitors pick a type, then a time |
 | **Booking questions** | Short answer, long answer, dropdown, checkbox; required or optional; answers go to the Google event, emails, booking record and CSV |
 | **Payments** | Stripe Checkout per type, the slot held while paying, confirmation after payment only, automatic refunds by policy |
 | **Self-service** | One link in every email to reschedule (same calendar, own slot treated as free) or cancel, with a cut-off and a reschedule limit |
-| **Google Calendar** | Events with visitor details, Meet links, guest invites; moves and deletions made in Google Calendar flow back within the hour |
-| **Emails** | Confirmation (with a calendar file when Google isn't inviting), reminder, moved, cancelled with refund details, owner notices |
+| **Booking calendar** | Google (Meet links, guest invites), Outlook / Microsoft 365 (Teams links, invites) or CalDAV (calendar file in the confirmation email); moves and deletions made in the calendar flow back within the hour |
+| **Emails** | Confirmation (with a calendar file when the calendar service isn't inviting), reminder, moved, cancelled with refund details, owner notices |
 | **Design** | Theme matching for block and classic themes, live preview inside your theme, per-block and shortcode overrides, CSS variables, container-query layout, keyboard navigation |
 | **Reliability** | Atomic slot lock, fails closed when a calendar can't be read, retries with backoff, idempotent Google and Stripe calls, Site Health checks, owner alerts |
-| **Admin** | Bookings list with type, payment and status; CSV export; problem log; "Check Google Calendar now" |
-| **Privacy** | Narrow OAuth scopes, secrets encrypted at rest, personal-data export and erase, automatic record clean-up |
+| **Admin** | Bookings list with type, payment and status; CSV export; problem log; "Check calendars now" |
+| **Privacy** | Narrow OAuth scopes, tokens, app passwords and feed links encrypted at rest, personal-data export and erase, automatic record clean-up |
 
 ## How it works
 
@@ -75,7 +81,7 @@ flowchart LR
     end
 
     subgraph WP["Your WordPress site"]
-        REST["REST API<br/>aab/v1"]
+        REST["REST API<br/>jatcs/v1"]
         AV["Availability"]
         BK["Bookings"]
         PAY["Payments"]
@@ -83,11 +89,15 @@ flowchart LR
         DB[("Database")]
     end
 
-    subgraph Ext["External services"]
+    subgraph Ext["External services (yours)"]
         G["Google Calendar"]
-        MS["Microsoft Graph"]
+        MS["Outlook / Microsoft 365"]
+        DAV["CalDAV<br/>iCloud, Fastmail, Nextcloud…"]
+        ICS["iCal feeds<br/>Sling, shared calendars…"]
         S["Stripe"]
     end
+
+    CAL["Calendar layer<br/>JATCS_Calendars"]
 
     W --> REST
     M --> REST
@@ -97,9 +107,13 @@ flowchart LR
     BK --> DB
     CRON --> BK
     CRON --> PAY
-    AV -->|free/busy| G
-    AV -->|busy times| MS
-    BK -->|create, move, delete| G
+    AV --> CAL
+    BK -->|create, move, delete| CAL
+    CRON -->|follow moves and deletions| CAL
+    CAL --> G
+    CAL --> MS
+    CAL --> DAV
+    CAL -->|read only| ICS
     PAY -->|checkout, refunds| S
     S -.->|webhook| REST
 ```
@@ -109,9 +123,10 @@ flowchart LR
 | Booking widget | Type picker, month calendar, times, form; theme-matched; about 14 KB gzipped |
 | Manage page | Linked from every email: reschedule, cancel, finish or release a payment |
 | Availability | Builds candidate times from hours and types, removes busy times, buffers, caps |
-| Bookings | Atomic slot lock, live re-check, records, Google events, emails |
+| Bookings | Atomic slot lock, live re-check, records, calendar events, emails |
+| Calendar layer | One interface to Google, Outlook, CalDAV and iCal feeds: busy times per calendar, create/move/delete, reading back changes, last posted shift |
 | Payments | Holds the slot, Stripe Checkout, confirmation, refunds |
-| Hourly tasks | Google sync, reminders, payment sweep, retention |
+| Hourly tasks | Calendar sync, reminders, payment sweep, retention |
 
 ### Booking a free appointment
 
@@ -280,29 +295,60 @@ flowchart LR
     S4 --> S4a["Delete records older than N days<br/>(if enabled)"]
 ```
 
+
+## Calendar services
+
+| Service | Blocks times | Receives bookings | Video link | Guest invite | Follows moves and deletions | Connect with |
+| --- | --- | --- | --- | --- | --- | --- |
+| Google Calendar | Yes, several calendars | Yes | Google Meet | Sent by Google | Yes, hourly | Your own Google OAuth client |
+| Outlook / Microsoft 365 | Yes, several calendars | Yes | Microsoft Teams (work and school accounts) | Sent by Outlook | Yes, hourly | Your own Microsoft Entra app |
+| iCloud | Yes | Yes | None | Calendar file in the confirmation email | Yes, hourly | Apple ID + app-specific password |
+| Fastmail, Nextcloud, Zoho, Yahoo, mailbox.org, other CalDAV | Yes | Yes | None | Calendar file in the confirmation email | Yes, hourly | User name + app password |
+| iCal (ICS) feeds | Yes | No (read only) | — | — | — | A subscription link |
+
+You can mix services: for example bookings in Google Calendar, an Outlook work calendar and an iCloud family calendar blocking times, and a Sling feed setting your work schedule. Every calendar that blocks times must be readable for times to be offered.
+
+```mermaid
+flowchart LR
+    subgraph Block["Calendars that block times"]
+        G1["Google calendars"]
+        O1["Outlook calendars"]
+        D1["CalDAV calendars"]
+        F1["iCal feeds"]
+    end
+    Block --> B["Busy times<br/>(fails closed if any can't be read)"]
+    SCH["Work schedule calendar<br/>(any of the above)"] -->|last posted shift| WIN["Booking window"]
+    SCH -->|shifts + free time around them| B
+    B --> SL["Open times"]
+    WIN --> SL
+    SL --> BK["Booking"]
+    BK --> TGT["Booking calendar<br/>Google, Outlook or CalDAV"]
+```
+
 ## Requirements
 
 | | Minimum | Notes |
 | --- | --- | --- |
 | WordPress | 6.2 | |
 | PHP | 7.4 | Tested in CI on 7.4 to 8.4; OpenSSL recommended (encrypts stored secrets) |
-| Google account | Any | Personal Gmail or Google Workspace |
+| A calendar | One of these | Google (personal or Workspace), Outlook / Microsoft 365 (work, school or personal), or a CalDAV account (iCloud, Fastmail, Nextcloud, Zoho, Yahoo, mailbox.org…) for bookings; iCal feeds can be added to block times |
 | Stripe account | Optional | Only for paid appointment types |
-| Microsoft account | Optional | Work, school or personal, only for Outlook conflict calendars |
 | Site timezone | A city | Fixed UTC offsets ignore daylight saving time; Site Health warns |
 
 ## Setup
 
 Install the plugin (upload the zip under **Plugins → Add New**) and open **Appointments → Settings**. Each connection has step-by-step instructions on that screen with the exact URLs to copy.
 
-### 1. Google Calendar (required)
+Connect at least one calendar that can receive bookings (Google, Outlook or CalDAV). Add as many others as you like to block times.
+
+### 1. Google Calendar
 
 | Step | Where | What to do |
 | --- | --- | --- |
 | 1 | [Google Cloud Console](https://console.cloud.google.com/apis/library/calendar-json.googleapis.com) | Create or pick a project, enable the **Google Calendar API** |
 | 2 | Google Auth Platform | Choose **External**, fill in app name and email |
 | 3 | Audience | **Publish app** so it's *In production* (apps left in *Testing* lose access after 7 days) |
-| 4 | Clients | Create a **Web application** client with redirect URI `https://your-site/wp-admin/admin-post.php?action=aab_oauth` |
+| 4 | Clients | Create a **Web application** client with redirect URI `https://your-site/wp-admin/admin-post.php?action=jatcs_oauth` |
 | 5 | Appointments → Settings | Paste client ID and secret, save, **Connect Google Calendar** |
 | 6 | Appointments → Settings | Choose the booking calendar and conflict calendars, set your hours |
 
@@ -315,7 +361,7 @@ Open **Appointments → Appointment types** and add what visitors can book (see 
 | Step | Where | What to do |
 | --- | --- | --- |
 | 1 | Stripe → Developers → API keys | Copy the **Secret key** (start with `sk_test_…`) |
-| 2 | Stripe → Developers → Webhooks | Add endpoint `https://your-site/wp-json/aab/v1/stripe` with events `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` |
+| 2 | Stripe → Developers → Webhooks | Add endpoint `https://your-site/wp-json/jatcs/v1/stripe` with events `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` |
 | 3 | Same page | Copy the **Signing secret** (`whsec_…`) |
 | 4 | Appointments → Settings → Payments | Paste both, set currency and refund cut-off |
 | 5 | Appointment types | Give a type a price |
@@ -327,32 +373,81 @@ Without the webhook, paid bookings still confirm when the visitor returns from S
 | Step | Where | What to do |
 | --- | --- | --- |
 | 1 | [Microsoft Entra](https://entra.microsoft.com/) → App registrations | **New registration**, accounts in any organizational directory **and** personal Microsoft accounts |
-| 2 | Redirect URI | Platform **Web**: `https://your-site/wp-admin/admin-post.php?action=aab_ms_oauth` |
-| 3 | API permissions | Microsoft Graph, delegated: `Calendars.Read`, `User.Read`, `offline_access` |
+| 2 | Redirect URI | Platform **Web**: `https://your-site/wp-admin/admin-post.php?action=jatcs_ms_oauth` |
+| 3 | API permissions | Microsoft Graph, delegated: `Calendars.Read` (or `Calendars.ReadWrite` to add bookings), `User.Read`, `offline_access` |
 | 4 | Certificates & secrets | New client secret; note its expiry (24 months at most) |
-| 5 | Appointments → Settings → Outlook | Paste the Application (client) ID and secret value, **Connect Outlook**, tick calendars |
+| 5 | Appointments → Settings → Outlook | Paste the Application (client) ID and secret value, then **Connect Outlook to block times** (read only) or **Connect and allow adding bookings** (read and write); tick calendars that block times |
+| 6 | Where bookings go | Optional: choose an Outlook calendar as the booking calendar (Teams links on work and school accounts) |
 
-### 5. Put the calendar on a page
+Read-only connections (including ones made before 2.0) show **Allow adding bookings to Outlook** to upgrade. Some work tenants need an administrator to approve write access.
+
+### 5. iCloud, Fastmail, Nextcloud and other CalDAV calendars (optional)
+
+| Service | Server address (filled in for you) | Password to use |
+| --- | --- | --- |
+| iCloud | `https://caldav.icloud.com/` | App-specific password from [account.apple.com](https://account.apple.com/) → Sign-In and Security |
+| Fastmail | `https://caldav.fastmail.com/dav/` | App password with CalDAV access |
+| Nextcloud | `https://your-server/remote.php/dav` | App password (Personal settings → Security) |
+| Zoho Calendar | `https://calendar.zoho.com/caldav/` | App-specific password if two-factor is on |
+| Yahoo Calendar | `https://caldav.calendar.yahoo.com/` | App password |
+| mailbox.org | `https://dav.mailbox.org/caldav/` | Account or app password |
+| Other (Radicale, Baïkal, SOGo, Synology…) | Your server's CalDAV address | As configured |
+
+Under **Appointments → Settings → iCloud, Fastmail, Nextcloud and other CalDAV calendars**, pick the service, enter the user name and app password, and **Connect**. Tick the calendars that block times; writable ones can be chosen under **Where bookings go**. The plugin finds calendars itself (well-known discovery, principal, calendar home), expands recurring events, and never sends your password to a different site on redirects.
+
+### 6. iCal feeds (optional)
+
+Paste any subscription link (`https://` or `webcal://`) under **iCal feeds**: Sling, When I Work, Deputy and 7shifts schedules, iCloud shared calendars, Outlook published calendars, Google's secret iCal address, Proton, Teamup, Airbnb. Feeds are read-only, checked every 10 minutes (conditional requests), and fetched only from public addresses. If a feed can't be reached, its last copy is used for up to 6 hours, then no times are offered until it can be read again.
+
+### 7. Shift-work mode (optional)
+
+Under **Where bookings go → Open booking only as far as**, choose the calendar or feed that holds your work schedule.
+
+| Setting | Effect |
+| --- | --- |
+| Open booking only as far as | Booking closes after your last posted shift; nothing posted means nothing bookable |
+| …and the rest of that week | Extends to the Sunday of the last posted week |
+| Keep free before and after each shift | Minutes kept clear around every shift (counts toward your usual buffers, doesn't stack) |
+
+### 8. Put the calendar on a page
 
 | Method | Example |
 | --- | --- |
 | Block | **Appointment Booking** block; sidebar picks one type or all, plus style overrides |
-| Shortcode, all types | `[anderson_booking heading="Book a call"]` |
-| Shortcode, one type | `[anderson_booking type="consult"]` |
+| Shortcode, all types | `[jat_booking heading="Book a call"]` |
+| Shortcode, one type | `[jat_booking type="consult"]` |
 
 ### Keeping secrets out of the database
 
 Any of these in `wp-config.php` takes precedence over the settings screen:
 
 ```php
-define( 'AAB_GOOGLE_CLIENT_ID', '…apps.googleusercontent.com' );
-define( 'AAB_GOOGLE_CLIENT_SECRET', '…' );
-define( 'AAB_STRIPE_SECRET_KEY', 'sk_live_…' );
-define( 'AAB_STRIPE_WEBHOOK_SECRET', 'whsec_…' );
-define( 'AAB_MS_CLIENT_ID', '…' );
-define( 'AAB_MS_CLIENT_SECRET', '…' );
-define( 'AAB_ENCRYPTION_KEY', 'a long random string' ); // optional: key for secrets stored in the DB
+define( 'JATCS_GOOGLE_CLIENT_ID', '…apps.googleusercontent.com' );
+define( 'JATCS_GOOGLE_CLIENT_SECRET', '…' );
+define( 'JATCS_STRIPE_SECRET_KEY', 'sk_live_…' );
+define( 'JATCS_STRIPE_WEBHOOK_SECRET', 'whsec_…' );
+define( 'JATCS_MS_CLIENT_ID', '…' );
+define( 'JATCS_MS_CLIENT_SECRET', '…' );
+define( 'JATCS_ENCRYPTION_KEY', 'a long random string' ); // optional: key for secrets stored in the DB
 ```
+
+
+## Moving from Anderson Appointment Booking
+
+Install and activate JAT Calendar Sync. On activation (or the first page load) it takes over automatically:
+
+| What | What happens |
+| --- | --- |
+| Settings and appointment types | Moved to the new names (`jatcs_*`) |
+| Bookings and their details | Kept, with their calendar events |
+| Google and Outlook connections | Kept: encrypted tokens written by the old plugin are still readable, and the redirect addresses already registered with Google and Microsoft keep working |
+| Booking blocks and shortcodes | Rewritten to the new names; the old block name and `[anderson_booking]` keep working too |
+| Links in emails already sent | `?aab_manage=…` links still open the manage page |
+| Stripe | The old webhook address `/wp-json/aab/v1/stripe` still works, and checkouts started before the switch still confirm |
+| `wp-config.php` constants | `AAB_*` constants are read as their `JATCS_*` equivalents |
+| The old plugin | Deactivated, and its stored data removed, so deleting it afterwards can't disconnect anything |
+
+A copy of the old settings (without secrets) is kept in the `jatcs_legacy_backup` option.
 
 ## Appointment types
 
@@ -446,7 +541,7 @@ flowchart LR
     B --> C["Appearance settings"]
     C --> D["Block / shortcode overrides"]
     D --> E["Custom CSS"]
-    E --> F["Your theme's .aab rules"]
+    E --> F["Your theme's .jatcs rules"]
     F --> G(["What visitors see"])
 ```
 
@@ -475,21 +570,21 @@ flowchart LR
 
 ### CSS variables
 
-Declared at zero specificity, so a plain `.aab { … }` rule in your theme wins:
+Declared at zero specificity, so a plain `.jatcs { … }` rule in your theme wins:
 
 | Variable | Controls |
 | --- | --- |
-| `--aab-accent` / `--aab-on-accent` | Selected day, bars, links, plugin-style button / text on it |
-| `--aab-radius` | Outer corners (controls derive smaller radii) |
-| `--aab-space` | Spacing multiplier (0.75 to 1.3) |
-| `--aab-surface` | Calendar box background |
-| `--aab-text`, `--aab-muted` | Text and secondary text |
-| `--aab-line`, `--aab-soft`, `--aab-tint` | Borders, open-day background, hover tint |
-| `--aab-error` | Errors |
-| `--aab-heading-font` | Month and panel titles |
-| `--aab-max-width` | Widget width (none when the block is wide or full) |
+| `--jatcs-accent` / `--jatcs-on-accent` | Selected day, bars, links, plugin-style button / text on it |
+| `--jatcs-radius` | Outer corners (controls derive smaller radii) |
+| `--jatcs-space` | Spacing multiplier (0.75 to 1.3) |
+| `--jatcs-surface` | Calendar box background |
+| `--jatcs-text`, `--jatcs-muted` | Text and secondary text |
+| `--jatcs-line`, `--jatcs-soft`, `--jatcs-tint` | Borders, open-day background, hover tint |
+| `--jatcs-error` | Errors |
+| `--jatcs-heading-font` | Month and panel titles |
+| `--jatcs-max-width` | Widget width (none when the block is wide or full) |
 
-Parts: `.aab__types`, `.aab__type`, `.aab__type-price`, `.aab__body`, `.aab__cal`, `.aab__month-label`, `.aab__nav`, `.aab__day` (`.is-open`, `.is-selected`), `.aab__bar`, `.aab__panel`, `.aab__time`, `.aab__form`, `.aab__field`, `.aab__input`, `.aab__submit`, `.aab__done`, `.aab__tz`. Calendar buttons are protected from theme `button` rules with `.aab:not(#aab-x) …`; use the same prefix, or the variables, to restyle them.
+Parts: `.jatcs__types`, `.jatcs__type`, `.jatcs__type-price`, `.jatcs__body`, `.jatcs__cal`, `.jatcs__month-label`, `.jatcs__nav`, `.jatcs__day` (`.is-open`, `.is-selected`), `.jatcs__bar`, `.jatcs__panel`, `.jatcs__time`, `.jatcs__form`, `.jatcs__field`, `.jatcs__input`, `.jatcs__submit`, `.jatcs__done`, `.jatcs__tz`. Calendar buttons are protected from theme `button` rules with `.jatcs:not(#jatcs-x) …`; use the same prefix, or the variables, to restyle them.
 
 ## Emails
 
@@ -508,7 +603,7 @@ Google Calendar also emails invited guests its own invites and updates.
 
 ## Developers
 
-### REST API (`/wp-json/aab/v1`)
+### REST API (`/wp-json/jatcs/v1`)
 
 | Method and route | Purpose | Auth |
 | --- | --- | --- |
@@ -522,34 +617,34 @@ Google Calendar also emails invited guests its own invites and updates.
 
 | Hook | Type | Arguments |
 | --- | --- | --- |
-| `aab_booking_confirmed` | action | `$booking` |
-| `aab_booking_rescheduled` | action | `$booking`, `$old_start` |
-| `aab_booking_cancelled` | action | `$booking`, `$by` (`visitor`, `admin`, `calendar`) |
-| `aab_client_ip` | filter | `$ip`, `$remote_addr` |
-| `aab_enqueue_styles` | filter | `$load` (return `false` to style everything yourself) |
-| `aab_style_vars` | filter | `$vars`, `$overrides` |
-| `aab_theme_tokens` | filter | `$tokens` |
+| `jatcs_booking_confirmed` | action | `$booking` |
+| `jatcs_booking_rescheduled` | action | `$booking`, `$old_start` |
+| `jatcs_booking_cancelled` | action | `$booking`, `$by` (`visitor`, `admin`, `calendar`) |
+| `jatcs_client_ip` | filter | `$ip`, `$remote_addr` |
+| `jatcs_enqueue_styles` | filter | `$load` (return `false` to style everything yourself) |
+| `jatcs_style_vars` | filter | `$vars`, `$overrides` |
+| `jatcs_theme_tokens` | filter | `$tokens` |
 
 ### File map
 
 | Piece | File |
 | --- | --- |
-| Bootstrap | `anderson-appointment-booking.php` |
-| Google OAuth and Calendar v3 | `includes/class-aab-google.php` |
-| Microsoft Graph (Outlook) | `includes/class-aab-microsoft.php` |
-| Stripe client | `includes/class-aab-stripe.php` |
-| Paid booking flow | `includes/class-aab-payments.php` |
-| Slot engine | `includes/class-aab-availability.php` |
-| Bookings, locks, emails, calendar files | `includes/class-aab-bookings.php` |
-| Appointment types and answer validation | `includes/class-aab-types.php` |
-| REST API | `includes/class-aab-rest.php` |
-| Shortcode, block, manage page, preview | `includes/class-aab-frontend.php` |
-| Theme detection and style resolution | `includes/class-aab-style.php` |
-| Hourly tasks and Site Health | `includes/class-aab-maintenance.php` |
-| Admin screens | `includes/class-aab-admin.php`, `includes/class-aab-admin-types.php`, `includes/views/` |
+| Bootstrap | `jat-calendar-sync.php` |
+| Google OAuth and Calendar v3 | `includes/class-jatcs-google.php` |
+| Microsoft Graph (Outlook) | `includes/class-jatcs-microsoft.php` |
+| Stripe client | `includes/class-jatcs-stripe.php` |
+| Paid booking flow | `includes/class-jatcs-payments.php` |
+| Slot engine | `includes/class-jatcs-availability.php` |
+| Bookings, locks, emails, calendar files | `includes/class-jatcs-bookings.php` |
+| Appointment types and answer validation | `includes/class-jatcs-types.php` |
+| REST API | `includes/class-jatcs-rest.php` |
+| Shortcode, block, manage page, preview | `includes/class-jatcs-frontend.php` |
+| Theme detection and style resolution | `includes/class-jatcs-style.php` |
+| Hourly tasks and Site Health | `includes/class-jatcs-maintenance.php` |
+| Admin screens | `includes/class-jatcs-admin.php`, `includes/class-jatcs-admin-types.php`, `includes/views/` |
 | Widget | `assets/js/booking.js`, `assets/css/booking.css` |
 | Block | `blocks/booking/` |
-| Translations template | `languages/anderson-appointment-booking.pot` |
+| Translations template | `languages/jat-calendar-sync.pot` |
 
 ### Development
 
@@ -559,7 +654,7 @@ No build step: edit and reload. CI (GitHub Actions) checks PHP syntax on 7.4 to 
 
 | Concern | How it's handled |
 | --- | --- |
-| Google, Stripe and Microsoft secrets | AES-256-GCM encrypted at rest (key from WordPress salts or `AAB_ENCRYPTION_KEY`), or kept in `wp-config.php` |
+| Google, Stripe and Microsoft secrets | AES-256-GCM encrypted at rest (key from WordPress salts or `JATCS_ENCRYPTION_KEY`), or kept in `wp-config.php` |
 | Google scopes | `calendar.events`, `calendar.freebusy`, `calendar.calendarlist.readonly` only |
 | Microsoft scopes | `Calendars.Read`, `User.Read`, `offline_access` (read-only) |
 | Event details from conflict calendars | Never read: free/busy (Google) and start, end, show-as (Outlook) only |
@@ -610,7 +705,7 @@ No build step: edit and reload. CI (GitHub Actions) checks PHP syntax on 7.4 to 
 
 ## License
 
-MIT © Jeremy Anderson
+GPLv2 or later © Jeremy Anderson. See [LICENSE](LICENSE).
 
 ---
 

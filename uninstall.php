@@ -1,66 +1,81 @@
 <?php
 /**
- * Uninstall: always revoke Google access; delete data only if the owner opted in.
+ * Uninstall: always revoke Google access and forget calendar sign-ins; delete settings and
+ * booking records only if the owner opted in.
  *
- * @package AndersonAppointmentBooking
+ * @package JATCalendarSync
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
 // Another copy of this plugin (e.g. a GitHub download in a differently named folder)
 // is still active and uses the same settings and Google grant: leave everything alone.
-foreach ( (array) get_option( 'active_plugins', array() ) as $aab_active ) {
-	if ( 'anderson-appointment-booking.php' === basename( (string) $aab_active ) && WP_UNINSTALL_PLUGIN !== $aab_active ) {
+foreach ( (array) get_option( 'active_plugins', array() ) as $jatcs_active ) {
+	if ( 'jat-calendar-sync.php' === basename( (string) $jatcs_active ) && WP_UNINSTALL_PLUGIN !== $jatcs_active ) {
 		return;
 	}
 }
 
-$aab_settings = get_option( 'aab_settings', array() );
+$jatcs_settings = get_option( 'jatcs_settings', array() );
 
 // Revoke the Google grant so no token outlives the plugin.
-require_once __DIR__ . '/includes/class-aab-crypto.php';
-$aab_google = get_option( 'aab_google', array() );
-if ( ! empty( $aab_google['refresh_token'] ) ) {
-	$aab_token = AAB_Crypto::decrypt( $aab_google['refresh_token'] );
-	if ( '' !== $aab_token ) {
+require_once __DIR__ . '/includes/class-jatcs-crypto.php';
+$jatcs_google = get_option( 'jatcs_google', array() );
+if ( ! empty( $jatcs_google['refresh_token'] ) ) {
+	$jatcs_token = JATCS_Crypto::decrypt( $jatcs_google['refresh_token'] );
+	if ( '' !== $jatcs_token ) {
 		wp_remote_post(
 			'https://oauth2.googleapis.com/revoke',
 			array(
 				'timeout' => 10,
-				'body'    => array( 'token' => $aab_token ),
+				'body'    => array( 'token' => $jatcs_token ),
 			)
 		);
 	}
 }
-delete_option( 'aab_google' );
-delete_option( 'aab_google_error' );
-delete_option( 'aab_busy_generation' );
-delete_option( 'aab_log' );
-delete_option( 'aab_ms' );
-delete_option( 'aab_ms_error' );
-delete_transient( 'aab_ms_access' );
-delete_transient( 'aab_ms_calendars' );
-delete_option( 'aab_last_run' );
-delete_option( 'aab_installed' );
-wp_clear_scheduled_hook( 'aab_hourly' );
-delete_transient( 'aab_access_token' );
-delete_transient( 'aab_calendars' );
+delete_option( 'jatcs_google' );
+delete_option( 'jatcs_google_error' );
+delete_option( 'jatcs_busy_generation' );
+delete_option( 'jatcs_log' );
+delete_option( 'jatcs_ms' );
+delete_option( 'jatcs_ms_error' );
+delete_transient( 'jatcs_ms_access' );
+delete_transient( 'jatcs_ms_calendars' );
+delete_option( 'jatcs_last_run' );
+delete_option( 'jatcs_installed' );
+wp_clear_scheduled_hook( 'jatcs_hourly' );
+delete_transient( 'jatcs_access_token' );
+delete_transient( 'jatcs_calendars' );
+// CalDAV sign-in and iCal feed links are credentials too: always removed.
+delete_option( 'jatcs_caldav' );
+delete_transient( 'jatcs_caldav_calendars' );
+foreach ( array_keys( (array) get_option( 'jatcs_feeds', array() ) ) as $jatcs_feed ) {
+	delete_option( 'jatcs_feed_cache_' . $jatcs_feed );
+}
+delete_option( 'jatcs_feeds' );
+delete_option( 'jatcs_feeds_version' );
+delete_option( 'jatcs_legacy_google_redirect' );
+delete_option( 'jatcs_legacy_ms_redirect' );
+delete_option( 'jatcs_migrated_notice' );
+delete_option( 'jatcs_migrating' );
 
-if ( empty( $aab_settings['delete_data'] ) ) {
+if ( empty( $jatcs_settings['delete_data'] ) ) {
 	return;
 }
 
-delete_option( 'aab_settings' );
-delete_option( 'aab_types' );
+delete_option( 'jatcs_settings' );
+delete_option( 'jatcs_types' );
+delete_option( 'jatcs_migrated' );
+delete_option( 'jatcs_legacy_backup' );
 
-$aab_ids = get_posts(
+$jatcs_ids = get_posts(
 	array(
-		'post_type'      => 'aab_booking',
+		'post_type'      => 'jatcs_booking',
 		'post_status'    => 'any',
 		'posts_per_page' => -1,
 		'fields'         => 'ids',
 	)
 );
-foreach ( $aab_ids as $aab_id ) {
-	wp_delete_post( $aab_id, true );
+foreach ( $jatcs_ids as $jatcs_id ) {
+	wp_delete_post( $jatcs_id, true );
 }

@@ -1,8 +1,8 @@
-/* Anderson Appointment Booking – settings screen. */
+/* JAT Calendar Sync – settings screen. */
 ( function ( $ ) {
 	'use strict';
 
-	var data = window.aabAdmin || {};
+	var data = window.jatcsAdmin || {};
 	var tokens = data.tokens || {};
 
 	function luminance( hex ) {
@@ -28,52 +28,52 @@
 	}
 
 	function val( name ) {
-		var field = $( '[name="aab[' + name + ']"]' );
+		var field = $( '[name="jatcs[' + name + ']"]' );
 		if ( field.is( ':radio' ) ) {
 			return field.filter( ':checked' ).val() || '';
 		}
 		return field.val() || '';
 	}
 
-	// Mirrors AAB_Style::resolve() so the preview updates as you click.
+	// Mirrors JATCS_Style::resolve() so the preview updates as you click.
 	function resolve() {
 		var vars = {};
 		var accentMode = val( 'style_accent' );
 		var custom = val( 'accent' ) || '#2e7d4f';
 		if ( accentMode === 'theme' && tokens.accent ) {
-			vars[ '--aab-accent' ] = tokens.accent;
-			vars[ '--aab-on-accent' ] = tokens.onAccent || '#ffffff';
+			vars[ '--jatcs-accent' ] = tokens.accent;
+			vars[ '--jatcs-on-accent' ] = tokens.onAccent || '#ffffff';
 		} else {
-			vars[ '--aab-accent' ] = custom;
-			vars[ '--aab-on-accent' ] = readableOn( custom );
+			vars[ '--jatcs-accent' ] = custom;
+			vars[ '--jatcs-on-accent' ] = readableOn( custom );
 		}
 
 		var radius = val( 'style_radius' );
-		vars[ '--aab-radius' ] = radius === 'auto' || ! data.radii[ radius ] ? tokens.radius || '10px' : data.radii[ radius ];
-		vars[ '--aab-space' ] = data.densities[ val( 'style_density' ) ] || '1';
+		vars[ '--jatcs-radius' ] = radius === 'auto' || ! data.radii[ radius ] ? tokens.radius || '10px' : data.radii[ radius ];
+		vars[ '--jatcs-space' ] = data.densities[ val( 'style_density' ) ] || '1';
 
 		var bg = val( 'style_background' );
 		if ( bg === 'theme' ) {
-			vars[ '--aab-surface' ] = tokens.base || 'transparent';
+			vars[ '--jatcs-surface' ] = tokens.base || 'transparent';
 		} else if ( bg === 'custom' ) {
-			vars[ '--aab-surface' ] = val( 'style_bg_color' ) || 'transparent';
+			vars[ '--jatcs-surface' ] = val( 'style_bg_color' ) || 'transparent';
 		}
 		if ( val( 'style_headings' ) === 'theme' && tokens.headingFont ) {
-			vars[ '--aab-heading-font' ] = tokens.headingFont;
+			vars[ '--jatcs-heading-font' ] = tokens.headingFont;
 		}
 
-		var classes = [ 'aab--buttons-' + ( val( 'style_buttons' ) || 'theme' ), 'aab--density-' + ( val( 'style_density' ) || 'comfortable' ) ];
+		var classes = [ 'jatcs--buttons-' + ( val( 'style_buttons' ) || 'theme' ), 'jatcs--density-' + ( val( 'style_density' ) || 'comfortable' ) ];
 		if ( tokens.json ) {
-			classes.push( 'aab--wp-buttons' );
+			classes.push( 'jatcs--wp-buttons' );
 		}
 		if ( accentMode === 'theme' && ( ! tokens.accent || ! tokens.json ) ) {
-			classes.push( 'aab--probe-accent' );
+			classes.push( 'jatcs--probe-accent' );
 		}
 		if ( val( 'style_headings' ) === 'theme' && ! tokens.headingFont && ! tokens.json ) {
-			classes.push( 'aab--probe-font' );
+			classes.push( 'jatcs--probe-font' );
 		}
 		if ( radius === 'auto' && ! tokens.radius && ! tokens.json ) {
-			classes.push( 'aab--probe-radius' );
+			classes.push( 'jatcs--probe-radius' );
 		}
 
 		return {
@@ -84,20 +84,20 @@
 		};
 	}
 
-	var frame = document.getElementById( 'aab-preview' );
+	var frame = document.getElementById( 'jatcs-preview' );
 	var pending = null;
 
 	function sync() {
-		$( '.aab-custom-accent' ).toggleClass( 'is-off', val( 'style_accent' ) !== 'custom' );
-		$( '.aab-custom-bg' ).toggleClass( 'is-off', val( 'style_background' ) !== 'custom' );
+		$( '.jatcs-custom-accent' ).toggleClass( 'is-off', val( 'style_accent' ) !== 'custom' );
+		$( '.jatcs-custom-bg' ).toggleClass( 'is-off', val( 'style_background' ) !== 'custom' );
 		if ( ! frame || ! frame.contentWindow ) {
 			return;
 		}
 		clearTimeout( pending );
 		pending = setTimeout( function () {
 			var r = resolve();
-			r.type = 'aab-style';
-			r.css = $( '#aab-custom-css' ).length ? $( '#aab-custom-css' ).val() : null;
+			r.type = 'jatcs-style';
+			r.css = $( '#jatcs-custom-css' ).length ? $( '#jatcs-custom-css' ).val() : null;
 			if ( r.css === null ) {
 				delete r.css;
 			}
@@ -109,14 +109,14 @@
 
 	$( function () {
 		if ( $.fn.wpColorPicker ) {
-			$( '.aab-color' ).wpColorPicker( {
+			$( '.jatcs-color' ).wpColorPicker( {
 				change: function ( event, ui ) {
 					$( event.target ).val( ui.color.toString() );
-					var target = $( event.target ).data( 'aab-target' );
+					var target = $( event.target ).data( 'jatcs-target' );
 					if ( target === 'accent' ) {
-						$( '[name="aab[style_accent]"][value="custom"]' ).prop( 'checked', true );
+						$( '[name="jatcs[style_accent]"][value="custom"]' ).prop( 'checked', true );
 					} else if ( target === 'bg' ) {
-						$( '[name="aab[style_background]"][value="custom"]' ).prop( 'checked', true );
+						$( '[name="jatcs[style_background]"][value="custom"]' ).prop( 'checked', true );
 					}
 					sync();
 				},
@@ -124,7 +124,7 @@
 			} );
 		}
 
-		$( '.aab-swatch--pick' ).on( 'click', function () {
+		$( '.jatcs-swatch--pick' ).on( 'click', function () {
 			var color = $( this ).data( 'color' );
 			var input = $( '#' + $( this ).data( 'target' ) );
 			if ( input.wpColorPicker ) {
@@ -132,11 +132,11 @@
 			} else {
 				input.val( color );
 			}
-			$( '[name="aab[style_accent]"][value="custom"]' ).prop( 'checked', true );
+			$( '[name="jatcs[style_accent]"][value="custom"]' ).prop( 'checked', true );
 			sync();
 		} );
 
-		$( '#aab-appearance' ).on( 'change input', 'input, select, textarea', sync );
+		$( '#jatcs-appearance' ).on( 'change input', 'input, select, textarea', sync );
 
 		if ( frame ) {
 			frame.addEventListener( 'load', function () {
@@ -155,17 +155,17 @@
 			} );
 		}
 
-		$( '[data-aab-width]' ).on( 'click', function () {
-			$( '[data-aab-width]' ).removeClass( 'is-pressed' ).attr( 'aria-pressed', 'false' );
+		$( '[data-jatcs-width]' ).on( 'click', function () {
+			$( '[data-jatcs-width]' ).removeClass( 'is-pressed' ).attr( 'aria-pressed', 'false' );
 			$( this ).addClass( 'is-pressed' ).attr( 'aria-pressed', 'true' );
-			$( '.aab-preview-frame' ).css( 'max-width', $( this ).data( 'aab-width' ) );
+			$( '.jatcs-preview-frame' ).css( 'max-width', $( this ).data( 'jatcs-width' ) );
 		} );
 
 		sync();
 
-		$( '[data-aab-copy]' ).on( 'click', function () {
+		$( '[data-jatcs-copy]' ).on( 'click', function () {
 			var button = $( this );
-			var field = document.getElementById( button.data( 'aab-copy' ) );
+			var field = document.getElementById( button.data( 'jatcs-copy' ) );
 			if ( ! field ) {
 				return;
 			}
@@ -184,5 +184,23 @@
 				done();
 			}
 		} );
+
+		// CalDAV: choosing a service fills in its server address.
+		var preset = $( '#jatcs-dav-preset' );
+		var davUrl = $( '#jatcs-dav-url' );
+		var fill   = function () {
+			var url = preset.find( 'option:selected' ).data( 'url' ) || '';
+			if ( url.indexOf( 'YOUR-SERVER' ) !== -1 ) {
+				davUrl.val( '' ).attr( 'placeholder', url );
+			} else if ( url ) {
+				davUrl.val( url );
+			} else {
+				davUrl.val( '' ).attr( 'placeholder', 'https://' );
+			}
+		};
+		if ( preset.length && davUrl.length ) {
+			preset.on( 'change', fill );
+			fill();
+		}
 	} );
 } )( jQuery );

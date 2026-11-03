@@ -5,7 +5,7 @@
  * Uses the WordPress HTTP API directly (no SDK). Card details never touch this site:
  * visitors pay on Stripe's hosted Checkout page.
  *
- * @package AndersonAppointmentBooking
+ * @package JATCalendarSync
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Talks to Stripe.
  */
-final class AAB_Stripe {
+final class JATCS_Stripe {
 
 	const API = 'https://api.stripe.com/v1';
 
@@ -98,10 +98,10 @@ final class AAB_Stripe {
 	 * @return string
 	 */
 	public static function secret() {
-		if ( defined( 'AAB_STRIPE_SECRET_KEY' ) ) {
-			return (string) AAB_STRIPE_SECRET_KEY;
+		if ( defined( 'JATCS_STRIPE_SECRET_KEY' ) ) {
+			return (string) JATCS_STRIPE_SECRET_KEY;
 		}
-		return AAB_Crypto::decrypt( (string) AAB_Settings::get( 'stripe_secret' ) );
+		return JATCS_Crypto::decrypt( (string) JATCS_Settings::get( 'stripe_secret' ) );
 	}
 
 	/**
@@ -110,10 +110,10 @@ final class AAB_Stripe {
 	 * @return string
 	 */
 	public static function webhook_secret() {
-		if ( defined( 'AAB_STRIPE_WEBHOOK_SECRET' ) ) {
-			return (string) AAB_STRIPE_WEBHOOK_SECRET;
+		if ( defined( 'JATCS_STRIPE_WEBHOOK_SECRET' ) ) {
+			return (string) JATCS_STRIPE_WEBHOOK_SECRET;
 		}
-		return AAB_Crypto::decrypt( (string) AAB_Settings::get( 'stripe_webhook_secret' ) );
+		return JATCS_Crypto::decrypt( (string) JATCS_Settings::get( 'stripe_webhook_secret' ) );
 	}
 
 	/**
@@ -140,7 +140,7 @@ final class AAB_Stripe {
 	 * @return string
 	 */
 	public static function webhook_url() {
-		return rest_url( AAB_Rest::NS . '/stripe' );
+		return rest_url( JATCS_Rest::NS . '/stripe' );
 	}
 
 	/**
@@ -175,7 +175,7 @@ final class AAB_Stripe {
 	public static function request( $method, $path, array $params = array(), $idempotency_key = '' ) {
 		$secret = self::secret();
 		if ( '' === $secret ) {
-			return new WP_Error( 'aab_stripe_off', __( 'Stripe is not set up.', 'anderson-appointment-booking' ) );
+			return new WP_Error( 'jatcs_stripe_off', __( 'Stripe is not set up.', 'jat-calendar-sync' ) );
 		}
 		$args = array(
 			'method'  => $method,
@@ -206,14 +206,14 @@ final class AAB_Stripe {
 			break;
 		}
 		if ( is_wp_error( $response ) ) {
-			AAB_Google::log( 'Stripe ' . $method . ' ' . $path, $response->get_error_message() );
+			JATCS_Google::log( 'Stripe ' . $method . ' ' . $path, $response->get_error_message() );
 			return $response;
 		}
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( $code >= 400 || ! is_array( $body ) ) {
 			$message = is_array( $body ) && isset( $body['error']['message'] ) ? (string) $body['error']['message'] : 'HTTP ' . $code;
-			AAB_Google::log( 'Stripe ' . $method . ' ' . preg_replace( '#/(cs|pi|re)_[A-Za-z0-9_]+#', '/$1_…', $path ), $code . ' ' . $message );
-			return new WP_Error( 'aab_stripe_http', $message, array( 'status' => $code ) );
+			JATCS_Google::log( 'Stripe ' . $method . ' ' . preg_replace( '#/(cs|pi|re)_[A-Za-z0-9_]+#', '/$1_…', $path ), $code . ' ' . $message );
+			return new WP_Error( 'jatcs_stripe_http', $message, array( 'status' => $code ) );
 		}
 		return $body;
 	}
@@ -248,21 +248,21 @@ final class AAB_Stripe {
 							'currency'     => strtolower( $currency ),
 							'unit_amount'  => (int) $amount,
 							'product_data' => array(
-								'name'        => '' !== $booking['type_name'] ? $booking['type_name'] : __( 'Appointment', 'anderson-appointment-booking' ),
+								'name'        => '' !== $booking['type_name'] ? $booking['type_name'] : __( 'Appointment', 'jat-calendar-sync' ),
 								/* translators: 1: date and time, 2: site name */
-								'description' => sprintf( __( '%1$s with %2$s', 'anderson-appointment-booking' ), AAB_Bookings::format_time( $booking['start'] ), $site ),
+								'description' => sprintf( __( '%1$s with %2$s', 'jat-calendar-sync' ), JATCS_Bookings::format_time( $booking['start'] ), $site ),
 							),
 						),
 					),
 				),
-				'metadata'            => array( 'aab_booking_id' => (string) $booking['id'] ),
+				'metadata'            => array( 'jatcs_booking_id' => (string) $booking['id'] ),
 				'payment_intent_data' => array(
-					'metadata'    => array( 'aab_booking_id' => (string) $booking['id'] ),
+					'metadata'    => array( 'jatcs_booking_id' => (string) $booking['id'] ),
 					/* translators: %s: site name */
-					'description' => sprintf( __( 'Appointment booking, %s', 'anderson-appointment-booking' ), $site ),
+					'description' => sprintf( __( 'Appointment booking, %s', 'jat-calendar-sync' ), $site ),
 				),
 			),
-			'aab-session-' . $booking['id'] . '-' . get_post_meta( $booking['id'], '_aab_hold_until', true )
+			'jatcs-session-' . $booking['id'] . '-' . get_post_meta( $booking['id'], '_jatcs_hold_until', true )
 		);
 	}
 
@@ -274,7 +274,7 @@ final class AAB_Stripe {
 	 */
 	public static function get_session( $id ) {
 		if ( ! preg_match( '/^cs_[A-Za-z0-9_]+$/', (string) $id ) ) {
-			return new WP_Error( 'aab_stripe_bad_id', 'Invalid session' );
+			return new WP_Error( 'jatcs_stripe_bad_id', 'Invalid session' );
 		}
 		return self::request( 'GET', '/checkout/sessions/' . $id );
 	}
@@ -286,7 +286,7 @@ final class AAB_Stripe {
 	 * @return array|WP_Error
 	 */
 	public static function expire_session( $id ) {
-		return self::request( 'POST', '/checkout/sessions/' . $id . '/expire', array(), 'aab-expire-' . $id );
+		return self::request( 'POST', '/checkout/sessions/' . $id . '/expire', array(), 'jatcs-expire-' . $id );
 	}
 
 	/**
@@ -302,9 +302,9 @@ final class AAB_Stripe {
 			'/refunds',
 			array(
 				'payment_intent' => $payment_intent,
-				'metadata'       => array( 'aab_booking_id' => (string) $booking_id ),
+				'metadata'       => array( 'jatcs_booking_id' => (string) $booking_id ),
 			),
-			'aab-refund-' . $booking_id
+			'jatcs-refund-' . $booking_id
 		);
 	}
 

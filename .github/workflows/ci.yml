@@ -21,6 +21,10 @@ jobs:
           coverage: none
       - name: PHP syntax check
         run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+      - name: iCal parser tests
+        run: php tests/ical-test.php
+      - name: CalDAV client tests
+        run: php tests/caldav-test.php
 
   js:
     name: JavaScript syntax

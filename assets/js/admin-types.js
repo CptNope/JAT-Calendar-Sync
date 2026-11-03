@@ -1,13 +1,13 @@
-/* Anderson Appointment Booking – appointment type editor. */
+/* JAT Calendar Sync – appointment type editor. */
 ( function () {
 	'use strict';
 
-	var list = document.getElementById( 'aab-questions' );
-	var template = document.getElementById( 'aab-question-template' );
-	var add = document.getElementById( 'aab-add-question' );
+	var list = document.getElementById( 'jatcs-questions' );
+	var template = document.getElementById( 'jatcs-question-template' );
+	var add = document.getElementById( 'jatcs-add-question' );
 
 	// Hours table is only relevant when the type uses its own hours.
-	var hoursTable = document.querySelector( '.aab-type-hours' );
+	var hoursTable = document.querySelector( '.jatcs-type-hours' );
 	var radios = document.querySelectorAll( 'input[name="type[custom_hours]"]' );
 	function syncHours() {
 		var own = document.querySelector( 'input[name="type[custom_hours]"]:checked' );
@@ -25,7 +25,7 @@
 	}
 
 	function syncKind( row ) {
-		var kind = row.querySelector( '.aab-question__kind' );
+		var kind = row.querySelector( '.jatcs-question__kind' );
 		if ( kind ) {
 			row.setAttribute( 'data-kind', kind.value );
 		}
@@ -47,25 +47,25 @@
 	} );
 
 	list.addEventListener( 'change', function ( ev ) {
-		if ( ev.target.classList.contains( 'aab-question__kind' ) ) {
-			syncKind( ev.target.closest( '.aab-question' ) );
+		if ( ev.target.classList.contains( 'jatcs-question__kind' ) ) {
+			syncKind( ev.target.closest( '.jatcs-question' ) );
 		}
 	} );
 
 	list.addEventListener( 'click', function ( ev ) {
-		var row = ev.target.closest( '.aab-question' );
+		var row = ev.target.closest( '.jatcs-question' );
 		if ( ! row ) {
 			return;
 		}
-		if ( ev.target.classList.contains( 'aab-question__remove' ) ) {
+		if ( ev.target.classList.contains( 'jatcs-question__remove' ) ) {
 			row.parentNode.removeChild( row );
 			add.focus();
-		} else if ( ev.target.classList.contains( 'aab-question__up' ) && row.previousElementSibling ) {
+		} else if ( ev.target.classList.contains( 'jatcs-question__up' ) && row.previousElementSibling ) {
 			// Field names carry their index, but PHP keeps POST order, so moving the element is enough.
 			list.insertBefore( row, row.previousElementSibling );
 			ev.target.focus();
 		}
 	} );
 
-	Array.prototype.forEach.call( list.querySelectorAll( '.aab-question' ), syncKind );
+	Array.prototype.forEach.call( list.querySelectorAll( '.jatcs-question' ), syncKind );
 } )();

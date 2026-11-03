@@ -1,7 +1,7 @@
 /**
- * Anderson Appointment Booking – visitor widget.
+ * JAT Calendar Sync – visitor widget.
  *
- * Plain JavaScript, no dependencies. Each .aab[data-aab-config] element becomes a booking calendar.
+ * Plain JavaScript, no dependencies. Each .jatcs[data-jatcs-config] element becomes a booking calendar.
  */
 ( function () {
 	'use strict';
@@ -54,7 +54,7 @@
 
 	function Widget( root, cfg ) {
 		this.root = root;
-		this.cfg = cfg || JSON.parse( root.getAttribute( 'data-aab-config' ) || '{}' );
+		this.cfg = cfg || JSON.parse( root.getAttribute( 'data-jatcs-config' ) || '{}' );
 		this.t = this.cfg.i18n || {};
 		this.locale = this.cfg.locale || undefined;
 		this.cache = {};
@@ -130,9 +130,9 @@
 	 */
 	Widget.prototype.probeTheme = function () {
 		var root = this.root;
-		var wantAccent = root.classList.contains( 'aab--probe-accent' );
-		var wantRadius = root.classList.contains( 'aab--probe-radius' );
-		var wantFont = root.classList.contains( 'aab--probe-font' );
+		var wantAccent = root.classList.contains( 'jatcs--probe-accent' );
+		var wantRadius = root.classList.contains( 'jatcs--probe-radius' );
+		var wantFont = root.classList.contains( 'jatcs--probe-font' );
 		if ( ! ( wantAccent || wantRadius || wantFont ) || ! window.getComputedStyle ) {
 			return;
 		}
@@ -169,7 +169,7 @@
 		host.removeChild( box );
 
 		if ( wantFont && headingFont && headingFont !== bodyFont ) {
-			root.style.setProperty( '--aab-heading-font', headingFont );
+			root.style.setProperty( '--jatcs-heading-font', headingFont );
 		}
 
 		// Browser-default grey buttons and see-through ones mean the theme doesn't style buttons.
@@ -188,19 +188,19 @@
 			if ( accent ) {
 				var white = { r: 255, g: 255, b: 255 };
 				var dark = { r: 17, g: 17, b: 17 };
-				root.style.setProperty( '--aab-accent', accent.hex );
-				root.style.setProperty( '--aab-on-accent', on ? on.hex : ( ratio( accent, white ) >= ratio( accent, dark ) ? '#ffffff' : '#111111' ) );
+				root.style.setProperty( '--jatcs-accent', accent.hex );
+				root.style.setProperty( '--jatcs-on-accent', on ? on.hex : ( ratio( accent, white ) >= ratio( accent, dark ) ? '#ffffff' : '#111111' ) );
 			}
 		}
 		if ( wantRadius && themedButton && /^[\d.]+px$/.test( radius || '' ) ) {
-			root.style.setProperty( '--aab-radius', radius );
+			root.style.setProperty( '--jatcs-radius', radius );
 		}
 	};
 
 	Widget.prototype.endpoint = function ( path, params ) {
 		var base = this.cfg.rest;
 		var url = new URL( base, window.location.href );
-		// Sites with plain permalinks use ?rest_route=/aab/v1/ instead of /wp-json/aab/v1/.
+		// Sites with plain permalinks use ?rest_route=/jatcs/v1/ instead of /wp-json/jatcs/v1/.
 		if ( url.searchParams.has( 'rest_route' ) ) {
 			url.searchParams.set( 'rest_route', url.searchParams.get( 'rest_route' ).replace( /\/?$/, '/' ) + path );
 		} else {
@@ -215,34 +215,34 @@
 	Widget.prototype.build = function () {
 		var self = this;
 		this.root.textContent = '';
-		this.root.classList.add( 'aab--ready' );
+		this.root.classList.add( 'jatcs--ready' );
 
 		if ( this.cfg.heading ) {
-			this.root.appendChild( h( 'h2', { class: 'aab__heading', text: this.cfg.heading } ) );
+			this.root.appendChild( h( 'h2', { class: 'jatcs__heading', text: this.cfg.heading } ) );
 		}
 
-		this.monthLabel = h( 'h3', { class: 'aab__month-label', 'aria-live': 'polite' } );
-		this.prevBtn = h( 'button', { type: 'button', class: 'aab__nav', 'aria-label': this.t.prevMonth, onclick: function () {
+		this.monthLabel = h( 'h3', { class: 'jatcs__month-label', 'aria-live': 'polite' } );
+		this.prevBtn = h( 'button', { type: 'button', class: 'jatcs__nav', 'aria-label': this.t.prevMonth, onclick: function () {
 			self.shiftMonth( -1 );
 		} }, [ h( 'span', { 'aria-hidden': 'true', text: '‹' } ) ] );
-		this.nextBtn = h( 'button', { type: 'button', class: 'aab__nav', 'aria-label': this.t.nextMonth, onclick: function () {
+		this.nextBtn = h( 'button', { type: 'button', class: 'jatcs__nav', 'aria-label': this.t.nextMonth, onclick: function () {
 			self.shiftMonth( 1 );
 		} }, [ h( 'span', { 'aria-hidden': 'true', text: '›' } ) ] );
 
-		this.grid = h( 'div', { class: 'aab__grid', role: 'group', 'aria-label': this.t.pickDay, onkeydown: function ( ev ) {
+		this.grid = h( 'div', { class: 'jatcs__grid', role: 'group', 'aria-label': this.t.pickDay, onkeydown: function ( ev ) {
 			self.onGridKey( ev );
 		} } );
-		this.panel = h( 'div', { class: 'aab__panel', 'aria-live': 'polite' } );
-		this.tzNote = h( 'p', { class: 'aab__tz' } );
-		this.picker = h( 'div', { class: 'aab__types', role: 'list', hidden: true } );
-		this.typeBar = h( 'div', { class: 'aab__typebar', hidden: true } );
+		this.panel = h( 'div', { class: 'jatcs__panel', 'aria-live': 'polite' } );
+		this.tzNote = h( 'p', { class: 'jatcs__tz' } );
+		this.picker = h( 'div', { class: 'jatcs__types', role: 'list', hidden: true } );
+		this.typeBar = h( 'div', { class: 'jatcs__typebar', hidden: true } );
 
 		this.root.appendChild( this.picker );
 		this.root.appendChild( this.typeBar );
 		this.root.appendChild(
-			this.body = h( 'div', { class: 'aab__body' }, [
-				h( 'div', { class: 'aab__cal' }, [
-					h( 'div', { class: 'aab__month' }, [ this.prevBtn, this.monthLabel, this.nextBtn ] ),
+			this.body = h( 'div', { class: 'jatcs__body' }, [
+				h( 'div', { class: 'jatcs__cal' }, [
+					h( 'div', { class: 'jatcs__month' }, [ this.prevBtn, this.monthLabel, this.nextBtn ] ),
 					this.grid,
 				] ),
 				this.panel,
@@ -273,22 +273,22 @@
 		this.tzNote.hidden = true;
 		this.picker.hidden = false;
 		this.picker.textContent = '';
-		this.picker.appendChild( h( 'h3', { class: 'aab__types-title', text: this.t.pickType } ) );
+		this.picker.appendChild( h( 'h3', { class: 'jatcs__types-title', text: this.t.pickType } ) );
 		this.types.forEach( function ( type ) {
 			var meta = self.typeMeta( type );
 			self.picker.appendChild(
 				h( 'div', { role: 'listitem' }, [
-					h( 'button', { type: 'button', class: 'aab__type', onclick: function () {
+					h( 'button', { type: 'button', class: 'jatcs__type', onclick: function () {
 						self.picked = true;
 						self.pickType( type );
 					} }, [
-						h( 'span', { class: 'aab__type-head' }, [
-							h( 'span', { class: 'aab__type-name', text: type.name } ),
-							h( 'span', { class: 'aab__type-len', text: meta[ 0 ] } ),
+						h( 'span', { class: 'jatcs__type-head' }, [
+							h( 'span', { class: 'jatcs__type-name', text: type.name } ),
+							h( 'span', { class: 'jatcs__type-len', text: meta[ 0 ] } ),
 						] ),
-						type.priceText ? h( 'span', { class: 'aab__type-price', text: type.priceText } ) : null,
-						meta[ 1 ] ? h( 'span', { class: 'aab__type-where', text: meta[ 1 ] } ) : null,
-						type.description ? h( 'span', { class: 'aab__type-desc', text: type.description } ) : null,
+						type.priceText ? h( 'span', { class: 'jatcs__type-price', text: type.priceText } ) : null,
+						meta[ 1 ] ? h( 'span', { class: 'jatcs__type-where', text: meta[ 1 ] } ) : null,
+						type.description ? h( 'span', { class: 'jatcs__type-desc', text: type.description } ) : null,
 					] ),
 				] )
 			);
@@ -304,14 +304,14 @@
 		this.typeBar.textContent = '';
 		this.typeBar.hidden = this.types.length < 2;
 		if ( this.types.length > 1 ) {
-			this.typeBar.appendChild( h( 'button', { type: 'button', class: 'aab__link aab__back', text: '‹ ' + this.t.allTypes, onclick: function () {
+			this.typeBar.appendChild( h( 'button', { type: 'button', class: 'jatcs__link jatcs__back', text: '‹ ' + this.t.allTypes, onclick: function () {
 				self.showPicker();
-				var first = self.picker.querySelector( '.aab__type' );
+				var first = self.picker.querySelector( '.jatcs__type' );
 				if ( first ) {
 					first.focus();
 				}
 			} } ) );
-			this.typeBar.appendChild( h( 'span', { class: 'aab__typebar-name', text: type.name } ) );
+			this.typeBar.appendChild( h( 'span', { class: 'jatcs__typebar-name', text: type.name } ) );
 		}
 		this.selected = null;
 		this.slot = null;
@@ -361,7 +361,7 @@
 		}
 
 		this.data = null;
-		this.root.classList.add( 'aab--loading' );
+		this.root.classList.add( 'jatcs--loading' );
 		this.render();
 
 		var range = this.monthRange( month );
@@ -391,7 +391,7 @@
 				self.cache[ key ] = body;
 				self.data = body;
 				self.error = '';
-				self.root.classList.remove( 'aab--loading' );
+				self.root.classList.remove( 'jatcs--loading' );
 
 				var hasAny = Object.keys( body.days || {} ).some( function ( d ) {
 					return body.days[ d ].length > 0;
@@ -411,7 +411,7 @@
 				if ( month !== self.month ) {
 					return;
 				}
-				self.root.classList.remove( 'aab--loading' );
+				self.root.classList.remove( 'jatcs--loading' );
 				self.error = ( err && err.message ) || self.t.error;
 				self.render();
 			} );
@@ -480,12 +480,12 @@
 		// Weekday header.
 		for ( var w = 0; w < 7; w++ ) {
 			var ref = new Date( Date.UTC( 2024, 0, 7 + ( ( weekStart + w ) % 7 ) ) ); // 2024-01-07 is a Sunday.
-			this.grid.appendChild( h( 'span', { class: 'aab__wd', title: this.weekdayLongFmt.format( ref ), 'aria-hidden': 'true', text: this.weekdayFmt.format( ref ) } ) );
+			this.grid.appendChild( h( 'span', { class: 'jatcs__wd', title: this.weekdayLongFmt.format( ref ), 'aria-hidden': 'true', text: this.weekdayFmt.format( ref ) } ) );
 		}
 
 		var lead = ( start.getUTCDay() - weekStart + 7 ) % 7;
 		for ( var i = 0; i < lead; i++ ) {
-			this.grid.appendChild( h( 'span', { class: 'aab__blank', 'aria-hidden': 'true' } ) );
+			this.grid.appendChild( h( 'span', { class: 'jatcs__blank', 'aria-hidden': 'true' } ) );
 		}
 
 		for ( var d = new Date( start.getTime() ); d <= end; d.setUTCDate( d.getUTCDate() + 1 ) ) {
@@ -493,13 +493,13 @@
 			var count = days[ key ] ? days[ key ].length : 0;
 			var open = count > 0;
 			var label = this.dayFmt.format( d ) + ( open ? ', ' + ( count === 1 ? this.t.openOne : sprintf( this.t.openCount, count ) ) : '' );
-			var bar = h( 'span', { class: 'aab__bar', 'aria-hidden': 'true' }, [ h( 'i' ) ] );
+			var bar = h( 'span', { class: 'jatcs__bar', 'aria-hidden': 'true' }, [ h( 'i' ) ] );
 			bar.firstChild.style.width = open && max ? Math.max( 12, Math.round( ( count / max ) * 100 ) ) + '%' : '0';
 
 			this.grid.appendChild(
 				h( 'button', {
 					type: 'button',
-					class: 'aab__day' + ( open ? ' is-open' : '' ) + ( key === this.selected ? ' is-selected' : '' ),
+					class: 'jatcs__day' + ( open ? ' is-open' : '' ) + ( key === this.selected ? ' is-selected' : '' ),
 					'data-date': key,
 					disabled: ! open,
 					'aria-pressed': key === this.selected ? 'true' : 'false',
@@ -509,15 +509,15 @@
 							self.selectDay( date );
 						};
 					} )( key ),
-				}, [ h( 'span', { class: 'aab__num', text: String( d.getUTCDate() ) } ), bar ] )
+				}, [ h( 'span', { class: 'jatcs__num', text: String( d.getUTCDate() ) } ), bar ] )
 			);
 		}
 	};
 
 	// One tab stop for the whole grid (the selected or first open day); arrow keys move between open days.
 	Widget.prototype.rovingTabindex = function () {
-		var open = this.grid.querySelectorAll( '.aab__day.is-open' );
-		var current = this.grid.querySelector( '.aab__day.is-selected' ) || open[ 0 ];
+		var open = this.grid.querySelectorAll( '.jatcs__day.is-open' );
+		var current = this.grid.querySelector( '.jatcs__day.is-selected' ) || open[ 0 ];
 		Array.prototype.forEach.call( open, function ( b ) {
 			b.tabIndex = b === current ? 0 : -1;
 		} );
@@ -525,10 +525,10 @@
 
 	Widget.prototype.onGridKey = function ( ev ) {
 		var btn = ev.target;
-		if ( ! btn || ! btn.classList || ! btn.classList.contains( 'aab__day' ) ) {
+		if ( ! btn || ! btn.classList || ! btn.classList.contains( 'jatcs__day' ) ) {
 			return;
 		}
-		var open = Array.prototype.slice.call( this.grid.querySelectorAll( '.aab__day.is-open' ) );
+		var open = Array.prototype.slice.call( this.grid.querySelectorAll( '.jatcs__day.is-open' ) );
 		var i = open.indexOf( btn );
 		if ( i < 0 ) {
 			return;
@@ -585,12 +585,12 @@
 		this.notice = '';
 		this.render();
 		if ( hadFocus ) {
-			var again = this.grid.querySelector( '.aab__day.is-selected' );
+			var again = this.grid.querySelector( '.jatcs__day.is-selected' );
 			if ( again ) {
 				again.focus( { preventScroll: true } );
 			}
 		}
-		var first = this.panel.querySelector( '.aab__time' );
+		var first = this.panel.querySelector( '.jatcs__time' );
 		if ( first && window.matchMedia( '(max-width: 640px)' ).matches ) {
 			this.panel.scrollIntoView( { behavior: 'smooth', block: 'start' } );
 		}
@@ -612,40 +612,40 @@
 		var panel = this.panel;
 
 		if ( this.error ) {
-			panel.appendChild( h( 'p', { class: 'aab__message aab__message--error', role: 'alert', text: this.error } ) );
-			panel.appendChild( h( 'button', { type: 'button', class: 'aab__link', text: this.t.retry, onclick: function () {
+			panel.appendChild( h( 'p', { class: 'jatcs__message jatcs__message--error', role: 'alert', text: this.error } ) );
+			panel.appendChild( h( 'button', { type: 'button', class: 'jatcs__link', text: this.t.retry, onclick: function () {
 				self.error = '';
 				self.load( true );
 			} } ) );
 			return;
 		}
 		if ( ! this.data ) {
-			panel.appendChild( h( 'p', { class: 'aab__message aab__message--quiet', text: this.t.loading } ) );
+			panel.appendChild( h( 'p', { class: 'jatcs__message jatcs__message--quiet', text: this.t.loading } ) );
 			return;
 		}
 		if ( this.notice ) {
-			panel.appendChild( h( 'p', { class: 'aab__message aab__message--error', role: 'alert', text: this.notice } ) );
+			panel.appendChild( h( 'p', { class: 'jatcs__message jatcs__message--error', role: 'alert', text: this.notice } ) );
 		}
 		if ( ! this.selected ) {
-			panel.appendChild( h( 'p', { class: 'aab__message aab__message--quiet', text: this.firstOpenDay() ? this.t.noDay : this.t.noTimes } ) );
+			panel.appendChild( h( 'p', { class: 'jatcs__message jatcs__message--quiet', text: this.firstOpenDay() ? this.t.noDay : this.t.noTimes } ) );
 			return;
 		}
 
 		var slots = this.data.days[ this.selected ] || [];
-		panel.appendChild( h( 'h3', { class: 'aab__panel-title', text: this.dayFmt.format( parseYmd( this.selected ) ) } ) );
+		panel.appendChild( h( 'h3', { class: 'jatcs__panel-title', text: this.dayFmt.format( parseYmd( this.selected ) ) } ) );
 		if ( this.data.duration ) {
-			panel.appendChild( h( 'p', { class: 'aab__duration', text: sprintf( this.t.minutes, this.data.duration ) } ) );
+			panel.appendChild( h( 'p', { class: 'jatcs__duration', text: sprintf( this.t.minutes, this.data.duration ) } ) );
 		}
 		if ( ! slots.length ) {
-			panel.appendChild( h( 'p', { class: 'aab__message aab__message--quiet', text: this.t.dayFull } ) );
+			panel.appendChild( h( 'p', { class: 'jatcs__message jatcs__message--quiet', text: this.t.dayFull } ) );
 			return;
 		}
 
-		var list = h( 'div', { class: 'aab__times', role: 'group', 'aria-label': this.t.pickTime } );
+		var list = h( 'div', { class: 'jatcs__times', role: 'group', 'aria-label': this.t.pickTime } );
 		slots.forEach( function ( start ) {
 			list.appendChild( h( 'button', {
 				type: 'button',
-				class: 'aab__time',
+				class: 'jatcs__time',
 				'aria-current': self.moving && start === self.moving.start ? 'true' : null,
 				title: self.moving && start === self.moving.start ? self.t.currentTime : null,
 				disabled: !! ( self.moving && start === self.moving.start ),
@@ -669,9 +669,9 @@
 
 	Widget.prototype.field = function ( name, label, type, attrs ) {
 		var id = this.root.id + '-' + name;
-		var input = h( type === 'textarea' ? 'textarea' : 'input', Object.assign( { id: id, name: name, class: 'aab__input' }, type === 'textarea' ? { rows: '3' } : { type: type }, attrs || {} ) );
-		var error = h( 'span', { class: 'aab__field-error', id: id + '-error' } );
-		return h( 'div', { class: 'aab__field' }, [ h( 'label', { for: id, text: label } ), input, error ] );
+		var input = h( type === 'textarea' ? 'textarea' : 'input', Object.assign( { id: id, name: name, class: 'jatcs__input' }, type === 'textarea' ? { rows: '3' } : { type: type }, attrs || {} ) );
+		var error = h( 'span', { class: 'jatcs__field-error', id: id + '-error' } );
+		return h( 'div', { class: 'jatcs__field' }, [ h( 'label', { for: id, text: label } ), input, error ] );
 	};
 
 	// A booking question as a form field. Field names are "q_<id>", matching server error keys.
@@ -680,21 +680,21 @@
 		var name = 'q_' + q.id;
 		var id = this.root.id + '-' + name;
 		var label = q.label + ( q.required || q.kind === 'checkbox' ? '' : ' ' + t.optional );
-		var error = h( 'span', { class: 'aab__field-error', id: id + '-error' } );
+		var error = h( 'span', { class: 'jatcs__field-error', id: id + '-error' } );
 		if ( q.kind === 'checkbox' ) {
-			return h( 'div', { class: 'aab__field aab__field--check' }, [
+			return h( 'div', { class: 'jatcs__field jatcs__field--check' }, [
 				h( 'input', { type: 'checkbox', id: id, name: name, value: '1' } ),
 				h( 'label', { for: id, text: q.label } ),
 				error,
 			] );
 		}
 		if ( q.kind === 'select' ) {
-			var select = h( 'select', { id: id, name: name, class: 'aab__input', required: !! q.required }, [
+			var select = h( 'select', { id: id, name: name, class: 'jatcs__input', required: !! q.required }, [
 				h( 'option', { value: '', text: t.choose } ),
 			].concat( ( q.options || [] ).map( function ( o ) {
 				return h( 'option', { value: o, text: o } );
 			} ) ) );
-			return h( 'div', { class: 'aab__field' }, [ h( 'label', { for: id, text: label } ), select, error ] );
+			return h( 'div', { class: 'jatcs__field' }, [ h( 'label', { for: id, text: label } ), select, error ] );
 		}
 		return this.field( name, label, q.kind === 'textarea' ? 'textarea' : 'text', { required: !! q.required, maxlength: '2000' } );
 	};
@@ -705,12 +705,12 @@
 		var shownAt = Date.now();
 		var timeText = this.timeFmt.format( new Date( this.slot * 1000 ) );
 
-		var back = h( 'button', { type: 'button', class: 'aab__link aab__back', text: t.changeTime, onclick: function () {
+		var back = h( 'button', { type: 'button', class: 'jatcs__link jatcs__back', text: t.changeTime, onclick: function () {
 			self.view = 'times';
 			self.renderPanel();
 		} } );
 
-		var form = h( 'form', { class: 'aab__form', novalidate: true } );
+		var form = h( 'form', { class: 'jatcs__form', novalidate: true } );
 		form.appendChild( this.field( 'name', t.name, 'text', { autocomplete: 'name', required: true, maxlength: '100' } ) );
 		form.appendChild( this.field( 'email', t.email, 'email', { autocomplete: 'email', required: true } ) );
 		if ( this.cfg.phone === 'optional' || this.cfg.phone === 'required' ) {
@@ -725,29 +725,29 @@
 		}
 
 		// Honeypot: hidden from people, tempting to bots.
-		form.appendChild( h( 'div', { class: 'aab__hp', 'aria-hidden': 'true' }, [
+		form.appendChild( h( 'div', { class: 'jatcs__hp', 'aria-hidden': 'true' }, [
 			h( 'label', { for: this.root.id + '-website', text: t.website } ),
 			h( 'input', { id: this.root.id + '-website', type: 'text', name: 'website', tabindex: '-1', autocomplete: 'off' } ),
 		] ) );
 
 		if ( this.cfg.consent ) {
 			var cid = this.root.id + '-consent';
-			form.appendChild( h( 'div', { class: 'aab__field aab__field--check' }, [
+			form.appendChild( h( 'div', { class: 'jatcs__field jatcs__field--check' }, [
 				h( 'input', { type: 'checkbox', id: cid, name: 'consent', value: '1' } ),
 				h( 'label', { for: cid, text: this.cfg.consent } ),
-				h( 'span', { class: 'aab__field-error', id: cid + '-error' } ),
+				h( 'span', { class: 'jatcs__field-error', id: cid + '-error' } ),
 			] ) );
 		}
 
-		var status = h( 'p', { class: 'aab__message aab__message--error', role: 'alert', hidden: true } );
+		var status = h( 'p', { class: 'jatcs__message jatcs__message--error', role: 'alert', hidden: true } );
 		// In "match my theme" mode on block themes the button also takes the theme's button class.
-		var themed = this.root.classList.contains( 'aab--buttons-theme' ) && this.root.classList.contains( 'aab--wp-buttons' );
+		var themed = this.root.classList.contains( 'jatcs--buttons-theme' ) && this.root.classList.contains( 'jatcs--wp-buttons' );
 		var paid = !! ( this.type && this.type.price );
 		var label = paid ? sprintf( t.payAndBook, this.type.priceText ) : sprintf( t.book, timeText );
-		var submit = h( 'button', { type: 'submit', class: 'aab__submit' + ( themed ? ' wp-element-button' : '' ), text: label, 'data-label': label } );
+		var submit = h( 'button', { type: 'submit', class: 'jatcs__submit' + ( themed ? ' wp-element-button' : '' ), text: label, 'data-label': label } );
 		form.appendChild( status );
 		if ( paid ) {
-			form.appendChild( h( 'p', { class: 'aab__pay-note', text: sprintf( t.payNote, this.type.priceText ) } ) );
+			form.appendChild( h( 'p', { class: 'jatcs__pay-note', text: sprintf( t.payNote, this.type.priceText ) } ) );
 		}
 		form.appendChild( submit );
 
@@ -756,8 +756,8 @@
 			self.submit( form, submit, status, shownAt, timeText );
 		} );
 
-		this.panel.appendChild( h( 'div', { class: 'aab__summary' }, [
-			h( 'h3', { class: 'aab__panel-title', text: this.slotLabel( this.slot ) } ),
+		this.panel.appendChild( h( 'div', { class: 'jatcs__summary' }, [
+			h( 'h3', { class: 'jatcs__panel-title', text: this.slotLabel( this.slot ) } ),
 			back,
 		] ) );
 		this.panel.appendChild( form );
@@ -773,7 +773,7 @@
 		};
 
 		// Clear previous errors.
-		Array.prototype.forEach.call( form.querySelectorAll( '.aab__field-error' ), function ( el ) {
+		Array.prototype.forEach.call( form.querySelectorAll( '.jatcs__field-error' ), function ( el ) {
 			el.textContent = '';
 		} );
 		Array.prototype.forEach.call( form.querySelectorAll( '[aria-invalid]' ), function ( el ) {
@@ -884,7 +884,7 @@
 				if ( r.ok && r.body && r.body.checkout ) {
 					// Paid appointment: the time is held; finish on Stripe's hosted checkout.
 					status.hidden = true;
-					form.querySelector( '.aab__submit' ).textContent = t.redirecting;
+					form.querySelector( '.jatcs__submit' ).textContent = t.redirecting;
 					window.location.assign( r.body.checkout );
 					return;
 				}
@@ -923,9 +923,9 @@
 		var self = this;
 		var t = this.t;
 		var timeText = this.timeFmt.format( new Date( this.slot * 1000 ) );
-		var themed = this.root.classList.contains( 'aab--buttons-theme' ) && this.root.classList.contains( 'aab--wp-buttons' );
-		var status = h( 'p', { class: 'aab__message aab__message--error', role: 'alert', hidden: true } );
-		var button = h( 'button', { type: 'button', class: 'aab__submit' + ( themed ? ' wp-element-button' : '' ), text: sprintf( t.moveTo, timeText ) } );
+		var themed = this.root.classList.contains( 'jatcs--buttons-theme' ) && this.root.classList.contains( 'jatcs--wp-buttons' );
+		var status = h( 'p', { class: 'jatcs__message jatcs__message--error', role: 'alert', hidden: true } );
+		var button = h( 'button', { type: 'button', class: 'jatcs__submit' + ( themed ? ' wp-element-button' : '' ), text: sprintf( t.moveTo, timeText ) } );
 		var current = new Date( this.moving.start * 1000 );
 
 		button.addEventListener( 'click', function () {
@@ -961,7 +961,7 @@
 						done( r.body );
 						return;
 					}
-					if ( r.status === 409 && r.body && r.body.code === 'aab_slot_taken' ) {
+					if ( r.status === 409 && r.body && r.body.code === 'jatcs_slot_taken' ) {
 						self.notice = r.body.message || t.error;
 						self.view = 'times';
 						self.slot = null;
@@ -981,15 +981,15 @@
 				} );
 		} );
 
-		this.panel.appendChild( h( 'div', { class: 'aab__summary' }, [
-			h( 'h3', { class: 'aab__panel-title', text: this.slotLabel( this.slot ) } ),
-			h( 'button', { type: 'button', class: 'aab__link aab__back', text: t.changeTime, onclick: function () {
+		this.panel.appendChild( h( 'div', { class: 'jatcs__summary' }, [
+			h( 'h3', { class: 'jatcs__panel-title', text: this.slotLabel( this.slot ) } ),
+			h( 'button', { type: 'button', class: 'jatcs__link jatcs__back', text: t.changeTime, onclick: function () {
 				self.view = 'times';
 				self.renderPanel();
 			} } ),
 		] ) );
-		this.panel.appendChild( h( 'p', { class: 'aab__was' }, [
-			h( 'span', { class: 'aab__was-label', text: t.currentTime + ': ' } ),
+		this.panel.appendChild( h( 'p', { class: 'jatcs__was' }, [
+			h( 'span', { class: 'jatcs__was-label', text: t.currentTime + ': ' } ),
 			h( 'del', { text: this.shortDayFmt.format( new Date( Date.UTC( current.getFullYear(), current.getMonth(), current.getDate() ) ) ) + ', ' + this.timeFmt.format( current ) } ),
 		] ) );
 		this.panel.appendChild( status );
@@ -1001,22 +1001,22 @@
 		var self = this;
 		var r = this.result || {};
 		if ( r.moved ) {
-			var moved = h( 'div', { class: 'aab__done', tabindex: '-1' }, [
-				h( 'p', { class: 'aab__done-badge', text: this.t.moved } ),
-				h( 'h3', { class: 'aab__panel-title', text: this.slotLabel( r.start ) } ),
-				h( 'p', { class: 'aab__done-text', text: this.t.movedText } ),
-				this.moving.manage ? h( 'a', { class: 'aab__link', href: this.moving.manage, text: this.t.backToBooking } ) : null,
+			var moved = h( 'div', { class: 'jatcs__done', tabindex: '-1' }, [
+				h( 'p', { class: 'jatcs__done-badge', text: this.t.moved } ),
+				h( 'h3', { class: 'jatcs__panel-title', text: this.slotLabel( r.start ) } ),
+				h( 'p', { class: 'jatcs__done-text', text: this.t.movedText } ),
+				this.moving.manage ? h( 'a', { class: 'jatcs__link', href: this.moving.manage, text: this.t.backToBooking } ) : null,
 			] );
 			this.panel.appendChild( moved );
 			moved.focus( { preventScroll: true } );
 			return;
 		}
-		var done = h( 'div', { class: 'aab__done', tabindex: '-1' }, [
-			h( 'p', { class: 'aab__done-badge', text: this.t.booked } ),
-			h( 'h3', { class: 'aab__panel-title', text: this.slotLabel( r.start || this.slot ) } ),
-			r.message ? h( 'p', { class: 'aab__done-text', text: r.message } ) : null,
+		var done = h( 'div', { class: 'jatcs__done', tabindex: '-1' }, [
+			h( 'p', { class: 'jatcs__done-badge', text: this.t.booked } ),
+			h( 'h3', { class: 'jatcs__panel-title', text: this.slotLabel( r.start || this.slot ) } ),
+			r.message ? h( 'p', { class: 'jatcs__done-text', text: r.message } ) : null,
 			r.meet ? h( 'p', null, [ h( 'a', { href: r.meet, target: '_blank', rel: 'noopener', text: this.t.joinCall } ) ] ) : null,
-			h( 'button', { type: 'button', class: 'aab__link', text: this.t.bookAnother, onclick: function () {
+			h( 'button', { type: 'button', class: 'jatcs__link', text: this.t.bookAnother, onclick: function () {
 				self.view = 'times';
 				self.slot = null;
 				self.selected = null;
@@ -1032,7 +1032,7 @@
 	};
 
 	// Public hook so the block editor (and developers) can mount a widget on any element.
-	window.AABBooking = {
+	window.JATCSBooking = {
 		mount: function ( root, cfg ) {
 			return new Widget( root, cfg );
 		},
@@ -1043,8 +1043,8 @@
 	};
 
 	function boot() {
-		Array.prototype.forEach.call( document.querySelectorAll( '.aab[data-aab-config]' ), function ( root ) {
-			if ( ! root.classList.contains( 'aab--ready' ) && window.fetch && window.Intl && window.URL ) {
+		Array.prototype.forEach.call( document.querySelectorAll( '.jatcs[data-jatcs-config]' ), function ( root ) {
+			if ( ! root.classList.contains( 'jatcs--ready' ) && window.fetch && window.Intl && window.URL ) {
 				new Widget( root ); // eslint-disable-line no-new
 			}
 		} );
