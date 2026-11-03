@@ -4,7 +4,7 @@ Tags: appointment, booking, google calendar, scheduling, calendar
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.4.2
+Stable tag: 1.5.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -20,6 +20,7 @@ Anderson Appointment Booking puts a booking calendar on your site that knows whe
 * Custom booking questions: short answer, long answer, dropdown, checkbox
 * Visitors can reschedule or cancel from a link in every email, with a cut-off you choose
 * Weekly hours with breaks, buffers, minimum notice, booking window and daily cap
+* Shift-work mode: open booking only as far as your posted work schedule (Sling and similar)
 * Optional Google Meet link and calendar invite for the visitor
 * Atomic slot locking and a live re-check at booking time to prevent double bookings
 * Follows changes made in Google Calendar: deleted or moved appointments update on the site
@@ -101,11 +102,18 @@ Yes. Add your Stripe keys under Appointments → Settings → Payments and give 
 
 Yes. Connect Outlook / Microsoft 365 under Appointments → Settings and choose which of its calendars to check. Busy, tentative and out-of-office events (including recurring meetings) block times. Bookings are still created in Google Calendar.
 
+= Does it work with shift schedules like Sling? =
+
+Yes. Subscribe to your schedule's calendar feed in Google Calendar, tick it under "Also check for conflicts" so shifts block their times, and choose it under "Open booking only as far as". Visitors can then only book up to your last posted shift (or the end of that week), so nobody books a time that later becomes a shift. Google refreshes subscribed calendars every few hours, so a newly posted week opens a little later, never early.
+
 = Does it work with page caching? =
 
 Yes. Times are loaded through the REST API when the page opens, so cached pages still show current availability.
 
 == Changelog ==
+
+= 1.5.0 =
+* New: Open booking only as far as your posted work schedule (Sling, When I Work, Deputy or any calendar of shifts). Booking opens up to your last posted shift, optionally through the end of that week, and new weeks open automatically when the schedule reaches Google Calendar. If nothing is posted, or the schedule can't be read, nothing can be booked.
 
 = 1.4.2 =
 * Fix: Installing a second copy of the plugin in a differently named folder (for example a GitHub download) no longer causes a fatal error on activation. The extra copy stays idle and a notice explains what to do.

@@ -229,6 +229,8 @@ final class AAB_Admin {
 			$new['conflict_calendars'] = isset( $in['conflict_calendars'] ) && is_array( $in['conflict_calendars'] )
 				? array_values( array_map( 'sanitize_text_field', $in['conflict_calendars'] ) )
 				: array();
+			$new['schedule_calendar'] = isset( $in['schedule_calendar'] ) ? sanitize_text_field( $in['schedule_calendar'] ) : '';
+			$new['schedule_week']     = empty( $in['schedule_week'] ) ? 0 : 1;
 		}
 
 		$invalid_hours = array();

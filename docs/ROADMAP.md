@@ -9,6 +9,7 @@ Based on the [competitive analysis](research/competitive-analysis.md). Principle
 - **1.2** Production hardening: atomic slot lock, proxy-aware rate limits, Google retries without duplicates, hourly sync of moves and deletions, reminders, days off, per-person cap, phone field, Site Health checks, owner alerts, CSV export, retention.
 - **1.3** Appointment types (own length, start-time spacing, hours, location, video call), custom booking questions, visitor self-service rescheduling with a change cutoff, one manage page for reschedule and cancel.
 - **1.4** Stripe payments (hold, pay, confirm, automatic refunds by policy) and Outlook / Microsoft 365 conflict calendars via Microsoft Graph. README rewritten with diagrams.
+- **1.4.1–1.5.0** Fixes found on the first live install (permissions, duplicate copies) and shift-work mode: booking opens only as far as a posted work schedule such as Sling.
 
 ## Next
 
