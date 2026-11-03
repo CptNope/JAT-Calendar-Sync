@@ -27,6 +27,7 @@ final class AAB_Availability {
 	public static function conflict_calendars() {
 		$ids   = (array) AAB_Settings::get( 'conflict_calendars' );
 		$ids[] = (string) AAB_Settings::get( 'booking_calendar' );
+		$ids[] = (string) AAB_Settings::get( 'schedule_calendar' ); // Posted shifts always block their own times.
 		return array_values( array_unique( array_filter( array_map( 'strval', $ids ) ) ) );
 	}
 
@@ -48,6 +49,24 @@ final class AAB_Availability {
 			return false;
 		}
 		return checkdate( (int) $m[2], (int) $m[3], (int) $m[1] );
+	}
+
+	/**
+	 * Extra clear time around work-schedule events, per calendar: [before, after] in seconds.
+	 *
+	 * "At least N minutes": the booking's own buffers count toward it, so they don't stack.
+	 *
+	 * @return array<string,int[]>
+	 */
+	public static function schedule_padding() {
+		$calendar = (string) AAB_Settings::get( 'schedule_calendar' );
+		$gap      = (int) AAB_Settings::get( 'schedule_buffer' ) * MINUTE_IN_SECONDS;
+		if ( '' === $calendar || $gap <= 0 ) {
+			return array();
+		}
+		$before = (int) AAB_Settings::get( 'buffer_before' ) * MINUTE_IN_SECONDS; // Booking's clear time before it (after a shift).
+		$after  = (int) AAB_Settings::get( 'buffer_after' ) * MINUTE_IN_SECONDS;  // Booking's clear time after it (before a shift).
+		return array( $calendar => array( max( 0, $gap - $after ), max( 0, $gap - $before ) ) );
 	}
 
 	/**
@@ -276,14 +295,16 @@ final class AAB_Availability {
 			)
 			: null;
 		$outlook   = AAB_Microsoft::active();
-		$key       = 'aab_busy_' . md5( $from . '|' . $to . '|' . implode( ',', $calendars ) . '|' . (int) get_option( self::GENERATION_OPTION, 0 ) . '|' . ( $skip ? implode( ',', $skip ) : '' ) . '|' . ( $outlook ? implode( ',', (array) AAB_Settings::get( 'ms_calendars' ) ) : '' ) );
+		$pad       = self::schedule_padding();
+		$key       = 'aab_busy_' . md5( wp_json_encode( $pad ) . '|' . $from . '|' . $to . '|' . implode( ',', $calendars ) . '|' . (int) get_option( self::GENERATION_OPTION, 0 ) . '|' . ( $skip ? implode( ',', $skip ) : '' ) . '|' . ( $outlook ? implode( ',', (array) AAB_Settings::get( 'ms_calendars' ) ) : '' ) );
 		if ( ! $fresh ) {
 			$cached = get_transient( $key );
 			if ( is_array( $cached ) ) {
 				return $cached;
 			}
 		}
-		$busy = AAB_Google::busy( $from, $to, $calendars, $skip );
+		$reach = $pad ? max( array_map( 'max', $pad ) ) : 0; // See shifts just outside the range too.
+		$busy  = AAB_Google::busy( $from - $reach, $to + $reach, $calendars, $skip, $pad );
 		if ( ! is_wp_error( $busy ) && $outlook ) {
 			// Outlook conflict calendars: if they can't be read, offer nothing rather than risk a clash.
 			$more = AAB_Microsoft::busy( $from, $to );

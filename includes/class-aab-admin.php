@@ -231,6 +231,7 @@ final class AAB_Admin {
 				: array();
 			$new['schedule_calendar'] = isset( $in['schedule_calendar'] ) ? sanitize_text_field( $in['schedule_calendar'] ) : '';
 			$new['schedule_week']     = empty( $in['schedule_week'] ) ? 0 : 1;
+			$new['schedule_buffer']   = isset( $in['schedule_buffer'] ) ? max( 0, min( 480, (int) $in['schedule_buffer'] ) ) : (int) $cur['schedule_buffer'];
 		}
 
 		$invalid_hours = array();

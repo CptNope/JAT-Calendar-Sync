@@ -224,7 +224,8 @@ $aab_has_secret = $secret_locked || '' !== AAB_Settings::client_secret();
 									<?php endforeach; ?>
 								</select>
 								<p><label><input type="checkbox" name="aab[schedule_week]" value="1" <?php checked( ! empty( $s['schedule_week'] ) ); ?>> <?php esc_html_e( 'and the rest of that week, through Sunday', 'anderson-appointment-booking' ); ?></label></p>
-								<p class="description"><?php esc_html_e( 'For shift work (Sling, When I Work, Deputy…): booking opens only up to your last posted shift, so nobody books a time that may still become a shift. When the next schedule appears in Google Calendar, those days open automatically. If nothing is posted, nothing can be booked. Also tick this calendar above so shifts block their own times.', 'anderson-appointment-booking' ); ?></p>
+								<p><label><?php esc_html_e( 'Keep free before and after each shift:', 'anderson-appointment-booking' ); ?> <input type="number" min="0" max="480" name="aab[schedule_buffer]" value="<?php echo esc_attr( (int) $s['schedule_buffer'] ); ?>" class="small-text"> <?php esc_html_e( 'minutes', 'anderson-appointment-booking' ); ?></label></p>
+								<p class="description"><?php esc_html_e( 'For shift work (Sling, When I Work, Deputy…): booking opens only up to your last posted shift, so nobody books a time that may still become a shift. When the next schedule appears in Google Calendar, those days open automatically. If nothing is posted, nothing can be booked. Shifts on this calendar always block their own times, plus the free time you set around them.', 'anderson-appointment-booking' ); ?></p>
 								<?php
 								$aab_horizon = '' !== (string) $s['schedule_calendar'] && AAB_Google::is_connected() ? AAB_Availability::schedule_horizon() : null;
 								if ( null !== $aab_horizon ) :

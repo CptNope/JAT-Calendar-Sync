@@ -104,7 +104,7 @@ Yes. Connect Outlook / Microsoft 365 under Appointments → Settings and choose 
 
 = Does it work with shift schedules like Sling? =
 
-Yes. Subscribe to your schedule's calendar feed in Google Calendar, tick it under "Also check for conflicts" so shifts block their times, and choose it under "Open booking only as far as". Visitors can then only book up to your last posted shift (or the end of that week), so nobody books a time that later becomes a shift. Google refreshes subscribed calendars every few hours, so a newly posted week opens a little later, never early.
+Yes. Subscribe to your schedule's calendar feed in Google Calendar, tick it under "Also check for conflicts" so shifts block their times, and choose it under "Open booking only as far as". Visitors can then only book up to your last posted shift (or the end of that week), so nobody books a time that later becomes a shift. By default an hour before and after each shift stays free too (change it next to the setting). Google refreshes subscribed calendars every few hours, so a newly posted week opens a little later, never early.
 
 = Does it work with page caching? =
 
@@ -114,6 +114,7 @@ Yes. Times are loaded through the REST API when the page opens, so cached pages 
 
 = 1.5.0 =
 * New: Open booking only as far as your posted work schedule (Sling, When I Work, Deputy or any calendar of shifts). Booking opens up to your last posted shift, optionally through the end of that week, and new weeks open automatically when the schedule reaches Google Calendar. If nothing is posted, or the schedule can't be read, nothing can be booked.
+* New: Keep free time around shifts (default 60 minutes before and after each one). It counts as "at least": your usual free time before and after appointments doesn't stack on top.
 
 = 1.4.2 =
 * Fix: Installing a second copy of the plugin in a differently named folder (for example a GitHub download) no longer causes a fatal error on activation. The extra copy stays idle and a notice explains what to do.

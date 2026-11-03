@@ -466,7 +466,7 @@ final class AAB_Google {
 	 * @param array|null $skip         Optional {calendar, start, end}: a booking's own event to ignore (rescheduling).
 	 * @return array<int,array{0:int,1:int}>|WP_Error
 	 */
-	public static function busy( $from, $to, array $calendar_ids, $skip = null ) {
+	public static function busy( $from, $to, array $calendar_ids, $skip = null, array $pad = array() ) {
 		$items = array();
 		foreach ( array_unique( $calendar_ids ) as $id ) {
 			$items[] = array( 'id' => $id );
@@ -500,6 +500,13 @@ final class AAB_Google {
 			}
 			if ( $skip && (string) $id === $skip['calendar'] ) {
 				$ranges = AAB_Availability::subtract( $ranges, $skip['start'], $skip['end'] );
+			}
+			if ( isset( $pad[ (string) $id ] ) ) {
+				// Extra clear time around this calendar's events (e.g. an hour around work shifts).
+				list( $pad_before, $pad_after ) = $pad[ (string) $id ];
+				foreach ( $ranges as $i => $r ) {
+					$ranges[ $i ] = array( $r[0] - (int) $pad_before, $r[1] + (int) $pad_after );
+				}
 			}
 			$busy = array_merge( $busy, $ranges );
 		}
