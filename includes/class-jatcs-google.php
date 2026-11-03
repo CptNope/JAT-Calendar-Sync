@@ -623,7 +623,7 @@ final class JATCS_Google {
 				'singleEvents' => 'true',
 				'showDeleted'  => 'false',
 				'maxResults'   => 2500,
-				'fields'       => 'nextPageToken,items(status,start,end)',
+				'fields'       => 'nextPageToken,items(status,transparency,start,end)',
 			);
 			if ( '' !== $token ) {
 				$query['pageToken'] = $token;
@@ -633,7 +633,8 @@ final class JATCS_Google {
 				return $result;
 			}
 			foreach ( isset( $result['items'] ) ? (array) $result['items'] : array() as $item ) {
-				if ( isset( $item['status'] ) && 'cancelled' === $item['status'] ) {
+				// Cancelled and "Free" (transparent) events aren't part of a work schedule.
+				if ( ( isset( $item['status'] ) && 'cancelled' === $item['status'] ) || ( isset( $item['transparency'] ) && 'transparent' === $item['transparency'] ) ) {
 					continue;
 				}
 				$end = isset( $item['end']['dateTime'] ) ? strtotime( $item['end']['dateTime'] )

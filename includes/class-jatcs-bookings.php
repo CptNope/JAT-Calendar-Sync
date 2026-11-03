@@ -452,7 +452,7 @@ final class JATCS_Bookings {
 			self::email_admin_new( $booking );
 
 			/**
-			 * Fires after a booking is confirmed and added to Google Calendar.
+			 * Fires after a booking is confirmed and added to the booking calendar (Google, Outlook or CalDAV).
 			 *
 			 * @param array $booking Booking data.
 			 */
@@ -581,7 +581,7 @@ final class JATCS_Bookings {
 		 * Fires after a booking is cancelled.
 		 *
 		 * @param array  $booking Booking data.
-		 * @param string $by      'visitor' or 'admin'.
+		 * @param string $by      'visitor', 'admin' or 'calendar' (deleted in the calendar itself).
 		 */
 		do_action( 'jatcs_booking_cancelled', $booking, $by );
 		return true;

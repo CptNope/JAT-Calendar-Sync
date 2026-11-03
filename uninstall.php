@@ -57,7 +57,10 @@ delete_option( 'jatcs_feeds_version' );
 delete_option( 'jatcs_legacy_google_redirect' );
 delete_option( 'jatcs_legacy_ms_redirect' );
 delete_option( 'jatcs_migrated_notice' );
-delete_option( 'jatcs_migrating' );
+// Slot locks and per-user sign-in state.
+global $wpdb;
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-time cleanup of the plugin's own rows.
+$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s", $wpdb->esc_like( '_jatcs_lock_' ) . '%', $wpdb->esc_like( '_transient_jatcs_' ) . '%', $wpdb->esc_like( '_transient_timeout_jatcs_' ) . '%', $wpdb->esc_like( 'jatcs_feed_cache_' ) . '%', $wpdb->esc_like( '_jatcs_' ) . '%' ) );
 
 if ( empty( $jatcs_settings['delete_data'] ) ) {
 	return;

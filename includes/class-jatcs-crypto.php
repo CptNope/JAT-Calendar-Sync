@@ -1,9 +1,10 @@
 <?php
 /**
- * Encrypts secrets (Google client secret and refresh token) at rest.
+ * Encrypts secrets at rest: OAuth client secrets and refresh tokens, CalDAV app passwords,
+ * iCal feed links, Stripe keys and the tokens behind emailed manage links.
  *
- * Uses AES-256-GCM keyed from the site's auth salt, so a leaked database dump
- * alone does not expose your Google credentials. If the salts in wp-config.php
+ * Uses AES-256-GCM keyed from the site's auth salt (or JATCS_ENCRYPTION_KEY), so a leaked
+ * database dump alone does not expose your calendar credentials. If the salts in wp-config.php
  * change, stored secrets can no longer be read and you will need to reconnect.
  *
  * @package JATCalendarSync

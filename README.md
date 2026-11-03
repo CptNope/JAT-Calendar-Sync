@@ -11,6 +11,8 @@ Let visitors book appointments with you on your own WordPress site. Open times c
 
 **Every feature is free. No add-ons, no SaaS in the middle, no build step.**
 
+📖 **Full documentation lives in the [wiki](https://github.com/CptNope/JAT-Calendar-Sync/wiki)**: setup for each calendar service, availability rules, shift-work mode, Stripe, the REST API, hooks, architecture diagrams and troubleshooting. The wiki's source is in [`docs/wiki`](docs/wiki).
+
 ## Contents
 
 - [Why this plugin](#why-this-plugin)
@@ -656,7 +658,7 @@ No build step: edit and reload. CI (GitHub Actions) checks PHP syntax on 7.4 to 
 | --- | --- |
 | Google, Stripe and Microsoft secrets | AES-256-GCM encrypted at rest (key from WordPress salts or `JATCS_ENCRYPTION_KEY`), or kept in `wp-config.php` |
 | Google scopes | `calendar.events`, `calendar.freebusy`, `calendar.calendarlist.readonly` only |
-| Microsoft scopes | `Calendars.Read`, `User.Read`, `offline_access` (read-only) |
+| Microsoft scopes | `Calendars.Read`, `User.Read`, `offline_access` to block times; `Calendars.ReadWrite` instead when you choose **Connect and allow adding bookings** |
 | Event details from conflict calendars | Never read: free/busy (Google) and start, end, show-as (Outlook) only |
 | Card data | Never touches your site: Stripe-hosted Checkout |
 | Payment confirmation | Webhook signature (HMAC-SHA256, 5-minute tolerance) and amount/currency checked; return URLs re-check with Stripe |

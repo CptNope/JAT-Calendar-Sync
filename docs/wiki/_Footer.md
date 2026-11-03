@@ -1,0 +1,1 @@
+JAT Calendar Sync · free and open source (GPLv2 or later) · [GitHub](https://github.com/CptNope/JAT-Calendar-Sync) · by [Jeremy Anderson Tech](https://jeremyanderson.tech) · This wiki is generated from `docs/wiki/` in the repository; edit it there.

@@ -1,6 +1,6 @@
 <?php
 /**
- * Microsoft 365 / Outlook.com calendars as extra conflict calendars (read-only).
+ * Microsoft 365 / Outlook.com calendars: busy times, and (with write access) the booking calendar.
  *
  * Busy times come from Microsoft Graph's calendarView, which expands recurring meetings
  * on Microsoft's side. Events marked Busy, Tentative or Out of office block slots;
@@ -403,7 +403,8 @@ final class JATCS_Microsoft {
 					'name'     => (string) ( isset( $cal['name'] ) ? $cal['name'] : $cal['id'] ),
 					'default'  => ! empty( $cal['isDefaultCalendar'] ),
 					'writable' => ! isset( $cal['canEdit'] ) || ! empty( $cal['canEdit'] ),
-					'meeting'  => in_array( 'teamsforbusiness', $providers, true ) ? 'teamsForBusiness' : ( in_array( 'skypeforconsumer', $providers, true ) ? 'skypeForConsumer' : '' ),
+					// Teams only: Skype for consumer meetings are retired, so personal accounts get no video link.
+					'meeting'  => in_array( 'teamsforbusiness', $providers, true ) ? 'teamsForBusiness' : '',
 				);
 			}
 			$next = isset( $body['@odata.nextLink'] ) ? (string) $body['@odata.nextLink'] : '';
