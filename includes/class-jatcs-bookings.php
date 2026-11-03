@@ -2,7 +2,7 @@
 /**
  * Bookings: storage, creation, cancellation and emails.
  *
- * @package AndersonAppointmentBooking
+ * @package JATCalendarSync
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -10,9 +10,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Booking records live in a private post type so they appear in wp-admin and back up with the site.
  */
-final class AAB_Bookings {
+final class JATCS_Bookings {
 
-	const POST_TYPE = 'aab_booking';
+	const POST_TYPE = 'jatcs_booking';
 
 	/**
 	 * Hooks.
@@ -32,17 +32,17 @@ final class AAB_Bookings {
 			self::POST_TYPE,
 			array(
 				'labels'          => array(
-					'name'          => __( 'Bookings', 'anderson-appointment-booking' ),
-					'singular_name' => __( 'Booking', 'anderson-appointment-booking' ),
-					'menu_name'     => __( 'Bookings', 'anderson-appointment-booking' ),
-					'all_items'     => __( 'Bookings', 'anderson-appointment-booking' ),
-					'edit_item'     => __( 'Booking', 'anderson-appointment-booking' ),
-					'search_items'  => __( 'Search bookings', 'anderson-appointment-booking' ),
-					'not_found'     => __( 'No bookings yet.', 'anderson-appointment-booking' ),
+					'name'          => __( 'Bookings', 'jat-calendar-sync' ),
+					'singular_name' => __( 'Booking', 'jat-calendar-sync' ),
+					'menu_name'     => __( 'Bookings', 'jat-calendar-sync' ),
+					'all_items'     => __( 'Bookings', 'jat-calendar-sync' ),
+					'edit_item'     => __( 'Booking', 'jat-calendar-sync' ),
+					'search_items'  => __( 'Search bookings', 'jat-calendar-sync' ),
+					'not_found'     => __( 'No bookings yet.', 'jat-calendar-sync' ),
 				),
 				'public'          => false,
 				'show_ui'         => true,
-				'show_in_menu'    => 'aab-settings',
+				'show_in_menu'    => 'jatcs-settings',
 				'show_in_rest'    => false,
 				'supports'        => array( 'title' ),
 				'capability_type' => 'post',
@@ -76,37 +76,37 @@ final class AAB_Bookings {
 			return null;
 		}
 		$m = static function ( $key ) use ( $post ) {
-			return get_post_meta( $post->ID, '_aab_' . $key, true );
+			return get_post_meta( $post->ID, '_jatcs_' . $key, true );
 		};
 		return array(
-			'id'          => $post->ID,
-			'start'       => (int) $m( 'start' ),
-			'end'         => (int) $m( 'end' ),
-			'date'        => (string) $m( 'date' ),
-			'name'        => (string) $m( 'name' ),
-			'email'       => (string) $m( 'email' ),
-			'notes'       => (string) $m( 'notes' ),
-			'phone'       => (string) $m( 'phone' ),
-			'status'      => (string) $m( 'status' ),
-			'event_id'    => (string) $m( 'event_id' ),
-			'calendar_id' => (string) $m( 'calendar_id' ),
-			'meet_link'   => (string) $m( 'meet_link' ),
-			'event_link'  => (string) $m( 'event_link' ),
-			'type'        => (string) $m( 'type' ),
-			'type_name'   => (string) $m( 'type_name' ),
-			'answers'     => is_array( $m( 'answers' ) ) ? $m( 'answers' ) : array(),
+			'id'           => $post->ID,
+			'start'        => (int) $m( 'start' ),
+			'end'          => (int) $m( 'end' ),
+			'date'         => (string) $m( 'date' ),
+			'name'         => (string) $m( 'name' ),
+			'email'        => (string) $m( 'email' ),
+			'notes'        => (string) $m( 'notes' ),
+			'phone'        => (string) $m( 'phone' ),
+			'status'       => (string) $m( 'status' ),
+			'event_id'     => (string) $m( 'event_id' ),
+			'calendar_id'  => (string) $m( 'calendar_id' ),
+			'meet_link'    => (string) $m( 'meet_link' ),
+			'event_link'   => (string) $m( 'event_link' ),
+			'type'         => (string) $m( 'type' ),
+			'type_name'    => (string) $m( 'type_name' ),
+			'answers'      => is_array( $m( 'answers' ) ) ? $m( 'answers' ) : array(),
 			// Bookings made before 1.3 have no stored location: fall back to the global one.
-			'location'    => metadata_exists( 'post', $post->ID, '_aab_location' ) ? (string) $m( 'location' ) : trim( (string) AAB_Settings::get( 'location' ) ),
-			'reschedules' => (int) $m( 'reschedules' ),
-			'amount'      => (int) $m( 'amount' ),
-			'currency'    => (string) $m( 'currency' ),
-			'paid_at'     => (int) $m( 'paid_at' ),
-			'payment'     => (string) $m( 'payment_intent' ),
-			'refunded'    => (int) $m( 'refunded_at' ),
+			'location'     => metadata_exists( 'post', $post->ID, '_jatcs_location' ) ? (string) $m( 'location' ) : trim( (string) JATCS_Settings::get( 'location' ) ),
+			'reschedules'  => (int) $m( 'reschedules' ),
+			'amount'       => (int) $m( 'amount' ),
+			'currency'     => (string) $m( 'currency' ),
+			'paid_at'      => (int) $m( 'paid_at' ),
+			'payment'      => (string) $m( 'payment_intent' ),
+			'refunded'     => (int) $m( 'refunded_at' ),
 			'refund_error' => (string) $m( 'refund_error' ),
-			'hold_until'  => (int) $m( 'hold_until' ),
-			'session'     => (string) $m( 'session_id' ),
-			'checkout'    => (string) $m( 'checkout_url' ),
+			'hold_until'   => (int) $m( 'hold_until' ),
+			'session'      => (string) $m( 'session_id' ),
+			'checkout'     => (string) $m( 'checkout_url' ),
 		);
 	}
 
@@ -118,12 +118,12 @@ final class AAB_Bookings {
 	 * @return bool
 	 */
 	public static function holds_slot( $id ) {
-		$status = (string) get_post_meta( $id, '_aab_status', true );
+		$status = (string) get_post_meta( $id, '_jatcs_status', true );
 		if ( 'confirmed' === $status ) {
 			return true;
 		}
 		if ( 'awaiting_payment' === $status ) {
-			return (int) get_post_meta( $id, '_aab_paid_at', true ) > 0 || (int) get_post_meta( $id, '_aab_hold_until', true ) > time();
+			return (int) get_post_meta( $id, '_jatcs_paid_at', true ) > 0 || (int) get_post_meta( $id, '_jatcs_hold_until', true ) > time();
 		}
 		return false;
 	}
@@ -135,9 +135,9 @@ final class AAB_Bookings {
 	 * @return array
 	 */
 	public static function type_of( array $booking ) {
-		$type = '' !== $booking['type'] ? AAB_Types::get( $booking['type'] ) : null;
+		$type = '' !== $booking['type'] ? JATCS_Types::get( $booking['type'] ) : null;
 		if ( ! $type ) {
-			$type = AAB_Types::fallback( (int) round( ( $booking['end'] - $booking['start'] ) / MINUTE_IN_SECONDS ), $booking['type_name'] );
+			$type = JATCS_Types::fallback( (int) round( ( $booking['end'] - $booking['start'] ) / MINUTE_IN_SECONDS ), $booking['type_name'] );
 		}
 		return $type;
 	}
@@ -150,15 +150,15 @@ final class AAB_Bookings {
 	 */
 	public static function can_change( array $booking ) {
 		if ( 'confirmed' !== $booking['status'] ) {
-			return new WP_Error( 'aab_not_confirmed', __( 'This appointment is already cancelled.', 'anderson-appointment-booking' ), array( 'status' => 409 ) );
+			return new WP_Error( 'jatcs_not_confirmed', __( 'This appointment is already cancelled.', 'jat-calendar-sync' ), array( 'status' => 409 ) );
 		}
-		$cutoff = (int) AAB_Settings::get( 'change_cutoff' ) * HOUR_IN_SECONDS;
+		$cutoff = (int) JATCS_Settings::get( 'change_cutoff' ) * HOUR_IN_SECONDS;
 		if ( $booking['start'] - $cutoff <= time() ) {
 			$message = $cutoff
 				/* translators: %d: hours */
-				? sprintf( _n( 'Appointments can only be changed online up to %d hour before they start. Reply to your confirmation email instead.', 'Appointments can only be changed online up to %d hours before they start. Reply to your confirmation email instead.', (int) AAB_Settings::get( 'change_cutoff' ), 'anderson-appointment-booking' ), (int) AAB_Settings::get( 'change_cutoff' ) )
-				: __( 'This appointment has already started, so it can’t be changed online.', 'anderson-appointment-booking' );
-			return new WP_Error( 'aab_too_late', $message, array( 'status' => 403 ) );
+				? sprintf( _n( 'Appointments can only be changed online up to %d hour before they start. Reply to your confirmation email instead.', 'Appointments can only be changed online up to %d hours before they start. Reply to your confirmation email instead.', (int) JATCS_Settings::get( 'change_cutoff' ), 'jat-calendar-sync' ), (int) JATCS_Settings::get( 'change_cutoff' ) )
+				: __( 'This appointment has already started, so it can’t be changed online.', 'jat-calendar-sync' );
+			return new WP_Error( 'jatcs_too_late', $message, array( 'status' => 403 ) );
 		}
 		return true;
 	}
@@ -182,21 +182,21 @@ final class AAB_Bookings {
 				'answers' => array(),
 			)
 		);
-		$type    = is_array( $type ) ? $type : AAB_Types::first();
+		$type    = is_array( $type ) ? $type : JATCS_Types::first();
 		if ( ! $type ) {
-			return new WP_Error( 'aab_no_types', __( 'No appointment types are available.', 'anderson-appointment-booking' ), array( 'status' => 503 ) );
+			return new WP_Error( 'jatcs_no_types', __( 'No appointment types are available.', 'jat-calendar-sync' ), array( 'status' => 503 ) );
 		}
 		if ( ! self::acquire_lock( $start ) ) {
-			return new WP_Error( 'aab_slot_taken', __( 'Someone else is booking that time right now. Pick another time.', 'anderson-appointment-booking' ), array( 'status' => 409 ) );
+			return new WP_Error( 'jatcs_slot_taken', __( 'Someone else is booking that time right now. Pick another time.', 'jat-calendar-sync' ), array( 'status' => 409 ) );
 		}
 
 		try {
-			$check = AAB_Availability::check_slot( $start, $type );
+			$check = JATCS_Availability::check_slot( $start, $type );
 			if ( is_wp_error( $check ) ) {
 				return $check;
 			}
-			if ( AAB_Payments::is_paid( $type ) ) {
-				return AAB_Payments::start_checkout( $start, $visitor, $type );
+			if ( JATCS_Payments::is_paid( $type ) ) {
+				return JATCS_Payments::start_checkout( $start, $visitor, $type );
 			}
 			return self::insert( $start, $visitor, $type );
 		} finally {
@@ -213,7 +213,7 @@ final class AAB_Bookings {
 	 */
 	public static function acquire_named( $name, $ttl = 60 ) {
 		global $wpdb;
-		$name = '_aab_lock_' . substr( sanitize_key( $name ), 0, 150 );
+		$name = '_jatcs_lock_' . substr( sanitize_key( $name ), 0, 150 );
 		$now  = time();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		if ( $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')", $name, (string) $now ) ) ) {
@@ -236,7 +236,7 @@ final class AAB_Bookings {
 	public static function release_named( $name ) {
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$wpdb->delete( $wpdb->options, array( 'option_name' => '_aab_lock_' . substr( sanitize_key( $name ), 0, 150 ) ) );
+		$wpdb->delete( $wpdb->options, array( 'option_name' => '_jatcs_lock_' . substr( sanitize_key( $name ), 0, 150 ) ) );
 	}
 
 	/**
@@ -251,7 +251,7 @@ final class AAB_Bookings {
 	 */
 	private static function acquire_lock( $start ) {
 		global $wpdb;
-		$name = '_aab_lock_' . (int) $start;
+		$name = '_jatcs_lock_' . (int) $start;
 		$now  = time();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- atomic lock; must bypass the options cache.
@@ -278,7 +278,7 @@ final class AAB_Bookings {
 	private static function release_lock( $start ) {
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$wpdb->delete( $wpdb->options, array( 'option_name' => '_aab_lock_' . (int) $start ) );
+		$wpdb->delete( $wpdb->options, array( 'option_name' => '_jatcs_lock_' . (int) $start ) );
 	}
 
 	/**
@@ -298,16 +298,16 @@ final class AAB_Bookings {
 				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					'relation' => 'AND',
 					array(
-						'key'   => '_aab_email',
+						'key'   => '_jatcs_email',
 						'value' => $email,
 					),
 					array(
-						'key'     => '_aab_status',
+						'key'     => '_jatcs_status',
 						'value'   => array( 'confirmed', 'awaiting_payment' ),
 						'compare' => 'IN',
 					),
 					array(
-						'key'     => '_aab_end',
+						'key'     => '_jatcs_end',
 						'value'   => time(),
 						'compare' => '>',
 						'type'    => 'NUMERIC',
@@ -355,26 +355,26 @@ final class AAB_Bookings {
 				'post_type'   => self::POST_TYPE,
 				'post_status' => 'publish',
 				/* translators: 1: visitor name, 2: date and time */
-				'post_title'  => sprintf( __( '%1$s, %2$s', 'anderson-appointment-booking' ), $visitor['name'], self::format_time( $start ) ),
+				'post_title'  => sprintf( __( '%1$s, %2$s', 'jat-calendar-sync' ), $visitor['name'], self::format_time( $start ) ),
 				'meta_input'  => array_merge(
 					array(
-						'_aab_start'       => $start,
-						'_aab_end'         => $start + AAB_Availability::duration_seconds( $type ),
-						'_aab_date'        => wp_date( 'Y-m-d', $start ),
-						'_aab_name'        => $visitor['name'],
-						'_aab_email'       => $visitor['email'],
-						'_aab_notes'       => $visitor['notes'],
-						'_aab_phone'       => $visitor['phone'],
-						'_aab_type'        => $type['id'],
-						'_aab_type_name'   => $type['name'],
-						'_aab_answers'     => $visitor['answers'],
-						'_aab_location'    => AAB_Types::location( $type ),
-						'_aab_meet'        => AAB_Types::wants_meet( $type ) ? 1 : 0,
-						'_aab_status'      => $status,
-						'_aab_calendar_id' => (string) AAB_Settings::get( 'booking_calendar' ),
-						'_aab_cancel_hash' => self::hash_token( $token ),
+						'_jatcs_start'       => $start,
+						'_jatcs_end'         => $start + JATCS_Availability::duration_seconds( $type ),
+						'_jatcs_date'        => wp_date( 'Y-m-d', $start ),
+						'_jatcs_name'        => $visitor['name'],
+						'_jatcs_email'       => $visitor['email'],
+						'_jatcs_notes'       => $visitor['notes'],
+						'_jatcs_phone'       => $visitor['phone'],
+						'_jatcs_type'        => $type['id'],
+						'_jatcs_type_name'   => $type['name'],
+						'_jatcs_answers'     => $visitor['answers'],
+						'_jatcs_location'    => JATCS_Types::location( $type ),
+						'_jatcs_meet'        => JATCS_Types::wants_meet( $type ) ? 1 : 0,
+						'_jatcs_status'      => $status,
+						'_jatcs_calendar_id' => (string) JATCS_Settings::get( 'booking_calendar' ),
+						'_jatcs_cancel_hash' => self::hash_token( $token ),
 						// Kept (encrypted) so later emails can include the manage link too.
-						'_aab_cancel_enc'  => AAB_Crypto::encrypt( $token ),
+						'_jatcs_cancel_enc'  => JATCS_Crypto::encrypt( $token ),
 					),
 					$extra
 				),
@@ -383,7 +383,7 @@ final class AAB_Bookings {
 		);
 		if ( ! is_wp_error( $post_id ) ) {
 			// Fixed up front, so creating the Google event is safe to repeat (a retry gets "already exists").
-			update_post_meta( $post_id, '_aab_event_gid', self::event_id( $post_id ) );
+			update_post_meta( $post_id, '_jatcs_event_gid', self::event_id( $post_id ) );
 		}
 		return $post_id;
 	}
@@ -399,84 +399,53 @@ final class AAB_Bookings {
 	 */
 	public static function finalize( $post_id ) {
 		if ( ! self::acquire_named( 'fin_' . $post_id, 120 ) ) {
-			return new WP_Error( 'aab_busy', __( 'This booking is being confirmed. Refresh in a moment.', 'anderson-appointment-booking' ), array( 'status' => 409 ) );
+			return new WP_Error( 'jatcs_busy', __( 'This booking is being confirmed. Refresh in a moment.', 'jat-calendar-sync' ), array( 'status' => 409 ) );
 		}
 		try {
 			$booking = self::get( $post_id );
 			if ( ! $booking ) {
-				return new WP_Error( 'aab_not_found', __( 'Booking not found.', 'anderson-appointment-booking' ) );
+				return new WP_Error( 'jatcs_not_found', __( 'Booking not found.', 'jat-calendar-sync' ) );
 			}
 			if ( 'confirmed' === $booking['status'] ) {
 				return $booking;
 			}
 			$calendar = $booking['calendar_id'];
-			$tz       = self::google_timezone( wp_timezone_string() );
-			$event    = array(
-				'id'                 => (string) get_post_meta( $post_id, '_aab_event_gid', true ),
-				'summary'            => self::render_title( $booking['name'], $booking['type_name'] ),
-				'description'        => self::event_description( $booking['name'], $booking['email'], $booking['notes'], $booking['phone'], $booking['type_name'], $booking['answers'], $booking ),
-				'start'              => array(
-					'dateTime' => wp_date( 'c', $booking['start'] ),
-					'timeZone' => $tz,
-				),
-				'end'                => array(
-					'dateTime' => wp_date( 'c', $booking['end'] ),
-					'timeZone' => $tz,
-				),
-				'reminders'          => array( 'useDefault' => true ),
-				'extendedProperties' => array( 'private' => array( 'aab_booking_id' => (string) $post_id ) ),
+			$created  = JATCS_Calendars::create_event(
+				$calendar,
+				array(
+					'uid'         => (string) get_post_meta( $post_id, '_jatcs_event_gid', true ),
+					'booking_id'  => (int) $post_id,
+					'summary'     => self::render_title( $booking['name'], $booking['type_name'] ),
+					'description' => self::event_description( $booking['name'], $booking['email'], $booking['notes'], $booking['phone'], $booking['type_name'], $booking['answers'], $booking ),
+					'location'    => (string) $booking['location'],
+					'start'       => (int) $booking['start'],
+					'end'         => (int) $booking['end'],
+					'attendee'    => self::server_invites( $calendar ) ? array(
+						'email' => $booking['email'],
+						'name'  => $booking['name'],
+					) : null,
+					'video'       => (bool) get_post_meta( $post_id, '_jatcs_meet', true ),
+				)
 			);
-			if ( '' !== $booking['location'] ) {
-				$event['location'] = $booking['location'];
-			}
-			$invite = (bool) AAB_Settings::get( 'invite_guest' );
-			if ( $invite ) {
-				$event['attendees'] = array(
-					array(
-						'email'       => $booking['email'],
-						'displayName' => $booking['name'],
-					),
-				);
-			}
-			if ( get_post_meta( $post_id, '_aab_meet', true ) ) {
-				$event['conferenceData'] = array(
-					'createRequest' => array(
-						'requestId'             => 'aab-' . $post_id,
-						'conferenceSolutionKey' => array( 'type' => 'hangoutsMeet' ),
-					),
-				);
-			}
-
-			$created = AAB_Google::insert_event( $calendar, $event, $invite );
 			if ( is_wp_error( $created ) ) {
 				return new WP_Error(
-					'aab_google_failed',
-					__( 'The booking could not be added to the calendar. Try again in a minute.', 'anderson-appointment-booking' ),
+					'jatcs_google_failed',
+					__( 'The booking could not be added to the calendar. Try again in a minute.', 'jat-calendar-sync' ),
 					array(
 						'status' => 502,
 						'detail' => $created->get_error_message(),
 					)
 				);
 			}
+			$meet = (string) $created['video'];
 
-			$meet = '';
-			if ( ! empty( $created['hangoutLink'] ) ) {
-				$meet = (string) $created['hangoutLink'];
-			} elseif ( ! empty( $created['conferenceData']['entryPoints'] ) ) {
-				foreach ( $created['conferenceData']['entryPoints'] as $entry ) {
-					if ( isset( $entry['entryPointType'] ) && 'video' === $entry['entryPointType'] ) {
-						$meet = (string) $entry['uri'];
-						break;
-					}
-				}
-			}
-			update_post_meta( $post_id, '_aab_event_id', sanitize_text_field( $created['id'] ) );
-			update_post_meta( $post_id, '_aab_event_link', esc_url_raw( isset( $created['htmlLink'] ) ? $created['htmlLink'] : '' ) );
-			update_post_meta( $post_id, '_aab_meet_link', esc_url_raw( $meet ) );
-			update_post_meta( $post_id, '_aab_status', 'confirmed' );
-			delete_post_meta( $post_id, '_aab_hold_until' );
+			update_post_meta( $post_id, '_jatcs_event_id', sanitize_text_field( $created['id'] ) );
+			update_post_meta( $post_id, '_jatcs_event_link', esc_url_raw( $created['link'] ) );
+			update_post_meta( $post_id, '_jatcs_meet_link', esc_url_raw( $meet ) );
+			update_post_meta( $post_id, '_jatcs_status', 'confirmed' );
+			delete_post_meta( $post_id, '_jatcs_hold_until' );
 
-			AAB_Availability::bust_cache();
+			JATCS_Availability::bust_cache();
 
 			$booking = self::get( $post_id );
 			self::email_confirmation( $booking );
@@ -487,7 +456,7 @@ final class AAB_Bookings {
 			 *
 			 * @param array $booking Booking data.
 			 */
-			do_action( 'aab_booking_confirmed', $booking );
+			do_action( 'jatcs_booking_confirmed', $booking );
 
 			return $booking;
 		} finally {
@@ -508,67 +477,52 @@ final class AAB_Bookings {
 	public static function reschedule( $id, $start ) {
 		$booking = self::get( $id );
 		if ( ! $booking ) {
-			return new WP_Error( 'aab_not_found', __( 'Booking not found.', 'anderson-appointment-booking' ), array( 'status' => 404 ) );
+			return new WP_Error( 'jatcs_not_found', __( 'Booking not found.', 'jat-calendar-sync' ), array( 'status' => 404 ) );
 		}
 		$ok = self::can_change( $booking );
 		if ( is_wp_error( $ok ) ) {
 			return $ok;
 		}
 		if ( (int) $start === $booking['start'] ) {
-			return new WP_Error( 'aab_same_time', __( 'That’s already your appointment time. Pick a different time.', 'anderson-appointment-booking' ), array( 'status' => 400 ) );
+			return new WP_Error( 'jatcs_same_time', __( 'That’s already your appointment time. Pick a different time.', 'jat-calendar-sync' ), array( 'status' => 400 ) );
 		}
-		$limit = (int) AAB_Settings::get( 'max_reschedules' );
+		$limit = (int) JATCS_Settings::get( 'max_reschedules' );
 		if ( $limit > 0 && $booking['reschedules'] >= $limit ) {
-			return new WP_Error( 'aab_too_many_moves', __( 'This appointment can’t be moved again online. Reply to your confirmation email to change it.', 'anderson-appointment-booking' ), array( 'status' => 403 ) );
+			return new WP_Error( 'jatcs_too_many_moves', __( 'This appointment can’t be moved again online. Reply to your confirmation email to change it.', 'jat-calendar-sync' ), array( 'status' => 403 ) );
 		}
 		$type = self::type_of( $booking );
 
 		if ( ! self::acquire_lock( $start ) ) {
-			return new WP_Error( 'aab_slot_taken', __( 'Someone else is booking that time right now. Pick another time.', 'anderson-appointment-booking' ), array( 'status' => 409 ) );
+			return new WP_Error( 'jatcs_slot_taken', __( 'Someone else is booking that time right now. Pick another time.', 'jat-calendar-sync' ), array( 'status' => 409 ) );
 		}
 		try {
-			$check = AAB_Availability::check_slot( $start, $type, $booking );
+			$check = JATCS_Availability::check_slot( $start, $type, $booking );
 			if ( is_wp_error( $check ) ) {
 				return $check;
 			}
 			$end = $start + (int) $type['duration'] * MINUTE_IN_SECONDS;
-			$tz  = self::google_timezone( wp_timezone_string() );
 
 			if ( '' !== $booking['event_id'] ) {
-				$moved = AAB_Google::patch_event(
-					$booking['calendar_id'],
-					$booking['event_id'],
-					array(
-						'start' => array(
-							'dateTime' => wp_date( 'c', $start ),
-							'timeZone' => $tz,
-						),
-						'end'   => array(
-							'dateTime' => wp_date( 'c', $end ),
-							'timeZone' => $tz,
-						),
-					),
-					(bool) AAB_Settings::get( 'invite_guest' )
-				);
+				$moved = JATCS_Calendars::move_event( $booking['calendar_id'], $booking['event_id'], $start, $end, self::server_invites( $booking['calendar_id'] ) );
 				if ( is_wp_error( $moved ) ) {
-					return new WP_Error( 'aab_google_failed', __( 'Your appointment could not be moved right now. Try again in a minute.', 'anderson-appointment-booking' ), array( 'status' => 502 ) );
+					return new WP_Error( 'jatcs_google_failed', __( 'Your appointment could not be moved right now. Try again in a minute.', 'jat-calendar-sync' ), array( 'status' => 502 ) );
 				}
 			}
 
 			$old = $booking['start'];
-			update_post_meta( $id, '_aab_start', $start );
-			update_post_meta( $id, '_aab_end', $end );
-			update_post_meta( $id, '_aab_date', wp_date( 'Y-m-d', $start ) );
-			update_post_meta( $id, '_aab_reschedules', $booking['reschedules'] + 1 );
-			delete_post_meta( $id, '_aab_reminded' );
+			update_post_meta( $id, '_jatcs_start', $start );
+			update_post_meta( $id, '_jatcs_end', $end );
+			update_post_meta( $id, '_jatcs_date', wp_date( 'Y-m-d', $start ) );
+			update_post_meta( $id, '_jatcs_reschedules', $booking['reschedules'] + 1 );
+			delete_post_meta( $id, '_jatcs_reminded' );
 			wp_update_post(
 				array(
 					'ID'         => $id,
 					/* translators: 1: visitor name, 2: date and time */
-					'post_title' => sprintf( __( '%1$s, %2$s', 'anderson-appointment-booking' ), $booking['name'], self::format_time( $start ) ),
+					'post_title' => sprintf( __( '%1$s, %2$s', 'jat-calendar-sync' ), $booking['name'], self::format_time( $start ) ),
 				)
 			);
-			AAB_Availability::bust_cache();
+			JATCS_Availability::bust_cache();
 
 			$updated = self::get( $id );
 			self::email_rescheduled( $updated, $old, 'visitor' );
@@ -579,7 +533,7 @@ final class AAB_Bookings {
 			 * @param array $booking   Updated booking.
 			 * @param int   $old_start Previous start time.
 			 */
-			do_action( 'aab_booking_rescheduled', $updated, $old );
+			do_action( 'jatcs_booking_rescheduled', $updated, $old );
 			return $updated;
 		} finally {
 			self::release_lock( $start );
@@ -596,29 +550,29 @@ final class AAB_Bookings {
 	public static function cancel( $id, $by ) {
 		$booking = self::get( $id );
 		if ( ! $booking ) {
-			return new WP_Error( 'aab_not_found', __( 'Booking not found.', 'anderson-appointment-booking' ) );
+			return new WP_Error( 'jatcs_not_found', __( 'Booking not found.', 'jat-calendar-sync' ) );
 		}
 		if ( 'cancelled' === $booking['status'] ) {
 			return true;
 		}
 		if ( 'confirmed' !== $booking['status'] && ! $booking['paid_at'] ) {
 			// Never confirmed (payment abandoned): just let the slot go.
-			AAB_Payments::release( $id, 'cancelled' );
+			JATCS_Payments::release( $id, 'cancelled' );
 			return true;
 		}
 		if ( '' !== $booking['event_id'] && 'calendar' !== $by ) {
-			$result = AAB_Google::delete_event( $booking['calendar_id'], $booking['event_id'], (bool) AAB_Settings::get( 'invite_guest' ) );
+			$result = JATCS_Calendars::delete_event( $booking['calendar_id'], $booking['event_id'], self::server_invites( $booking['calendar_id'] ) );
 			if ( is_wp_error( $result ) ) {
 				return $result;
 			}
 		}
-		update_post_meta( $id, '_aab_status', 'cancelled' );
-		update_post_meta( $id, '_aab_cancelled_by', in_array( $by, array( 'admin', 'calendar' ), true ) ? $by : 'visitor' );
-		delete_post_meta( $id, '_aab_cancel_hash' );
-		delete_post_meta( $id, '_aab_cancel_enc' );
-		AAB_Availability::bust_cache();
+		update_post_meta( $id, '_jatcs_status', 'cancelled' );
+		update_post_meta( $id, '_jatcs_cancelled_by', in_array( $by, array( 'admin', 'calendar' ), true ) ? $by : 'visitor' );
+		delete_post_meta( $id, '_jatcs_cancel_hash' );
+		delete_post_meta( $id, '_jatcs_cancel_enc' );
+		JATCS_Availability::bust_cache();
 
-		$refund = AAB_Payments::refund_on_cancel( $booking, $by );
+		$refund = JATCS_Payments::refund_on_cancel( $booking, $by );
 
 		$booking['status'] = 'cancelled';
 		self::email_cancelled( $booking, $by, $refund );
@@ -629,7 +583,7 @@ final class AAB_Bookings {
 		 * @param array  $booking Booking data.
 		 * @param string $by      'visitor' or 'admin'.
 		 */
-		do_action( 'aab_booking_cancelled', $booking, $by );
+		do_action( 'jatcs_booking_cancelled', $booking, $by );
 		return true;
 	}
 
@@ -653,7 +607,7 @@ final class AAB_Bookings {
 	 * @return bool
 	 */
 	public static function verify_token( $id, $token ) {
-		$hash = (string) get_post_meta( $id, '_aab_cancel_hash', true );
+		$hash = (string) get_post_meta( $id, '_jatcs_cancel_hash', true );
 		return '' !== $hash && '' !== $token && hash_equals( $hash, self::hash_token( $token ) );
 	}
 
@@ -667,8 +621,8 @@ final class AAB_Bookings {
 	public static function cancel_url( $id, $token ) {
 		return add_query_arg(
 			array(
-				'aab_manage' => (int) $id,
-				'aab_token'  => rawurlencode( $token ),
+				'jatcs_manage' => (int) $id,
+				'jatcs_token'  => rawurlencode( $token ),
 			),
 			home_url( '/' )
 		);
@@ -693,13 +647,13 @@ final class AAB_Bookings {
 				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					'relation' => 'AND',
 					array(
-						'key'     => '_aab_start',
+						'key'     => '_jatcs_start',
 						'value'   => array( $from - DAY_IN_SECONDS, $to ),
 						'compare' => 'BETWEEN',
 						'type'    => 'NUMERIC',
 					),
 					array(
-						'key'     => '_aab_status',
+						'key'     => '_jatcs_status',
 						'value'   => array( 'confirmed', 'awaiting_payment' ),
 						'compare' => 'IN',
 					),
@@ -711,8 +665,8 @@ final class AAB_Bookings {
 			if ( (int) $id === (int) $exclude || ! self::holds_slot( $id ) ) {
 				continue;
 			}
-			$start = (int) get_post_meta( $id, '_aab_start', true );
-			$end   = (int) get_post_meta( $id, '_aab_end', true );
+			$start = (int) get_post_meta( $id, '_jatcs_start', true );
+			$end   = (int) get_post_meta( $id, '_jatcs_end', true );
 			if ( $end > $from && $start < $to ) {
 				$out[] = array( $start, $end );
 			}
@@ -739,12 +693,12 @@ final class AAB_Bookings {
 				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					'relation' => 'AND',
 					array(
-						'key'     => '_aab_date',
+						'key'     => '_jatcs_date',
 						'value'   => array( $from, $to ),
 						'compare' => 'BETWEEN',
 					),
 					array(
-						'key'     => '_aab_status',
+						'key'     => '_jatcs_status',
 						'value'   => array( 'confirmed', 'awaiting_payment' ),
 						'compare' => 'IN',
 					),
@@ -756,7 +710,7 @@ final class AAB_Bookings {
 			if ( (int) $id === (int) $exclude || ! self::holds_slot( $id ) ) {
 				continue;
 			}
-			$date            = (string) get_post_meta( $id, '_aab_date', true );
+			$date            = (string) get_post_meta( $id, '_jatcs_date', true );
 			$counts[ $date ] = isset( $counts[ $date ] ) ? $counts[ $date ] + 1 : 1;
 		}
 		return $counts;
@@ -773,13 +727,15 @@ final class AAB_Bookings {
 	}
 
 	/**
-	 * Google needs an IANA zone name; WordPress may be set to a raw offset like "+02:00".
+	 * Does the calendar service email the guest its own invitation (Google, Outlook)?
+	 * Otherwise the plugin's confirmation email carries a calendar file.
 	 *
-	 * @param string $tz Timezone string.
-	 * @return string
+	 * @param string $calendar Calendar reference.
+	 * @return bool
 	 */
-	private static function google_timezone( $tz ) {
-		return preg_match( '#^[A-Za-z_]+/[A-Za-z_/\-+0-9]+$#', $tz ) || 'UTC' === $tz ? $tz : 'UTC';
+	public static function server_invites( $calendar ) {
+		list( $service ) = JATCS_Calendars::parse( (string) $calendar );
+		return (bool) JATCS_Settings::get( 'invite_guest' ) && in_array( $service, array( 'google', 'ms' ), true );
 	}
 
 	/**
@@ -799,7 +755,7 @@ final class AAB_Bookings {
 	 * @return string
 	 */
 	private static function render_title( $name, $type_name = '' ) {
-		$template = (string) AAB_Settings::get( 'event_title' );
+		$template = (string) JATCS_Settings::get( 'event_title' );
 		return strtr(
 			'' !== trim( $template ) ? $template : 'Appointment with {name}',
 			array(
@@ -822,7 +778,7 @@ final class AAB_Bookings {
 		foreach ( str_split( random_bytes( 10 ) ) as $byte ) {
 			$random .= $alphabet[ ord( $byte ) % 32 ];
 		}
-		return 'aab' . (int) $post_id . 'v' . $random;
+		return 'jatcs' . (int) $post_id . 'v' . $random;
 	}
 
 	/**
@@ -845,19 +801,19 @@ final class AAB_Bookings {
 		$lines = array_merge(
 			$lines,
 			array(
-			/* translators: %s: visitor name */
-			sprintf( __( 'Name: %s', 'anderson-appointment-booking' ), $name ),
-			/* translators: %s: visitor email */
-			sprintf( __( 'Email: %s', 'anderson-appointment-booking' ), $email ),
+				/* translators: %s: visitor name */
+				sprintf( __( 'Name: %s', 'jat-calendar-sync' ), $name ),
+				/* translators: %s: visitor email */
+				sprintf( __( 'Email: %s', 'jat-calendar-sync' ), $email ),
 			)
 		);
 		if ( '' !== $phone ) {
 			/* translators: %s: visitor phone number */
-			$lines[] = sprintf( __( 'Phone: %s', 'anderson-appointment-booking' ), $phone );
+			$lines[] = sprintf( __( 'Phone: %s', 'jat-calendar-sync' ), $phone );
 		}
 		if ( ! empty( $booking['paid_at'] ) ) {
 			/* translators: %s: amount paid */
-			$lines[] = sprintf( __( 'Paid: %s (Stripe)', 'anderson-appointment-booking' ), AAB_Stripe::format( $booking['amount'], $booking['currency'] ) );
+			$lines[] = sprintf( __( 'Paid: %s (Stripe)', 'jat-calendar-sync' ), JATCS_Stripe::format( $booking['amount'], $booking['currency'] ) );
 		}
 		foreach ( self::answer_lines( $answers ) as $line ) {
 			$lines[] = $line;
@@ -868,7 +824,7 @@ final class AAB_Bookings {
 		}
 		$lines[] = '';
 		/* translators: %s: site URL */
-		$lines[] = sprintf( __( 'Booked through %s', 'anderson-appointment-booking' ), home_url( '/' ) );
+		$lines[] = sprintf( __( 'Booked through %s', 'jat-calendar-sync' ), home_url( '/' ) );
 		return implode( "\n", $lines );
 	}
 
@@ -895,7 +851,7 @@ final class AAB_Bookings {
 	 * @return string
 	 */
 	public static function cancel_url_for( array $booking ) {
-		$token = AAB_Crypto::decrypt( (string) get_post_meta( $booking['id'], '_aab_cancel_enc', true ) );
+		$token = JATCS_Crypto::decrypt( (string) get_post_meta( $booking['id'], '_jatcs_cancel_enc', true ) );
 		return '' !== $token && self::verify_token( $booking['id'], $token ) ? self::cancel_url( $booking['id'], $token ) : '';
 	}
 
@@ -918,28 +874,28 @@ final class AAB_Bookings {
 		$lines = array();
 		if ( '' !== $booking['type_name'] ) {
 			/* translators: %s: appointment type */
-			$lines[] = sprintf( __( 'What: %s', 'anderson-appointment-booking' ), $booking['type_name'] );
+			$lines[] = sprintf( __( 'What: %s', 'jat-calendar-sync' ), $booking['type_name'] );
 		}
 		$lines = array_merge(
 			$lines,
 			array(
-			/* translators: 1: date and time, 2: timezone */
-			sprintf( __( 'When: %1$s (%2$s)', 'anderson-appointment-booking' ), self::format_time( $booking['start'] ), wp_timezone_string() ),
+				/* translators: 1: date and time, 2: timezone */
+				sprintf( __( 'When: %1$s (%2$s)', 'jat-calendar-sync' ), self::format_time( $booking['start'] ), wp_timezone_string() ),
 			)
 		);
 		if ( '' !== $booking['meet_link'] ) {
 			/* translators: %s: video call link */
-			$lines[] = sprintf( __( 'Join the video call: %s', 'anderson-appointment-booking' ), $booking['meet_link'] );
+			$lines[] = sprintf( __( 'Join the video call: %s', 'jat-calendar-sync' ), $booking['meet_link'] );
 		}
 		if ( '' !== $booking['location'] ) {
 			/* translators: %s: location */
-			$lines[] = sprintf( __( 'Location: %s', 'anderson-appointment-booking' ), $booking['location'] );
+			$lines[] = sprintf( __( 'Location: %s', 'jat-calendar-sync' ), $booking['location'] );
 		}
 		$manage = self::cancel_url_for( $booking );
 		if ( '' !== $manage ) {
 			$lines[] = '';
 			/* translators: %s: link to reschedule or cancel */
-			$lines[] = sprintf( __( 'Need to reschedule or cancel? %s', 'anderson-appointment-booking' ), $manage );
+			$lines[] = sprintf( __( 'Need to reschedule or cancel? %s', 'jat-calendar-sync' ), $manage );
 		}
 		return $lines;
 	}
@@ -956,8 +912,11 @@ final class AAB_Bookings {
 		};
 		$fold = static function ( $line ) {
 			$out = '';
-			while ( strlen( $line ) > 74 ) {
-				$cut  = 74;
+			while ( true ) {
+				if ( strlen( $line ) <= 74 ) {
+					break;
+				}
+				$cut = 74;
 				// Don't split a multibyte character.
 				while ( $cut > 0 && ( ord( $line[ $cut ] ) & 0xC0 ) === 0x80 ) {
 					--$cut;
@@ -970,27 +929,27 @@ final class AAB_Bookings {
 		$desc = array();
 		if ( '' !== $booking['meet_link'] ) {
 			/* translators: %s: video call link */
-			$desc[] = sprintf( __( 'Join the video call: %s', 'anderson-appointment-booking' ), $booking['meet_link'] );
+			$desc[] = sprintf( __( 'Join the video call: %s', 'jat-calendar-sync' ), $booking['meet_link'] );
 		}
 		$manage = self::cancel_url_for( $booking );
 		if ( '' !== $manage ) {
 			/* translators: %s: link to reschedule or cancel */
-			$desc[] = sprintf( __( 'Need to reschedule or cancel? %s', 'anderson-appointment-booking' ), $manage );
+			$desc[] = sprintf( __( 'Need to reschedule or cancel? %s', 'jat-calendar-sync' ), $manage );
 		}
-		$host  = wp_parse_url( home_url(), PHP_URL_HOST );
-		$lines = array(
+		$host     = wp_parse_url( home_url(), PHP_URL_HOST );
+		$lines    = array(
 			'BEGIN:VCALENDAR',
 			'VERSION:2.0',
-			'PRODID:-//Anderson Appointment Booking//EN',
+			'PRODID:-//JAT Calendar Sync//EN',
 			'CALSCALE:GREGORIAN',
 			'METHOD:PUBLISH',
 			'BEGIN:VEVENT',
-			'UID:aab-' . $booking['id'] . '@' . $host,
+			'UID:jatcs-' . $booking['id'] . '@' . $host,
 			'DTSTAMP:' . gmdate( 'Ymd\THis\Z' ),
 			'DTSTART:' . gmdate( 'Ymd\THis\Z', $booking['start'] ),
 			'DTEND:' . gmdate( 'Ymd\THis\Z', $booking['end'] ),
 			/* translators: %s: site name */
-			'SUMMARY:' . $esc( '' !== $booking['type_name'] ? $booking['type_name'] . ' – ' . self::site_name() : sprintf( __( 'Appointment with %s', 'anderson-appointment-booking' ), self::site_name() ) ),
+			'SUMMARY:' . $esc( '' !== $booking['type_name'] ? $booking['type_name'] . ' – ' . self::site_name() : sprintf( __( 'Appointment with %s', 'jat-calendar-sync' ), self::site_name() ) ),
 			'DESCRIPTION:' . $esc( implode( "\n", $desc ) ),
 		);
 		$location = $booking['location'];
@@ -1007,7 +966,7 @@ final class AAB_Bookings {
 	}
 
 	/**
-	 * Send an email to the visitor, attaching a calendar file when Google isn't sending them an invite.
+	 * Send an email to the visitor, attaching a calendar file when the calendar service isn't sending them an invite.
 	 *
 	 * @param array    $booking Booking.
 	 * @param string   $subject Subject.
@@ -1016,7 +975,7 @@ final class AAB_Bookings {
 	 */
 	private static function mail_visitor( array $booking, $subject, array $lines, $attach ) {
 		$file = '';
-		if ( $attach && ! AAB_Settings::get( 'invite_guest' ) ) {
+		if ( $attach && ! self::server_invites( isset( $booking['calendar_id'] ) ? $booking['calendar_id'] : '' ) ) {
 			$file = trailingslashit( get_temp_dir() ) . 'appointment-' . (int) $booking['id'] . '-' . wp_generate_password( 6, false ) . '.ics';
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- short-lived temp attachment.
 			if ( false === file_put_contents( $file, self::ics( $booking ) ) ) {
@@ -1038,16 +997,16 @@ final class AAB_Bookings {
 		$lines = array_merge(
 			array(
 				/* translators: %s: visitor name */
-				sprintf( __( 'Hi %s,', 'anderson-appointment-booking' ), $booking['name'] ),
+				sprintf( __( 'Hi %s,', 'jat-calendar-sync' ), $booking['name'] ),
 				'',
 				/* translators: %s: site name */
-				sprintf( __( 'Your appointment with %s is booked.', 'anderson-appointment-booking' ), self::site_name() ),
+				sprintf( __( 'Your appointment with %s is booked.', 'jat-calendar-sync' ), self::site_name() ),
 				'',
 			),
 			self::details_lines( $booking )
 		);
 		/* translators: 1: site name, 2: date and time */
-		$subject = sprintf( __( '[%1$s] Appointment booked: %2$s', 'anderson-appointment-booking' ), self::site_name(), self::format_time( $booking['start'] ) );
+		$subject = sprintf( __( '[%1$s] Appointment booked: %2$s', 'jat-calendar-sync' ), self::site_name(), self::format_time( $booking['start'] ) );
 		self::mail_visitor( $booking, $subject, $lines, true );
 	}
 
@@ -1060,16 +1019,16 @@ final class AAB_Bookings {
 		$lines = array_merge(
 			array(
 				/* translators: %s: visitor name */
-				sprintf( __( 'Hi %s,', 'anderson-appointment-booking' ), $booking['name'] ),
+				sprintf( __( 'Hi %s,', 'jat-calendar-sync' ), $booking['name'] ),
 				'',
 				/* translators: %s: site name */
-				sprintf( __( 'A reminder of your upcoming appointment with %s.', 'anderson-appointment-booking' ), self::site_name() ),
+				sprintf( __( 'A reminder of your upcoming appointment with %s.', 'jat-calendar-sync' ), self::site_name() ),
 				'',
 			),
 			self::details_lines( $booking )
 		);
 		/* translators: 1: site name, 2: date and time */
-		$subject = sprintf( __( '[%1$s] Reminder: appointment %2$s', 'anderson-appointment-booking' ), self::site_name(), self::format_time( $booking['start'] ) );
+		$subject = sprintf( __( '[%1$s] Reminder: appointment %2$s', 'jat-calendar-sync' ), self::site_name(), self::format_time( $booking['start'] ) );
 		self::mail_visitor( $booking, $subject, $lines, false );
 	}
 
@@ -1084,26 +1043,26 @@ final class AAB_Bookings {
 		$lines = array_merge(
 			array(
 				/* translators: %s: visitor name */
-				sprintf( __( 'Hi %s,', 'anderson-appointment-booking' ), $booking['name'] ),
+				sprintf( __( 'Hi %s,', 'jat-calendar-sync' ), $booking['name'] ),
 				'',
 				'visitor' === $by
 					/* translators: 1: old date and time */
-					? sprintf( __( 'Your appointment has been moved from %1$s to the new time below.', 'anderson-appointment-booking' ), self::format_time( $old ) )
+					? sprintf( __( 'Your appointment has been moved from %1$s to the new time below.', 'jat-calendar-sync' ), self::format_time( $old ) )
 					/* translators: 1: site name, 2: old date and time */
-					: sprintf( __( 'Your appointment with %1$s, previously %2$s, has moved.', 'anderson-appointment-booking' ), self::site_name(), self::format_time( $old ) ),
+					: sprintf( __( 'Your appointment with %1$s, previously %2$s, has moved.', 'jat-calendar-sync' ), self::site_name(), self::format_time( $old ) ),
 				'',
 			),
 			self::details_lines( $booking )
 		);
 		/* translators: 1: site name, 2: new date and time */
-		$subject = sprintf( __( '[%1$s] Appointment moved to %2$s', 'anderson-appointment-booking' ), self::site_name(), self::format_time( $booking['start'] ) );
+		$subject = sprintf( __( '[%1$s] Appointment moved to %2$s', 'jat-calendar-sync' ), self::site_name(), self::format_time( $booking['start'] ) );
 		self::mail_visitor( $booking, $subject, $lines, true );
 
 		$to = self::notify_email();
 		if ( 'visitor' === $by && '' !== $to ) {
 			$body = sprintf(
 				/* translators: 1: visitor name, 2: email, 3: old time, 4: new time */
-				__( "%1\$s (%2\$s) rescheduled their appointment.\n\nWas: %3\$s\nNow: %4\$s\n\nGoogle Calendar has been updated.", 'anderson-appointment-booking' ),
+				__( "%1\$s (%2\$s) rescheduled their appointment.\n\nWas: %3\$s\nNow: %4\$s\n\nYour calendar has been updated.", 'jat-calendar-sync' ),
 				$booking['name'],
 				$booking['email'],
 				self::format_time( $old ),
@@ -1111,10 +1070,10 @@ final class AAB_Bookings {
 			);
 			if ( '' !== $booking['event_link'] ) {
 				/* translators: %s: Google Calendar event link */
-				$body .= "\n" . sprintf( __( 'Open in Google Calendar: %s', 'anderson-appointment-booking' ), $booking['event_link'] );
+				$body .= "\n" . sprintf( __( 'Open in your calendar: %s', 'jat-calendar-sync' ), $booking['event_link'] );
 			}
 			/* translators: 1: site name, 2: visitor name */
-			wp_mail( $to, sprintf( __( '[%1$s] %2$s rescheduled', 'anderson-appointment-booking' ), self::site_name(), $booking['name'] ), $body, self::reply_to_header( $booking['email'] ) );
+			wp_mail( $to, sprintf( __( '[%1$s] %2$s rescheduled', 'jat-calendar-sync' ), self::site_name(), $booking['name'] ), $body, self::reply_to_header( $booking['email'] ) );
 		}
 	}
 
@@ -1130,17 +1089,17 @@ final class AAB_Bookings {
 		}
 		$lines = array(
 			/* translators: %s: date and time */
-			sprintf( __( 'New appointment: %s', 'anderson-appointment-booking' ), self::format_time( $booking['start'] ) ),
+			sprintf( __( 'New appointment: %s', 'jat-calendar-sync' ), self::format_time( $booking['start'] ) ),
 			$booking['type_name'],
 			'',
 			/* translators: %s: name */
-			sprintf( __( 'Name: %s', 'anderson-appointment-booking' ), $booking['name'] ),
+			sprintf( __( 'Name: %s', 'jat-calendar-sync' ), $booking['name'] ),
 			/* translators: %s: email */
-			sprintf( __( 'Email: %s', 'anderson-appointment-booking' ), $booking['email'] ),
+			sprintf( __( 'Email: %s', 'jat-calendar-sync' ), $booking['email'] ),
 		);
 		if ( '' !== $booking['phone'] ) {
 			/* translators: %s: phone number */
-			$lines[] = sprintf( __( 'Phone: %s', 'anderson-appointment-booking' ), $booking['phone'] );
+			$lines[] = sprintf( __( 'Phone: %s', 'jat-calendar-sync' ), $booking['phone'] );
 		}
 		$answers = self::answer_lines( $booking['answers'] );
 		if ( $answers ) {
@@ -1154,10 +1113,10 @@ final class AAB_Bookings {
 		if ( '' !== $booking['event_link'] ) {
 			$lines[] = '';
 			/* translators: %s: Google Calendar event link */
-			$lines[] = sprintf( __( 'Open in Google Calendar: %s', 'anderson-appointment-booking' ), $booking['event_link'] );
+			$lines[] = sprintf( __( 'Open in your calendar: %s', 'jat-calendar-sync' ), $booking['event_link'] );
 		}
 		/* translators: 1: site name, 2: visitor name */
-		$subject = sprintf( __( '[%1$s] New booking from %2$s', 'anderson-appointment-booking' ), self::site_name(), $booking['name'] );
+		$subject = sprintf( __( '[%1$s] New booking from %2$s', 'jat-calendar-sync' ), self::site_name(), $booking['name'] );
 		wp_mail( $to, $subject, implode( "\n", $lines ), self::reply_to_header( $booking['email'] ) );
 	}
 
@@ -1172,25 +1131,25 @@ final class AAB_Bookings {
 		$refund_line = '';
 		if ( 'refunded' === $refund ) {
 			/* translators: %s: amount */
-			$refund_line = "\n\n" . sprintf( __( 'Your payment of %s has been refunded. It can take 5–10 business days to appear on your statement.', 'anderson-appointment-booking' ), AAB_Stripe::format( $booking['amount'], $booking['currency'] ) );
+			$refund_line = "\n\n" . sprintf( __( 'Your payment of %s has been refunded. It can take 5–10 business days to appear on your statement.', 'jat-calendar-sync' ), JATCS_Stripe::format( $booking['amount'], $booking['currency'] ) );
 		} elseif ( 'not_refunded' === $refund ) {
-			$refund_line = "\n\n" . __( 'This cancellation was inside the refund window, so the payment was not refunded. Reply to this email if you have questions.', 'anderson-appointment-booking' );
+			$refund_line = "\n\n" . __( 'This cancellation was inside the refund window, so the payment was not refunded. Reply to this email if you have questions.', 'jat-calendar-sync' );
 		}
 		$when = self::format_time( $booking['start'] );
 
 		/* translators: 1: site name, 2: date and time */
-		$subject = sprintf( __( '[%1$s] Appointment cancelled: %2$s', 'anderson-appointment-booking' ), self::site_name(), $when );
+		$subject = sprintf( __( '[%1$s] Appointment cancelled: %2$s', 'jat-calendar-sync' ), self::site_name(), $when );
 
 		if ( $booking['end'] > time() ) {
 			/* translators: 1: visitor name, 2: date and time */
-			$body = sprintf( __( "Hi %1\$s,\n\nYour appointment on %2\$s has been cancelled.", 'anderson-appointment-booking' ), $booking['name'], $when ) . $refund_line;
+			$body = sprintf( __( "Hi %1\$s,\n\nYour appointment on %2\$s has been cancelled.", 'jat-calendar-sync' ), $booking['name'], $when ) . $refund_line;
 			wp_mail( $booking['email'], $subject, $body, self::reply_to_header( self::notify_email() ) );
 		}
 
 		$to = self::notify_email();
 		if ( '' !== $to && 'visitor' === $by ) {
 			/* translators: 1: visitor name, 2: email, 3: date and time */
-			$body = sprintf( __( "%1\$s (%2\$s) cancelled their appointment on %3\$s. It has been removed from Google Calendar.", 'anderson-appointment-booking' ), $booking['name'], $booking['email'], $when );
+			$body = sprintf( __( '%1$s (%2$s) cancelled their appointment on %3$s. It has been removed from your calendar.', 'jat-calendar-sync' ), $booking['name'], $booking['email'], $when );
 			wp_mail( $to, $subject, $body, self::reply_to_header( $booking['email'] ) );
 		}
 	}
@@ -1201,7 +1160,7 @@ final class AAB_Bookings {
 	 * @return string
 	 */
 	public static function notify_email() {
-		$email = sanitize_email( (string) AAB_Settings::get( 'notify_email' ) );
+		$email = sanitize_email( (string) JATCS_Settings::get( 'notify_email' ) );
 		return is_email( $email ) ? $email : (string) get_option( 'admin_email' );
 	}
 
@@ -1222,8 +1181,8 @@ final class AAB_Bookings {
 	 * @return array
 	 */
 	public static function register_exporter( $exporters ) {
-		$exporters['anderson-appointment-booking'] = array(
-			'exporter_friendly_name' => __( 'Appointment bookings', 'anderson-appointment-booking' ),
+		$exporters['jat-calendar-sync'] = array(
+			'exporter_friendly_name' => __( 'Appointment bookings', 'jat-calendar-sync' ),
 			'callback'               => array( __CLASS__, 'export_personal_data' ),
 		);
 		return $exporters;
@@ -1236,8 +1195,8 @@ final class AAB_Bookings {
 	 * @return array
 	 */
 	public static function register_eraser( $erasers ) {
-		$erasers['anderson-appointment-booking'] = array(
-			'eraser_friendly_name' => __( 'Appointment bookings', 'anderson-appointment-booking' ),
+		$erasers['jat-calendar-sync'] = array(
+			'eraser_friendly_name' => __( 'Appointment bookings', 'jat-calendar-sync' ),
 			'callback'             => array( __CLASS__, 'erase_personal_data' ),
 		);
 		return $erasers;
@@ -1256,7 +1215,7 @@ final class AAB_Bookings {
 				'post_status'    => 'any',
 				'posts_per_page' => 200,
 				'fields'         => 'ids',
-				'meta_key'       => '_aab_email', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'       => '_jatcs_email', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value'     => $email, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);
@@ -1273,40 +1232,40 @@ final class AAB_Bookings {
 		foreach ( self::ids_for_email( $email ) as $id ) {
 			$b       = self::get( $id );
 			$items[] = array(
-				'group_id'    => 'aab-bookings',
-				'group_label' => __( 'Appointment bookings', 'anderson-appointment-booking' ),
-				'item_id'     => 'aab-booking-' . $id,
+				'group_id'    => 'jatcs-bookings',
+				'group_label' => __( 'Appointment bookings', 'jat-calendar-sync' ),
+				'item_id'     => 'jatcs-booking-' . $id,
 				'data'        => array(
 					array(
-						'name'  => __( 'Time', 'anderson-appointment-booking' ),
+						'name'  => __( 'Time', 'jat-calendar-sync' ),
 						'value' => self::format_time( $b['start'] ),
 					),
 					array(
-						'name'  => __( 'Name', 'anderson-appointment-booking' ),
+						'name'  => __( 'Name', 'jat-calendar-sync' ),
 						'value' => $b['name'],
 					),
 					array(
-						'name'  => __( 'Email', 'anderson-appointment-booking' ),
+						'name'  => __( 'Email', 'jat-calendar-sync' ),
 						'value' => $b['email'],
 					),
 					array(
-						'name'  => __( 'Phone', 'anderson-appointment-booking' ),
+						'name'  => __( 'Phone', 'jat-calendar-sync' ),
 						'value' => $b['phone'],
 					),
 					array(
-						'name'  => __( 'Appointment type', 'anderson-appointment-booking' ),
+						'name'  => __( 'Appointment type', 'jat-calendar-sync' ),
 						'value' => $b['type_name'],
 					),
 					array(
-						'name'  => __( 'Answers', 'anderson-appointment-booking' ),
+						'name'  => __( 'Answers', 'jat-calendar-sync' ),
 						'value' => implode( "\n", self::answer_lines( $b['answers'] ) ),
 					),
 					array(
-						'name'  => __( 'Notes', 'anderson-appointment-booking' ),
+						'name'  => __( 'Notes', 'jat-calendar-sync' ),
 						'value' => $b['notes'],
 					),
 					array(
-						'name'  => __( 'Status', 'anderson-appointment-booking' ),
+						'name'  => __( 'Status', 'jat-calendar-sync' ),
 						'value' => $b['status'],
 					),
 				),
@@ -1334,7 +1293,7 @@ final class AAB_Bookings {
 		return array(
 			'items_removed'  => $removed,
 			'items_retained' => false,
-			'messages'       => $removed ? array( __( 'Booking records were deleted from this site. Events already on the owner’s Google Calendar are not changed.', 'anderson-appointment-booking' ) ) : array(),
+			'messages'       => $removed ? array( __( 'Booking records were deleted from this site. Events already in the owner’s calendar are not changed.', 'jat-calendar-sync' ) ) : array(),
 			'done'           => true,
 		);
 	}

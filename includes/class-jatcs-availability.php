@@ -6,7 +6,7 @@
  * offered only if it, plus its buffers, doesn't overlap anything busy on the
  * checked Google calendars or another booking made here.
  *
- * @package AndersonAppointmentBooking
+ * @package JATCalendarSync
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -14,21 +14,24 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Slot calculator.
  */
-final class AAB_Availability {
+final class JATCS_Availability {
 
-	const GENERATION_OPTION = 'aab_busy_generation';
+	const GENERATION_OPTION = 'jatcs_busy_generation';
 	const CACHE_TTL         = 120;
 
 	/**
-	 * Calendars whose busy times block slots.
+	 * Calendars whose busy times block slots (canonical references across every service).
 	 *
 	 * @return string[]
 	 */
 	public static function conflict_calendars() {
-		$ids   = (array) AAB_Settings::get( 'conflict_calendars' );
-		$ids[] = (string) AAB_Settings::get( 'booking_calendar' );
-		$ids[] = (string) AAB_Settings::get( 'schedule_calendar' ); // Posted shifts always block their own times.
-		return array_values( array_unique( array_filter( array_map( 'strval', $ids ) ) ) );
+		$out = array();
+		foreach ( JATCS_Calendars::blocking() as $service => $ids ) {
+			foreach ( $ids as $id ) {
+				$out[] = $service . ':' . $id;
+			}
+		}
+		return $out;
 	}
 
 	/**
@@ -59,14 +62,14 @@ final class AAB_Availability {
 	 * @return array<string,int[]>
 	 */
 	public static function schedule_padding() {
-		$calendar = (string) AAB_Settings::get( 'schedule_calendar' );
-		$gap      = (int) AAB_Settings::get( 'schedule_buffer' ) * MINUTE_IN_SECONDS;
+		$calendar = (string) JATCS_Settings::get( 'schedule_calendar' );
+		$gap      = (int) JATCS_Settings::get( 'schedule_buffer' ) * MINUTE_IN_SECONDS;
 		if ( '' === $calendar || $gap <= 0 ) {
 			return array();
 		}
-		$before = (int) AAB_Settings::get( 'buffer_before' ) * MINUTE_IN_SECONDS; // Booking's clear time before it (after a shift).
-		$after  = (int) AAB_Settings::get( 'buffer_after' ) * MINUTE_IN_SECONDS;  // Booking's clear time after it (before a shift).
-		return array( $calendar => array( max( 0, $gap - $after ), max( 0, $gap - $before ) ) );
+		$before = (int) JATCS_Settings::get( 'buffer_before' ) * MINUTE_IN_SECONDS; // Booking's clear time before it (after a shift).
+		$after  = (int) JATCS_Settings::get( 'buffer_after' ) * MINUTE_IN_SECONDS;  // Booking's clear time after it (before a shift).
+		return array( JATCS_Calendars::canonical( $calendar ) => array( max( 0, $gap - $after ), max( 0, $gap - $before ) ) );
 	}
 
 	/**
@@ -77,7 +80,7 @@ final class AAB_Availability {
 	public static function window() {
 		$tz    = wp_timezone();
 		$today = new DateTimeImmutable( 'today', $tz );
-		$days  = max( 1, (int) AAB_Settings::get( 'max_days' ) );
+		$days  = max( 1, (int) JATCS_Settings::get( 'max_days' ) );
 		$last  = $today->modify( '+' . ( $days - 1 ) . ' days' )->format( 'Y-m-d' );
 		$until = self::schedule_horizon();
 		if ( null !== $until && $until < $last ) {
@@ -96,19 +99,19 @@ final class AAB_Availability {
 	 * @return string|null Y-m-d, or null when the setting is off.
 	 */
 	public static function schedule_horizon() {
-		$calendar = (string) AAB_Settings::get( 'schedule_calendar' );
+		$calendar = (string) JATCS_Settings::get( 'schedule_calendar' );
 		if ( '' === $calendar ) {
 			return null;
 		}
-		$week = (int) AAB_Settings::get( 'schedule_week' );
-		$key  = 'aab_horizon_' . md5( $calendar . '|' . $week . '|' . (int) get_option( self::GENERATION_OPTION, 0 ) );
+		$week = (int) JATCS_Settings::get( 'schedule_week' );
+		$key  = 'jatcs_horizon_' . md5( $calendar . '|' . $week . '|' . (int) get_option( self::GENERATION_OPTION, 0 ) );
 		$hit  = get_transient( $key );
 		if ( is_string( $hit ) && '' !== $hit ) {
 			return $hit;
 		}
 		$tz     = wp_timezone();
 		$closed = ( new DateTimeImmutable( 'yesterday', $tz ) )->format( 'Y-m-d' );
-		$end    = AAB_Google::last_event_end( $calendar, max( 31, (int) AAB_Settings::get( 'max_days' ) + 7 ) );
+		$end    = JATCS_Calendars::last_event_end( $calendar, max( 31, (int) JATCS_Settings::get( 'max_days' ) + 7 ) );
 		if ( is_wp_error( $end ) ) {
 			set_transient( $key, $closed, 2 * MINUTE_IN_SECONDS );
 			return $closed;
@@ -139,7 +142,7 @@ final class AAB_Availability {
 	public static function slots( $from, $to, $fresh = false, $type = null, $exclude = null ) {
 		$type = self::resolve_type( $type );
 		if ( ! $type ) {
-			return new WP_Error( 'aab_no_types', __( 'No appointment types are available.', 'anderson-appointment-booking' ) );
+			return new WP_Error( 'jatcs_no_types', __( 'No appointment types are available.', 'jat-calendar-sync' ) );
 		}
 		list( $first, $last ) = self::window();
 		$from                 = max( $from, $first );
@@ -158,8 +161,8 @@ final class AAB_Availability {
 		}
 
 		$duration = self::duration_seconds( $type );
-		$before   = (int) AAB_Settings::get( 'buffer_before' ) * MINUTE_IN_SECONDS;
-		$after    = (int) AAB_Settings::get( 'buffer_after' ) * MINUTE_IN_SECONDS;
+		$before   = (int) JATCS_Settings::get( 'buffer_before' ) * MINUTE_IN_SECONDS;
+		$after    = (int) JATCS_Settings::get( 'buffer_after' ) * MINUTE_IN_SECONDS;
 
 		$range_start = min( $all ) - $before;
 		$range_end   = max( $all ) + $duration + $after;
@@ -170,12 +173,12 @@ final class AAB_Availability {
 		}
 		// Appointments booked here keep their own free time before and after, so a new booking
 		// can't be squeezed in right after one (Google events only get the new booking's buffers).
-		foreach ( AAB_Bookings::busy_ranges( $range_start - $after, $range_end + $before, $exclude ? (int) $exclude['id'] : 0 ) as $r ) {
+		foreach ( JATCS_Bookings::busy_ranges( $range_start - $after, $range_end + $before, $exclude ? (int) $exclude['id'] : 0 ) as $r ) {
 			$busy[] = array( $r[0] - $before, $r[1] + $after );
 		}
 
-		$limit  = (int) AAB_Settings::get( 'daily_limit' );
-		$counts = $limit > 0 ? AAB_Bookings::counts_by_date( $from, $to, $exclude ? (int) $exclude['id'] : 0 ) : array();
+		$limit  = (int) JATCS_Settings::get( 'daily_limit' );
+		$counts = $limit > 0 ? JATCS_Bookings::counts_by_date( $from, $to, $exclude ? (int) $exclude['id'] : 0 ) : array();
 
 		$open = array();
 		foreach ( $candidates as $date => $starts ) {
@@ -209,7 +212,7 @@ final class AAB_Availability {
 			return $slots;
 		}
 		if ( empty( $slots[ $date ] ) || ! in_array( (int) $start, $slots[ $date ], true ) ) {
-			return new WP_Error( 'aab_slot_taken', __( 'That time was just taken. Pick another time.', 'anderson-appointment-booking' ), array( 'status' => 409 ) );
+			return new WP_Error( 'jatcs_slot_taken', __( 'That time was just taken. Pick another time.', 'jat-calendar-sync' ), array( 'status' => 409 ) );
 		}
 		return true;
 	}
@@ -221,7 +224,7 @@ final class AAB_Availability {
 	 * @return array|null
 	 */
 	private static function resolve_type( $type ) {
-		return is_array( $type ) ? array_merge( AAB_Types::defaults(), $type ) : AAB_Types::first();
+		return is_array( $type ) ? array_merge( JATCS_Types::defaults(), $type ) : JATCS_Types::first();
 	}
 
 	/**
@@ -232,7 +235,7 @@ final class AAB_Availability {
 	 */
 	public static function duration_seconds( $type = null ) {
 		$type = self::resolve_type( $type );
-		return max( 5, (int) ( $type ? $type['duration'] : AAB_Settings::get( 'duration' ) ) ) * MINUTE_IN_SECONDS;
+		return max( 5, (int) ( $type ? $type['duration'] : JATCS_Settings::get( 'duration' ) ) ) * MINUTE_IN_SECONDS;
 	}
 
 	/**
@@ -245,11 +248,11 @@ final class AAB_Availability {
 	 */
 	private static function candidates( $from, $to, array $type ) {
 		$tz       = wp_timezone();
-		$weekdays = AAB_Settings::weekdays();
-		$hours    = AAB_Types::hours( $type );
+		$weekdays = JATCS_Settings::weekdays();
+		$hours    = JATCS_Types::hours( $type );
 		$duration = (int) max( 5, (int) $type['duration'] );
 		$interval = (int) max( 5, (int) $type['interval'] );
-		$earliest = time() + (int) AAB_Settings::get( 'min_notice' ) * HOUR_IN_SECONDS;
+		$earliest = time() + (int) JATCS_Settings::get( 'min_notice' ) * HOUR_IN_SECONDS;
 		$day      = new DateTimeImmutable( $from . ' 00:00:00', $tz );
 		$end      = new DateTimeImmutable( $to . ' 00:00:00', $tz );
 		$out      = array();
@@ -259,7 +262,7 @@ final class AAB_Availability {
 			$date         = $day->format( 'Y-m-d' );
 			$key          = $weekdays[ (int) $day->format( 'N' ) ];
 			$out[ $date ] = array();
-			$ranges       = AAB_Settings::is_day_off( $date ) ? array() : AAB_Settings::parse_hours( isset( $hours[ $key ] ) ? $hours[ $key ] : '' );
+			$ranges       = JATCS_Settings::is_day_off( $date ) ? array() : JATCS_Settings::parse_hours( isset( $hours[ $key ] ) ? $hours[ $key ] : '' );
 
 			foreach ( $ranges as $range ) {
 				for ( $minute = $range[0]; $minute + $duration <= $range[1]; $minute += $interval ) {
@@ -277,7 +280,7 @@ final class AAB_Availability {
 	}
 
 	/**
-	 * Busy ranges from Google, cached briefly.
+	 * Busy ranges from every blocking calendar, cached briefly.
 	 *
 	 * @param int        $from    Unix start.
 	 * @param int        $to      Unix end.
@@ -286,17 +289,15 @@ final class AAB_Availability {
 	 * @return array|WP_Error
 	 */
 	private static function busy( $from, $to, $fresh, $exclude = null ) {
-		$calendars = self::conflict_calendars();
-		$skip      = $exclude && ! empty( $exclude['event_id'] ) && 'confirmed' === $exclude['status']
+		$skip = $exclude && ! empty( $exclude['event_id'] ) && 'confirmed' === $exclude['status']
 			? array(
 				'calendar' => (string) $exclude['calendar_id'],
 				'start'    => (int) $exclude['start'],
 				'end'      => (int) $exclude['end'],
 			)
 			: null;
-		$outlook   = AAB_Microsoft::active();
-		$pad       = self::schedule_padding();
-		$key       = 'aab_busy_' . md5( wp_json_encode( $pad ) . '|' . $from . '|' . $to . '|' . implode( ',', $calendars ) . '|' . (int) get_option( self::GENERATION_OPTION, 0 ) . '|' . ( $skip ? implode( ',', $skip ) : '' ) . '|' . ( $outlook ? implode( ',', (array) AAB_Settings::get( 'ms_calendars' ) ) : '' ) );
+		$pad  = self::schedule_padding();
+		$key  = 'jatcs_busy_' . md5( wp_json_encode( $pad ) . '|' . $from . '|' . $to . '|' . JATCS_Calendars::fingerprint() . '|' . (int) get_option( self::GENERATION_OPTION, 0 ) . '|' . ( $skip ? implode( ',', $skip ) : '' ) );
 		if ( ! $fresh ) {
 			$cached = get_transient( $key );
 			if ( is_array( $cached ) ) {
@@ -304,12 +305,8 @@ final class AAB_Availability {
 			}
 		}
 		$reach = $pad ? max( array_map( 'max', $pad ) ) : 0; // See shifts just outside the range too.
-		$busy  = AAB_Google::busy( $from - $reach, $to + $reach, $calendars, $skip, $pad );
-		if ( ! is_wp_error( $busy ) && $outlook ) {
-			// Outlook conflict calendars: if they can't be read, offer nothing rather than risk a clash.
-			$more = AAB_Microsoft::busy( $from, $to );
-			$busy = is_wp_error( $more ) ? $more : array_merge( $busy, $more );
-		}
+		// Any calendar that can't be read: offer nothing rather than risk a clash.
+		$busy = JATCS_Calendars::busy( $from - $reach, $to + $reach, $skip, $pad );
 		if ( ! is_wp_error( $busy ) ) {
 			set_transient( $key, $busy, self::CACHE_TTL );
 		}

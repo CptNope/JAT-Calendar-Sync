@@ -2,7 +2,7 @@
 /**
  * Settings storage and sanitization.
  *
- * @package AndersonAppointmentBooking
+ * @package JATCalendarSync
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -10,9 +10,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Reads and writes the plugin's settings.
  */
-final class AAB_Settings {
+final class JATCS_Settings {
 
-	const OPTION = 'aab_settings';
+	const OPTION = 'jatcs_settings';
 
 	/**
 	 * Request-level cache.
@@ -45,14 +45,15 @@ final class AAB_Settings {
 	 */
 	public static function defaults() {
 		return array(
-			'client_id'            => '',
-			'client_secret'        => '', // Encrypted.
-			'booking_calendar'     => 'primary',
-			'conflict_calendars'   => array(),
-			'schedule_calendar'    => '', // Open booking only as far as the latest event on this calendar ('' = off).
-			'schedule_week'        => 1,  // ...and through the end of that week (Sunday).
-			'schedule_buffer'      => 60, // Minutes kept free before and after each shift on that calendar.
-			'hours'                => array(
+			'client_id'             => '',
+			'client_secret'         => '', // Encrypted.
+			'booking_calendar'      => 'primary',
+			'conflict_calendars'    => array(),
+			'caldav_calendars'      => array(), // CalDAV calendar URLs whose events block times.
+			'schedule_calendar'     => '', // Open booking only as far as the latest event on this calendar ('' = off).
+			'schedule_week'         => 1,  // ...and through the end of that week (Sunday).
+			'schedule_buffer'       => 60, // Minutes kept free before and after each shift on that calendar.
+			'hours'                 => array(
 				'mon' => '09:00-17:00',
 				'tue' => '09:00-17:00',
 				'wed' => '09:00-17:00',
@@ -61,44 +62,44 @@ final class AAB_Settings {
 				'sat' => '',
 				'sun' => '',
 			),
-			'duration'             => 30,
-			'interval'             => 30,
-			'buffer_before'        => 0,
-			'buffer_after'         => 15,
-			'min_notice'           => 12,
-			'max_days'             => 30,
-			'daily_limit'          => 0,
-			'days_off'             => '',
-			'max_per_email'        => 2,
-			'phone_field'          => 'off',
-			'reminder_hours'       => 24,
-			'retention_days'       => 0,
-			'change_cutoff'        => 0,
-			'stripe_secret'        => '', // Encrypted.
+			'duration'              => 30,
+			'interval'              => 30,
+			'buffer_before'         => 0,
+			'buffer_after'          => 15,
+			'min_notice'            => 12,
+			'max_days'              => 30,
+			'daily_limit'           => 0,
+			'days_off'              => '',
+			'max_per_email'         => 2,
+			'phone_field'           => 'off',
+			'reminder_hours'        => 24,
+			'retention_days'        => 0,
+			'change_cutoff'         => 0,
+			'stripe_secret'         => '', // Encrypted.
 			'stripe_webhook_secret' => '', // Encrypted.
-			'currency'             => 'usd',
-			'refund_cutoff'        => 24,
-			'ms_client_id'         => '',
-			'ms_client_secret'     => '', // Encrypted.
-			'ms_calendars'         => array(),
-			'max_reschedules'      => 0,
-			'event_title'          => 'Appointment with {name}',
-			'location'             => '',
-			'add_meet'             => 1,
-			'invite_guest'         => 1,
-			'notify_email'         => get_option( 'admin_email' ),
-			'confirmation_message' => "You're booked. A confirmation is on its way to your inbox.",
-			'consent_text'         => '',
-			'accent'               => '#2e7d4f',
-			'style_accent'         => 'theme',
-			'style_buttons'        => 'theme',
-			'style_radius'         => 'auto',
-			'style_background'     => 'none',
-			'style_bg_color'       => '#ffffff',
-			'style_density'        => 'comfortable',
-			'style_headings'       => 'theme',
-			'custom_css'           => '',
-			'delete_data'          => 0,
+			'currency'              => 'usd',
+			'refund_cutoff'         => 24,
+			'ms_client_id'          => '',
+			'ms_client_secret'      => '', // Encrypted.
+			'ms_calendars'          => array(),
+			'max_reschedules'       => 0,
+			'event_title'           => 'Appointment with {name}',
+			'location'              => '',
+			'add_meet'              => 1,
+			'invite_guest'          => 1,
+			'notify_email'          => get_option( 'admin_email' ),
+			'confirmation_message'  => "You're booked. A confirmation is on its way to your inbox.",
+			'consent_text'          => '',
+			'accent'                => '#2e7d4f',
+			'style_accent'          => 'theme',
+			'style_buttons'         => 'theme',
+			'style_radius'          => 'auto',
+			'style_background'      => 'none',
+			'style_bg_color'        => '#ffffff',
+			'style_density'         => 'comfortable',
+			'style_headings'        => 'theme',
+			'custom_css'            => '',
+			'delete_data'           => 0,
 		);
 	}
 
@@ -135,10 +136,10 @@ final class AAB_Settings {
 	 * @return string
 	 */
 	public static function client_secret() {
-		if ( defined( 'AAB_GOOGLE_CLIENT_SECRET' ) ) {
-			return (string) AAB_GOOGLE_CLIENT_SECRET;
+		if ( defined( 'JATCS_GOOGLE_CLIENT_SECRET' ) ) {
+			return (string) JATCS_GOOGLE_CLIENT_SECRET;
 		}
-		return AAB_Crypto::decrypt( self::get( 'client_secret' ) );
+		return JATCS_Crypto::decrypt( self::get( 'client_secret' ) );
 	}
 
 	/**
@@ -147,8 +148,8 @@ final class AAB_Settings {
 	 * @return string
 	 */
 	public static function client_id() {
-		if ( defined( 'AAB_GOOGLE_CLIENT_ID' ) ) {
-			return (string) AAB_GOOGLE_CLIENT_ID;
+		if ( defined( 'JATCS_GOOGLE_CLIENT_ID' ) ) {
+			return (string) JATCS_GOOGLE_CLIENT_ID;
 		}
 		return (string) self::get( 'client_id' );
 	}
@@ -188,7 +189,7 @@ final class AAB_Settings {
 			if ( preg_match( '/^(\d{4}-\d{2}-\d{2})(?:\s*(?:to|-|–|—|\.\.)\s*(\d{4}-\d{2}-\d{2}))?$/u', $line, $m ) ) {
 				$from = $m[1];
 				$to   = isset( $m[2] ) && '' !== $m[2] ? $m[2] : $m[1];
-				if ( AAB_Availability::is_valid_date( $from ) && AAB_Availability::is_valid_date( $to ) ) {
+				if ( JATCS_Availability::is_valid_date( $from ) && JATCS_Availability::is_valid_date( $to ) ) {
 					$ranges[] = $from <= $to ? array( $from, $to ) : array( $to, $from );
 					continue;
 				}

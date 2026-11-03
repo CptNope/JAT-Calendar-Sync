@@ -32,7 +32,7 @@ Solo professionals and small businesses who take bookings on **their own WordPre
 
 Setup and usability, calendar view, buffers and limits, recurring appointments, custom durations, group/multi-spot bookings, calendar sync, multiple calendars, locations, video (Zoom, Meet), SMS/WhatsApp, reminders, payments (Stripe, PayPal, refunds), custom booking questions, roles and permissions, REST API and webhooks, CRM/form integrations, multilingual, and lately **AI-agent booking via MCP** (FluentBooking; WooCommerce documents the same pattern).
 
-## Where Anderson Appointment Booking stands (v1.2.0)
+## Where JAT Calendar Sync stands (formerly Anderson Appointment Booking)
 
 **Already ahead**
 
@@ -53,9 +53,14 @@ Setup and usability, calendar view, buffers and limits, recurring appointments, 
 - Payments (Stripe Checkout) for paid sessions, free, with automatic refunds.
 - Microsoft 365 / Outlook conflict calendars.
 
-**Still planned**
+**Closed in 2.0.0 (renamed JAT Calendar Sync)**
 
-- iCloud (CalDAV) calendars.
+- iCloud, Fastmail, Nextcloud, Zoho, Yahoo and any CalDAV calendar, read and write.
+- Any iCal feed (Sling and other shift apps, shared and published calendars) with full recurrence handling.
+- Outlook / Microsoft 365 as the booking calendar with Teams links.
+- Shift-work mode (booking follows a posted work schedule, with free time around shifts). No competitor found offering this.
+
+In the October 2026 review above, two-way calendar sync was usually a paid tier or add-on, and support beyond Google Calendar was rarely free. Recheck competitors' current tiers before making public comparisons.
 
 ## Positioning
 

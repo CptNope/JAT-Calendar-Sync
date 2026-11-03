@@ -7,9 +7,9 @@
  * notice, booking window, days off, daily cap) is shared, because one person's
  * calendar can only hold one appointment at a time.
  *
- * Stored as an ordered list in the `aab_types` option.
+ * Stored as an ordered list in the `jatcs_types` option.
  *
- * @package AndersonAppointmentBooking
+ * @package JATCalendarSync
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -17,9 +17,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Appointment type storage and validation.
  */
-final class AAB_Types {
+final class JATCS_Types {
 
-	const OPTION = 'aab_types';
+	const OPTION = 'jatcs_types';
 
 	/**
 	 * Request cache.
@@ -35,10 +35,10 @@ final class AAB_Types {
 	 */
 	public static function question_kinds() {
 		return array(
-			'text'     => __( 'Short answer', 'anderson-appointment-booking' ),
-			'textarea' => __( 'Long answer', 'anderson-appointment-booking' ),
-			'select'   => __( 'Dropdown', 'anderson-appointment-booking' ),
-			'checkbox' => __( 'Checkbox', 'anderson-appointment-booking' ),
+			'text'     => __( 'Short answer', 'jat-calendar-sync' ),
+			'textarea' => __( 'Long answer', 'jat-calendar-sync' ),
+			'select'   => __( 'Dropdown', 'jat-calendar-sync' ),
+			'checkbox' => __( 'Checkbox', 'jat-calendar-sync' ),
 		);
 	}
 
@@ -72,15 +72,15 @@ final class AAB_Types {
 		if ( false !== get_option( self::OPTION, false ) ) {
 			return;
 		}
-		$duration = max( 5, (int) AAB_Settings::get( 'duration' ) );
+		$duration = max( 5, (int) JATCS_Settings::get( 'duration' ) );
 		$type     = array_merge(
 			self::defaults(),
 			array(
 				'id'       => 'appointment',
 				/* translators: %d: minutes */
-				'name'     => sprintf( __( '%d-minute appointment', 'anderson-appointment-booking' ), $duration ),
+				'name'     => sprintf( __( '%d-minute appointment', 'jat-calendar-sync' ), $duration ),
 				'duration' => $duration,
-				'interval' => max( 5, (int) AAB_Settings::get( 'interval' ) ),
+				'interval' => max( 5, (int) JATCS_Settings::get( 'interval' ) ),
 			)
 		);
 		add_option( self::OPTION, array( $type ), '', false );
@@ -158,7 +158,7 @@ final class AAB_Types {
 			self::defaults(),
 			array(
 				'id'       => '',
-				'name'     => '' !== $name ? $name : __( 'Appointment', 'anderson-appointment-booking' ),
+				'name'     => '' !== $name ? $name : __( 'Appointment', 'jat-calendar-sync' ),
 				'duration' => max( 5, (int) $minutes ),
 				'interval' => max( 5, min( 30, (int) $minutes ) ),
 			)
@@ -172,7 +172,7 @@ final class AAB_Types {
 	 * @return array<string,string>
 	 */
 	public static function hours( array $type ) {
-		return ! empty( $type['custom_hours'] ) && is_array( $type['hours'] ) ? $type['hours'] : (array) AAB_Settings::get( 'hours' );
+		return ! empty( $type['custom_hours'] ) && is_array( $type['hours'] ) ? $type['hours'] : (array) JATCS_Settings::get( 'hours' );
 	}
 
 	/**
@@ -183,7 +183,7 @@ final class AAB_Types {
 	 */
 	public static function location( array $type ) {
 		$own = trim( (string) $type['location'] );
-		return '' !== $own ? $own : trim( (string) AAB_Settings::get( 'location' ) );
+		return '' !== $own ? $own : trim( (string) JATCS_Settings::get( 'location' ) );
 	}
 
 	/**
@@ -199,7 +199,7 @@ final class AAB_Types {
 		if ( 'off' === $type['meet'] ) {
 			return false;
 		}
-		return (bool) AAB_Settings::get( 'add_meet' );
+		return (bool) JATCS_Settings::get( 'add_meet' );
 	}
 
 	/**
@@ -282,7 +282,8 @@ final class AAB_Types {
 		$id   = $base;
 		$n    = 2;
 		while ( self::get( $id ) ) {
-			$id = $base . '-' . $n++;
+			$id = $base . '-' . $n;
+			++$n;
 		}
 		return $id;
 	}
@@ -300,7 +301,7 @@ final class AAB_Types {
 
 		$t['name'] = sanitize_text_field( isset( $in['name'] ) ? $in['name'] : '' );
 		if ( '' === $t['name'] ) {
-			$errors[] = __( 'Give the appointment type a name.', 'anderson-appointment-booking' );
+			$errors[] = __( 'Give the appointment type a name.', 'jat-calendar-sync' );
 		}
 		$t['id']          = '' !== $existing ? $existing : self::unique_id( $t['name'] );
 		$t['description'] = sanitize_textarea_field( isset( $in['description'] ) ? $in['description'] : '' );
@@ -310,15 +311,15 @@ final class AAB_Types {
 		$t['meet']        = isset( $in['meet'] ) && in_array( $in['meet'], array( 'default', 'on', 'off' ), true ) ? $in['meet'] : 'default';
 		$t['notes']       = empty( $in['notes'] ) ? 0 : 1;
 		$t['active']      = empty( $in['active'] ) ? 0 : 1;
-		$t['price']       = isset( $in['price'] ) ? AAB_Stripe::to_minor( $in['price'], AAB_Payments::currency() ) : 0;
+		$t['price']       = isset( $in['price'] ) ? JATCS_Stripe::to_minor( $in['price'], JATCS_Payments::currency() ) : 0;
 
 		$t['custom_hours'] = empty( $in['custom_hours'] ) ? 0 : 1;
-		foreach ( AAB_Settings::weekdays() as $day ) {
-			$raw                 = isset( $in['hours'][ $day ] ) ? sanitize_text_field( $in['hours'][ $day ] ) : '';
-			$t['hours'][ $day ] = AAB_Settings::normalize_hours( $raw );
+		foreach ( JATCS_Settings::weekdays() as $day ) {
+			$raw                = isset( $in['hours'][ $day ] ) ? sanitize_text_field( $in['hours'][ $day ] ) : '';
+			$t['hours'][ $day ] = JATCS_Settings::normalize_hours( $raw );
 			if ( $t['custom_hours'] && '' !== trim( $raw ) && '' === $t['hours'][ $day ] ) {
 				/* translators: %s: weekday */
-				$errors[] = sprintf( __( 'The hours for %s could not be read. Use 24-hour ranges like 09:00-12:00, 13:00-17:00.', 'anderson-appointment-booking' ), ucfirst( $day ) );
+				$errors[] = sprintf( __( 'The hours for %s could not be read. Use 24-hour ranges like 09:00-12:00, 13:00-17:00.', 'jat-calendar-sync' ), ucfirst( $day ) );
 			}
 		}
 
@@ -349,7 +350,7 @@ final class AAB_Types {
 				}
 				if ( ! $options ) {
 					/* translators: %s: question label */
-					$errors[] = sprintf( __( 'Add at least one choice to the dropdown “%s”, one per line.', 'anderson-appointment-booking' ), $label );
+					$errors[] = sprintf( __( 'Add at least one choice to the dropdown “%s”, one per line.', 'jat-calendar-sync' ), $label );
 				}
 			}
 			$t['questions'][] = array(
@@ -379,7 +380,7 @@ final class AAB_Types {
 		$out = array();
 		foreach ( self::active() as $t ) {
 			// Paid types are hidden while payments aren't set up (the types screen warns about it).
-			if ( AAB_Payments::is_paid( $t ) && ! AAB_Payments::ready() ) {
+			if ( JATCS_Payments::is_paid( $t ) && ! JATCS_Payments::ready() ) {
 				continue;
 			}
 			$out[] = self::public_type( $t );
@@ -397,7 +398,7 @@ final class AAB_Types {
 			array_filter(
 				self::active(),
 				static function ( $t ) {
-					return ! AAB_Payments::is_paid( $t ) || AAB_Payments::ready();
+					return ! JATCS_Payments::is_paid( $t ) || JATCS_Payments::ready();
 				}
 			)
 		);
@@ -429,8 +430,8 @@ final class AAB_Types {
 			'video'       => self::wants_meet( $t ),
 			'location'    => self::location( $t ),
 			'questions'   => $questions,
-			'price'       => AAB_Payments::price( $t ),
-			'priceText'   => AAB_Payments::price( $t ) ? AAB_Stripe::format( AAB_Payments::price( $t ), AAB_Payments::currency() ) : '',
+			'price'       => JATCS_Payments::price( $t ),
+			'priceText'   => JATCS_Payments::price( $t ) ? JATCS_Stripe::format( JATCS_Payments::price( $t ), JATCS_Payments::currency() ) : '',
 		);
 	}
 
@@ -450,17 +451,17 @@ final class AAB_Types {
 			if ( 'checkbox' === $q['kind'] ) {
 				$on = ! empty( $raw ) && 'false' !== $raw && '0' !== $raw;
 				if ( $q['required'] && ! $on ) {
-					$errors[ 'q_' . $q['id'] ] = __( 'Check the box to continue.', 'anderson-appointment-booking' );
+					$errors[ 'q_' . $q['id'] ] = __( 'Check the box to continue.', 'jat-calendar-sync' );
 				}
-				$value = $on ? __( 'Yes', 'anderson-appointment-booking' ) : __( 'No', 'anderson-appointment-booking' );
+				$value = $on ? __( 'Yes', 'jat-calendar-sync' ) : __( 'No', 'jat-calendar-sync' );
 			} else {
 				$value = 'textarea' === $q['kind'] ? sanitize_textarea_field( (string) $raw ) : sanitize_text_field( (string) $raw );
 				if ( mb_strlen( $value ) > 2000 ) {
-					$errors[ 'q_' . $q['id'] ] = __( 'Keep this under 2,000 characters.', 'anderson-appointment-booking' );
+					$errors[ 'q_' . $q['id'] ] = __( 'Keep this under 2,000 characters.', 'jat-calendar-sync' );
 				} elseif ( 'select' === $q['kind'] && '' !== $value && ! in_array( $value, $q['options'], true ) ) {
-					$errors[ 'q_' . $q['id'] ] = __( 'Choose one of the options.', 'anderson-appointment-booking' );
+					$errors[ 'q_' . $q['id'] ] = __( 'Choose one of the options.', 'jat-calendar-sync' );
 				} elseif ( $q['required'] && '' === trim( $value ) ) {
-					$errors[ 'q_' . $q['id'] ] = 'select' === $q['kind'] ? __( 'Choose one of the options.', 'anderson-appointment-booking' ) : __( 'Answer this question.', 'anderson-appointment-booking' );
+					$errors[ 'q_' . $q['id'] ] = 'select' === $q['kind'] ? __( 'Choose one of the options.', 'jat-calendar-sync' ) : __( 'Answer this question.', 'jat-calendar-sync' );
 				}
 			}
 			$out[] = array(

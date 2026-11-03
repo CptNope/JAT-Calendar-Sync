@@ -3,12 +3,12 @@
  * Appearance: reads the active theme's design tokens and turns settings into CSS variables.
  *
  * Every visual choice the widget makes goes through a CSS custom property on the
- * widget element (--aab-accent, --aab-radius, …). "Match my theme" fills those
+ * widget element (--jatcs-accent, --jatcs-radius, …). "Match my theme" fills those
  * from theme.json (block themes) or the editor color palette (classic themes),
  * pointing at the theme's own --wp--preset--* variables so style variations and
  * dark palettes carry through automatically.
  *
- * @package AndersonAppointmentBooking
+ * @package JATCalendarSync
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Style resolver.
  */
-final class AAB_Style {
+final class JATCS_Style {
 
 	/**
 	 * Cached theme tokens for this request.
@@ -117,12 +117,12 @@ final class AAB_Style {
 			$t['source'] = 'theme.json';
 
 			// The theme's primary button is the most reliable "brand action" color it defines.
-			$bg   = wp_get_global_styles( array( 'elements', 'button', 'color', 'background' ) );
-			$text = wp_get_global_styles( array( 'elements', 'button', 'color', 'text' ) );
-			list( $t['accent'], $t['accent_hex'] )       = self::color_ref( $bg );
+			$bg                                    = wp_get_global_styles( array( 'elements', 'button', 'color', 'background' ) );
+			$text                                  = wp_get_global_styles( array( 'elements', 'button', 'color', 'text' ) );
+			list( $t['accent'], $t['accent_hex'] ) = self::color_ref( $bg );
 			list( $t['on_accent'], $t['on_accent_hex'] ) = self::color_ref( $text );
 
-			$page_bg                         = wp_get_global_styles( array( 'color', 'background' ) );
+			$page_bg                           = wp_get_global_styles( array( 'color', 'background' ) );
 			list( $t['base'], $t['base_hex'] ) = self::color_ref( $page_bg );
 
 			$radius = wp_get_global_styles( array( 'elements', 'button', 'border', 'radius' ) );
@@ -160,7 +160,7 @@ final class AAB_Style {
 		 *
 		 * @param array $tokens Tokens.
 		 */
-		self::$tokens = (array) apply_filters( 'aab_theme_tokens', $t );
+		self::$tokens = (array) apply_filters( 'jatcs_theme_tokens', $t );
 		return self::$tokens;
 	}
 
@@ -200,7 +200,7 @@ final class AAB_Style {
 	 * @return array{vars:array<string,string>,classes:string[]}
 	 */
 	public static function resolve( array $overrides = array() ) {
-		$s = AAB_Settings::all();
+		$s = JATCS_Settings::all();
 		foreach ( array_keys( self::choices() ) as $key ) {
 			$s[ $key ] = self::clean( $key, isset( $overrides[ $key ] ) && '' !== $overrides[ $key ] ? $overrides[ $key ] : $s[ $key ] );
 		}
@@ -221,59 +221,59 @@ final class AAB_Style {
 		$custom = sanitize_hex_color( (string) $s['accent'] );
 		$custom = $custom ? $custom : '#2e7d4f';
 		if ( 'theme' === $s['style_accent'] && null !== $t['accent'] ) {
-			$vars['--aab-accent']    = $t['accent'];
-			$vars['--aab-on-accent'] = (string) $t['on_accent'];
+			$vars['--jatcs-accent']    = $t['accent'];
+			$vars['--jatcs-on-accent'] = (string) $t['on_accent'];
 			if ( 'theme.json' !== $t['source'] ) {
 				// Classic theme: the palette color is a guess from its name; the script confirms it from the page.
-				$classes[] = 'aab--probe-accent';
+				$classes[] = 'jatcs--probe-accent';
 			}
 		} elseif ( 'theme' === $s['style_accent'] ) {
 			// Theme publishes no colors (most classic themes): the custom color is a fallback and the
 			// script reads the theme's real button/link color from the page once it loads.
-			$vars['--aab-accent']    = $custom;
-			$vars['--aab-on-accent'] = self::readable_on( $custom );
-			$classes[]               = 'aab--probe-accent';
+			$vars['--jatcs-accent']    = $custom;
+			$vars['--jatcs-on-accent'] = self::readable_on( $custom );
+			$classes[]                 = 'jatcs--probe-accent';
 		} else {
-			$vars['--aab-accent']    = $custom;
-			$vars['--aab-on-accent'] = self::readable_on( $custom );
+			$vars['--jatcs-accent']    = $custom;
+			$vars['--jatcs-on-accent'] = self::readable_on( $custom );
 		}
 
 		// Corners.
 		$radii = self::radii();
 		if ( 'auto' === $s['style_radius'] ) {
-			$vars['--aab-radius'] = null !== $t['radius'] ? $t['radius'] : '10px';
+			$vars['--jatcs-radius'] = null !== $t['radius'] ? $t['radius'] : '10px';
 			if ( null === $t['radius'] && 'theme.json' !== $t['source'] ) {
-				$classes[] = 'aab--probe-radius';
+				$classes[] = 'jatcs--probe-radius';
 			}
 		} else {
-			$vars['--aab-radius'] = $radii[ $s['style_radius'] ];
+			$vars['--jatcs-radius'] = $radii[ $s['style_radius'] ];
 		}
 
 		// Spacing.
-		$vars['--aab-space'] = self::densities()[ $s['style_density'] ];
+		$vars['--jatcs-space'] = self::densities()[ $s['style_density'] ];
 
 		// Background of the calendar box.
 		if ( 'theme' === $s['style_background'] ) {
-			$vars['--aab-surface'] = null !== $t['base'] ? $t['base'] : 'transparent';
+			$vars['--jatcs-surface'] = null !== $t['base'] ? $t['base'] : 'transparent';
 		} elseif ( 'custom' === $s['style_background'] ) {
-			$bg                    = sanitize_hex_color( (string) $s['style_bg_color'] );
-			$vars['--aab-surface'] = $bg ? $bg : 'transparent';
+			$bg                      = sanitize_hex_color( (string) $s['style_bg_color'] );
+			$vars['--jatcs-surface'] = $bg ? $bg : 'transparent';
 		}
 
 		// Headings.
 		if ( 'theme' === $s['style_headings'] && null !== $t['heading_font'] ) {
-			$vars['--aab-heading-font'] = $t['heading_font'];
+			$vars['--jatcs-heading-font'] = $t['heading_font'];
 		} elseif ( 'theme' === $s['style_headings'] && 'theme.json' !== $t['source'] ) {
 			// Classic theme: the script reads the font the theme gives its headings.
-			$classes[] = 'aab--probe-font';
+			$classes[] = 'jatcs--probe-font';
 		}
 
-		$classes[] = 'aab--buttons-' . $s['style_buttons'];
+		$classes[] = 'jatcs--buttons-' . $s['style_buttons'];
 		if ( 'theme.json' === $t['source'] ) {
 			// Block themes style buttons through the .wp-element-button class; classic themes style plain <button>.
-			$classes[] = 'aab--wp-buttons';
+			$classes[] = 'jatcs--wp-buttons';
 		}
-		$classes[] = 'aab--density-' . $s['style_density'];
+		$classes[] = 'jatcs--density-' . $s['style_density'];
 
 		/**
 		 * Filter the CSS variables applied to a booking widget.
@@ -281,7 +281,7 @@ final class AAB_Style {
 		 * @param array<string,string> $vars      Variables.
 		 * @param array                $overrides Overrides passed to this widget.
 		 */
-		$vars = (array) apply_filters( 'aab_style_vars', $vars, $overrides );
+		$vars = (array) apply_filters( 'jatcs_style_vars', $vars, $overrides );
 
 		return array(
 			'vars'    => $vars,
@@ -299,7 +299,7 @@ final class AAB_Style {
 		$out = '';
 		foreach ( $vars as $name => $value ) {
 			$value = self::safe_value( (string) $value );
-			if ( preg_match( '/^--aab-[a-z0-9-]+$/', $name ) && '' !== $value ) {
+			if ( preg_match( '/^--jatcs-[a-z0-9-]+$/', $name ) && '' !== $value ) {
 				$out .= $name . ':' . $value . ';';
 			}
 		}
@@ -312,7 +312,7 @@ final class AAB_Style {
 	 * @return string
 	 */
 	public static function custom_css() {
-		$css = (string) AAB_Settings::get( 'custom_css' );
+		$css = (string) JATCS_Settings::get( 'custom_css' );
 		return trim( str_ireplace( '</style', '', wp_strip_all_tags( $css ) ) );
 	}
 

@@ -4,7 +4,7 @@
  *
  * No Composer dependencies: it only needs the four endpoints this plugin uses.
  *
- * @package AndersonAppointmentBooking
+ * @package JATCalendarSync
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -12,13 +12,13 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Talks to Google.
  */
-final class AAB_Google {
+final class JATCS_Google {
 
-	const TOKEN_OPTION   = 'aab_google';
-	const ERROR_OPTION   = 'aab_google_error';
-	const LOG_OPTION     = 'aab_log';
-	const ACCESS_KEY     = 'aab_access_token';
-	const CALENDARS_KEY  = 'aab_calendars';
+	const TOKEN_OPTION   = 'jatcs_google';
+	const ERROR_OPTION   = 'jatcs_google_error';
+	const LOG_OPTION     = 'jatcs_log';
+	const ACCESS_KEY     = 'jatcs_access_token';
+	const CALENDARS_KEY  = 'jatcs_calendars';
 	const AUTH_ENDPOINT  = 'https://accounts.google.com/o/oauth2/v2/auth';
 	const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 	const REVOKE_URL     = 'https://oauth2.googleapis.com/revoke';
@@ -43,7 +43,8 @@ final class AAB_Google {
 	 * @return string
 	 */
 	public static function redirect_uri() {
-		return admin_url( 'admin-post.php?action=aab_oauth' );
+		// Sites moved from the plugin's earlier name keep the address already registered with Google.
+		return admin_url( 'admin-post.php?action=' . ( get_option( 'jatcs_legacy_google_redirect' ) ? 'aab_oauth' : 'jatcs_oauth' ) );
 	}
 
 	/**
@@ -52,7 +53,7 @@ final class AAB_Google {
 	 * @return bool
 	 */
 	public static function has_credentials() {
-		return '' !== AAB_Settings::client_id() && '' !== AAB_Settings::client_secret();
+		return '' !== JATCS_Settings::client_id() && '' !== JATCS_Settings::client_secret();
 	}
 
 	/**
@@ -62,7 +63,7 @@ final class AAB_Google {
 	 */
 	public static function is_connected() {
 		$data = get_option( self::TOKEN_OPTION, array() );
-		return ! empty( $data['refresh_token'] ) && '' !== AAB_Crypto::decrypt( $data['refresh_token'] );
+		return ! empty( $data['refresh_token'] ) && '' !== JATCS_Crypto::decrypt( $data['refresh_token'] );
 	}
 
 	/**
@@ -88,7 +89,7 @@ final class AAB_Google {
 		return add_query_arg(
 			rawurlencode_deep(
 				array(
-					'client_id'              => AAB_Settings::client_id(),
+					'client_id'              => JATCS_Settings::client_id(),
 					'redirect_uri'           => self::redirect_uri(),
 					'response_type'          => 'code',
 					'scope'                  => implode( ' ', self::scopes() ),
@@ -120,19 +121,19 @@ final class AAB_Google {
 			return $response;
 		}
 		if ( empty( $response['refresh_token'] ) ) {
-			return new WP_Error( 'aab_no_refresh', __( 'Google did not return a refresh token. Remove this app from your Google account’s third-party access page, then connect again.', 'anderson-appointment-booking' ) );
+			return new WP_Error( 'jatcs_no_refresh', __( 'Google did not return a refresh token. Remove this app from your Google account’s third-party access page, then connect again.', 'jat-calendar-sync' ) );
 		}
 
 		$granted = isset( $response['scope'] ) ? explode( ' ', $response['scope'] ) : self::scopes();
 		$missing = array_diff( self::scopes(), $granted );
 		if ( $missing ) {
-			return new WP_Error( 'aab_scopes', __( 'Some calendar permissions were not granted. Connect again and leave every permission checked.', 'anderson-appointment-booking' ) );
+			return new WP_Error( 'jatcs_scopes', __( 'Some calendar permissions were not granted. Connect again and leave every permission checked.', 'jat-calendar-sync' ) );
 		}
 
 		update_option(
 			self::TOKEN_OPTION,
 			array(
-				'refresh_token' => AAB_Crypto::encrypt( $response['refresh_token'] ),
+				'refresh_token' => JATCS_Crypto::encrypt( $response['refresh_token'] ),
 				'email'         => '',
 				'connected_at'  => time(),
 			),
@@ -158,7 +159,7 @@ final class AAB_Google {
 	 */
 	public static function disconnect() {
 		$data  = get_option( self::TOKEN_OPTION, array() );
-		$token = ! empty( $data['refresh_token'] ) ? AAB_Crypto::decrypt( $data['refresh_token'] ) : '';
+		$token = ! empty( $data['refresh_token'] ) ? JATCS_Crypto::decrypt( $data['refresh_token'] ) : '';
 		if ( '' !== $token ) {
 			wp_remote_post(
 				self::REVOKE_URL,
@@ -181,8 +182,8 @@ final class AAB_Google {
 	 * @return array|WP_Error Decoded response.
 	 */
 	private static function token_request( array $params ) {
-		$params['client_id']     = AAB_Settings::client_id();
-		$params['client_secret'] = AAB_Settings::client_secret();
+		$params['client_id']     = JATCS_Settings::client_id();
+		$params['client_secret'] = JATCS_Settings::client_secret();
 
 		$response = wp_remote_post(
 			self::TOKEN_ENDPOINT,
@@ -199,7 +200,7 @@ final class AAB_Google {
 		if ( $code >= 400 || ! is_array( $body ) || ! empty( $body['error'] ) ) {
 			$error = is_array( $body ) && ! empty( $body['error'] ) ? (string) $body['error'] : 'http_' . $code;
 			$desc  = is_array( $body ) && ! empty( $body['error_description'] ) ? (string) $body['error_description'] : $error;
-			return new WP_Error( 'aab_token_' . sanitize_key( $error ), $desc, array( 'oauth_error' => $error ) );
+			return new WP_Error( 'jatcs_token_' . sanitize_key( $error ), $desc, array( 'oauth_error' => $error ) );
 		}
 		return $body;
 	}
@@ -214,7 +215,7 @@ final class AAB_Google {
 			return;
 		}
 		$ttl = isset( $response['expires_in'] ) ? max( 60, (int) $response['expires_in'] - 120 ) : 3000;
-		set_transient( self::ACCESS_KEY, AAB_Crypto::encrypt( $response['access_token'] ), $ttl );
+		set_transient( self::ACCESS_KEY, JATCS_Crypto::encrypt( $response['access_token'] ), $ttl );
 	}
 
 	/**
@@ -225,15 +226,15 @@ final class AAB_Google {
 	 */
 	public static function access_token( $force = false ) {
 		if ( ! $force ) {
-			$cached = AAB_Crypto::decrypt( (string) get_transient( self::ACCESS_KEY ) );
+			$cached = JATCS_Crypto::decrypt( (string) get_transient( self::ACCESS_KEY ) );
 			if ( '' !== $cached ) {
 				return $cached;
 			}
 		}
 		$data    = get_option( self::TOKEN_OPTION, array() );
-		$refresh = ! empty( $data['refresh_token'] ) ? AAB_Crypto::decrypt( $data['refresh_token'] ) : '';
+		$refresh = ! empty( $data['refresh_token'] ) ? JATCS_Crypto::decrypt( $data['refresh_token'] ) : '';
 		if ( '' === $refresh ) {
-			return new WP_Error( 'aab_not_connected', __( 'Google Calendar is not connected.', 'anderson-appointment-booking' ) );
+			return new WP_Error( 'jatcs_not_connected', __( 'Google Calendar is not connected.', 'jat-calendar-sync' ) );
 		}
 
 		$response = self::token_request(
@@ -247,7 +248,14 @@ final class AAB_Google {
 			if ( is_array( $data ) && isset( $data['oauth_error'] ) && 'invalid_grant' === $data['oauth_error'] ) {
 				// The grant was revoked or expired: booking is offline until the owner reconnects.
 				$first = ! get_option( self::ERROR_OPTION );
-				update_option( self::ERROR_OPTION, array( 'message' => $response->get_error_message(), 'time' => time() ), false );
+				update_option(
+					self::ERROR_OPTION,
+					array(
+						'message' => $response->get_error_message(),
+						'time'    => time(),
+					),
+					false
+				);
 				if ( $first ) {
 					self::alert_owner();
 				}
@@ -274,8 +282,8 @@ final class AAB_Google {
 	 * @return array|WP_Error Decoded JSON (empty array for 204).
 	 */
 	public static function request( $method, $path, $body = null, array $query = array() ) {
-		$url      = add_query_arg( rawurlencode_deep( $query ), self::API . $path );
-		$attempts = 3;
+		$url       = add_query_arg( rawurlencode_deep( $query ), self::API . $path );
+		$attempts  = 3;
 		$refreshed = false;
 
 		for ( $attempt = 1; $attempt <= $attempts; $attempt++ ) {
@@ -325,11 +333,11 @@ final class AAB_Google {
 				if ( ! in_array( $code, array( 404, 409, 410 ), true ) ) {
 					self::log( $method . ' ' . strtok( $path, '?' ), $code . ' ' . $message );
 				}
-				return new WP_Error( 'aab_google_http', $message, array( 'status' => $code ) );
+				return new WP_Error( 'jatcs_google_http', $message, array( 'status' => $code ) );
 			}
 			return is_array( $decoded ) ? $decoded : array();
 		}
-		return new WP_Error( 'aab_google_http', 'Retries exhausted' );
+		return new WP_Error( 'jatcs_google_http', 'Retries exhausted' );
 	}
 
 	/**
@@ -371,7 +379,7 @@ final class AAB_Google {
 	 * Tell the owner by email that booking went offline (once per outage).
 	 */
 	private static function alert_owner() {
-		$to = AAB_Bookings::notify_email();
+		$to = JATCS_Bookings::notify_email();
 		if ( '' === $to ) {
 			return;
 		}
@@ -379,11 +387,11 @@ final class AAB_Google {
 		wp_mail(
 			$to,
 			/* translators: %s: site name */
-			sprintf( __( '[%s] Online booking is offline: reconnect Google Calendar', 'anderson-appointment-booking' ), $site ),
+			sprintf( __( '[%s] Online booking is offline: reconnect Google Calendar', 'jat-calendar-sync' ), $site ),
 			sprintf(
 				/* translators: %s: settings page URL */
-				__( "Google stopped accepting this site's access to your calendar (access was revoked, the password changed, or the Google app is still in Testing mode, which expires access after 7 days).\n\nUntil you reconnect, visitors see \"Online booking is unavailable\".\n\nReconnect here: %s", 'anderson-appointment-booking' ),
-				admin_url( 'admin.php?page=aab-settings' )
+				__( "Google stopped accepting this site's access to your calendar (access was revoked, the password changed, or the Google app is still in Testing mode, which expires access after 7 days).\n\nUntil you reconnect, visitors see \"Online booking is unavailable\".\n\nReconnect here: %s", 'jat-calendar-sync' ),
+				admin_url( 'admin.php?page=jatcs-settings' )
 			)
 		);
 	}
@@ -406,7 +414,7 @@ final class AAB_Google {
 	 * @return string
 	 */
 	public static function calendar_timezone( $calendar_id ) {
-		$key    = 'aab_caltz_' . md5( $calendar_id );
+		$key    = 'jatcs_caltz_' . md5( $calendar_id );
 		$cached = get_transient( $key );
 		if ( is_string( $cached ) ) {
 			return $cached;
@@ -456,6 +464,89 @@ final class AAB_Google {
 	}
 
 	/**
+	 * Busy intervals per calendar.
+	 *
+	 * @param int      $from         Unix start.
+	 * @param int      $to           Unix end.
+	 * @param string[] $calendar_ids Calendar IDs.
+	 * @return array<string,array<int,array{0:int,1:int}>>|WP_Error
+	 */
+	public static function busy_map( $from, $to, array $calendar_ids ) {
+		$calendar_ids = array_values( array_unique( array_filter( array_map( 'strval', $calendar_ids ) ) ) );
+		if ( ! $calendar_ids ) {
+			return array();
+		}
+		$items = array();
+		foreach ( $calendar_ids as $id ) {
+			$items[] = array( 'id' => $id );
+		}
+		$result = self::request(
+			'POST',
+			'/freeBusy',
+			array(
+				'timeMin' => gmdate( 'Y-m-d\TH:i:s\Z', $from ),
+				'timeMax' => gmdate( 'Y-m-d\TH:i:s\Z', $to ),
+				'items'   => $items,
+			)
+		);
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+		$map = array();
+		foreach ( isset( $result['calendars'] ) ? $result['calendars'] : array() as $id => $calendar ) {
+			if ( ! empty( $calendar['errors'] ) ) {
+				/* translators: %s: calendar ID */
+				return new WP_Error( 'jatcs_freebusy', sprintf( __( 'Could not read availability for calendar %s.', 'jat-calendar-sync' ), $id ) );
+			}
+			$ranges = array();
+			foreach ( isset( $calendar['busy'] ) ? $calendar['busy'] : array() as $range ) {
+				$start = strtotime( $range['start'] );
+				$end   = strtotime( $range['end'] );
+				if ( $start && $end && $end > $start ) {
+					$ranges[] = array( $start, $end );
+				}
+			}
+			$map[ (string) $id ] = $ranges;
+		}
+		// Every calendar asked for must be answered, or a missing one could hide a conflict.
+		foreach ( $calendar_ids as $id ) {
+			if ( ! isset( $map[ $id ] ) ) {
+				/* translators: %s: calendar ID */
+				return new WP_Error( 'jatcs_freebusy', sprintf( __( 'Could not read availability for calendar %s.', 'jat-calendar-sync' ), $id ) );
+			}
+		}
+		return $map;
+	}
+
+	/**
+	 * Current state of an event, for following changes made in Google Calendar.
+	 *
+	 * @param string $calendar_id Calendar ID.
+	 * @param string $event_id    Event ID.
+	 * @return array|WP_Error {status: confirmed|cancelled|missing, start, end, all_day}
+	 */
+	public static function event_state( $calendar_id, $event_id ) {
+		$event = self::get_event( $calendar_id, $event_id );
+		if ( is_wp_error( $event ) ) {
+			$data = $event->get_error_data();
+			if ( is_array( $data ) && isset( $data['status'] ) && in_array( (int) $data['status'], array( 404, 410 ), true ) ) {
+				return array( 'status' => 'missing' );
+			}
+			return $event;
+		}
+		if ( isset( $event['status'] ) && 'cancelled' === $event['status'] ) {
+			return array( 'status' => 'cancelled' );
+		}
+		$all_day = empty( $event['start']['dateTime'] ) || empty( $event['end']['dateTime'] );
+		return array(
+			'status'  => 'confirmed',
+			'start'   => $all_day ? 0 : (int) strtotime( $event['start']['dateTime'] ),
+			'end'     => $all_day ? 0 : (int) strtotime( $event['end']['dateTime'] ),
+			'all_day' => $all_day,
+		);
+	}
+
+	/**
 	 * Busy intervals across calendars.
 	 *
 	 * Fails closed: if any calendar can't be read, an error is returned so no slot is offered on stale data.
@@ -488,7 +579,7 @@ final class AAB_Google {
 		foreach ( isset( $result['calendars'] ) ? $result['calendars'] : array() as $id => $calendar ) {
 			if ( ! empty( $calendar['errors'] ) ) {
 				/* translators: %s: calendar ID */
-				return new WP_Error( 'aab_freebusy', sprintf( __( 'Could not read availability for calendar %s.', 'anderson-appointment-booking' ), $id ) );
+				return new WP_Error( 'jatcs_freebusy', sprintf( __( 'Could not read availability for calendar %s.', 'jat-calendar-sync' ), $id ) );
 			}
 			$ranges = array();
 			foreach ( isset( $calendar['busy'] ) ? $calendar['busy'] : array() as $range ) {
@@ -499,7 +590,7 @@ final class AAB_Google {
 				}
 			}
 			if ( $skip && (string) $id === $skip['calendar'] ) {
-				$ranges = AAB_Availability::subtract( $ranges, $skip['start'], $skip['end'] );
+				$ranges = JATCS_Availability::subtract( $ranges, $skip['start'], $skip['end'] );
 			}
 			if ( isset( $pad[ (string) $id ] ) ) {
 				// Extra clear time around this calendar's events (e.g. an hour around work shifts).

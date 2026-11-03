@@ -1,6 +1,6 @@
 # Roadmap
 
-Based on the [competitive analysis](research/competitive-analysis.md). Principle: **every feature free, no add-ons**, built for solo professionals and small teams who live in Google Calendar.
+Based on the [competitive analysis](research/competitive-analysis.md). Principle: **every feature free, no add-ons**, built for solo professionals and small teams, whatever calendar they live in.
 
 ## Done
 
@@ -10,13 +10,14 @@ Based on the [competitive analysis](research/competitive-analysis.md). Principle
 - **1.3** Appointment types (own length, start-time spacing, hours, location, video call), custom booking questions, visitor self-service rescheduling with a change cutoff, one manage page for reschedule and cancel.
 - **1.4** Stripe payments (hold, pay, confirm, automatic refunds by policy) and Outlook / Microsoft 365 conflict calendars via Microsoft Graph. README rewritten with diagrams.
 - **1.4.1–1.5.0** Fixes found on the first live install (permissions, duplicate copies) and shift-work mode: booking opens only as far as a posted work schedule such as Sling.
+- **2.0** Renamed **JAT Calendar Sync** (GPLv2+), automatic migration from Anderson Appointment Booking. iCloud, Fastmail, Nextcloud and any CalDAV calendar (read and write), iCal feeds with full recurrence support, Outlook as the booking calendar with Teams links, one calendar layer across services. Passes Plugin Check with no errors or warnings.
 
 ## Next
 
-### 1.5: More calendars
-- [ ] iCloud and other CalDAV calendars as conflict calendars.
-- [ ] Outlook as the booking calendar (create events, Teams links) for people who don't use Google.
+### 2.1: Payments and links
 - [ ] Coupons and deposits for paid types.
+- [ ] Optional Jitsi / Zoom link for CalDAV booking calendars (no built-in video there today).
+- [ ] Several accounts per service (two Google or two CalDAV accounts).
 
 ### 1.6: Smarter scheduling
 - [ ] "Pack my day" option: prefer slots adjacent to existing meetings to avoid fragmented days.

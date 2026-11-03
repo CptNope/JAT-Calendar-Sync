@@ -1,116 +1,160 @@
-=== Anderson Appointment Booking ===
+=== JAT Calendar Sync ===
 Contributors: cptnope
-Tags: appointment, booking, google calendar, scheduling, calendar
+Tags: appointment booking, booking calendar, google calendar, outlook calendar, scheduling
 Requires at least: 6.2
-Tested up to: 6.9
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.5.0
-License: MIT
-License URI: https://opensource.org/licenses/MIT
+Stable tag: 2.0.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Let visitors book appointments with you. Availability comes live from your Google Calendar and every booking is added to it.
+Free appointment booking that syncs with Google, Outlook, iCloud and any CalDAV or iCal calendar, matches your theme and never double-books.
 
 == Description ==
 
-Anderson Appointment Booking puts a booking calendar on your site that knows when you're actually free. It reads free/busy times from your Google Calendar, offers only open slots within the hours you set, and adds each booking to your calendar — with a Google Meet link and a guest invite if you like.
+JAT Calendar Sync puts a booking calendar on your site that knows when you are actually free. It checks every calendar you choose, offers only open times within your hours, and adds each booking to your calendar with a video link and an invitation for your visitor. Everything is free: no add-ons, no paid tiers, no account with us.
 
-* Live availability from one or more Google calendars, plus optional Outlook / Microsoft 365 calendars
-* Paid appointments with Stripe Checkout: the time is held while the visitor pays, confirmed only after payment, refunded automatically by your policy
-* Appointment types, each with its own length, hours, location, video call and booking questions
-* Custom booking questions: short answer, long answer, dropdown, checkbox
-* Visitors can reschedule or cancel from a link in every email, with a cut-off you choose
-* Weekly hours with breaks, buffers, minimum notice, booking window and daily cap
-* Shift-work mode: open booking only as far as your posted work schedule (Sling and similar)
-* Optional Google Meet link and calendar invite for the visitor
-* Atomic slot locking and a live re-check at booking time to prevent double bookings
-* Follows changes made in Google Calendar: deleted or moved appointments update on the site
-* Confirmation (with calendar file), reminder and change emails; owner notifications
-* Days off, per-person booking cap, optional or required phone number
-* Site Health checks, an email alert if Google access breaks, CSV export, automatic record clean-up
-* Times shown in the visitor's own timezone
-* Matches your theme automatically (block and classic themes): fonts, colors, buttons, fields, corners
-* Appearance settings with a live preview inside your theme, per-block overrides, shortcode attributes and CSS variables
-* Block and shortcode: `[anderson_booking]`, or one type with `[anderson_booking type="consult"]`
-* Narrow Google permissions; credentials encrypted at rest
-* No build tools, no Composer, no extra services
+= Works with your calendars =
 
-Built by [Jeremy Anderson](https://jeremyanderson.tech).
+* **Google Calendar**: live free/busy from several calendars, bookings added with a Google Meet link and a guest invite.
+* **Outlook / Microsoft 365** (work, school or personal): busy times from any of your calendars, or add bookings to Outlook with a Microsoft Teams link.
+* **iCloud, Fastmail, Nextcloud, Zoho, Yahoo, mailbox.org and any CalDAV server**: read busy times and add bookings, with recurring events handled correctly.
+* **Any iCal (ICS) feed**: Sling, When I Work, Deputy, 7shifts, iCloud shared calendars, Outlook published calendars, Proton, Teamup, Airbnb and more. Feeds are checked every 10 minutes.
+* Mix them: for example, bookings go to Google Calendar while your Outlook work calendar and your Sling shifts block times.
 
-= External services =
+= Built for people with a schedule =
 
-This plugin connects to Google's OAuth and Google Calendar APIs, using the Google Cloud credentials you create, in order to read your free/busy times, list your calendars, and create or delete appointment events.
+* **Shift-work mode**: open booking only as far as your posted work schedule, keep free time around every shift, and open the next week automatically when it is posted.
+* Appointment types with their own length, start-time spacing, hours, location, video setting and questions.
+* Weekly hours with breaks, buffers, minimum notice, booking window, daily cap, days off and a per-person limit.
+* Visitors reschedule or cancel from a link in every email, within the limits you set.
+* Paid appointments with Stripe Checkout: the time is held while the visitor pays, confirmed only after payment and refunded automatically by your policy.
+* Confirmation, reminder and change emails with a calendar file; owner notifications.
+* Times shown in each visitor’s own time zone.
 
-* Data sent when a visitor views the booking calendar: the time range being viewed and the IDs of the calendars to check (from your server to Google).
-* Data sent when a visitor books: the appointment time and the name, email address and notes the visitor entered, which become a Google Calendar event (and, if enabled, a guest invite emailed by Google).
-* Google's terms: https://policies.google.com/terms — privacy policy: https://policies.google.com/privacy
+= Never double-books =
 
-Stripe (optional, only when you add Stripe keys and give an appointment type a price) processes payments on its hosted Checkout page. When a visitor books a paid appointment, your server sends Stripe the price, currency, appointment name and time, and the visitor's email address; the visitor enters payment details directly on Stripe. Stripe sends payment notifications back to your site. Refunds are requested from Stripe when a paid booking is cancelled under your refund policy.
+* Every time is re-checked live against your calendars at the moment of booking, under an atomic lock.
+* If any calendar that blocks times can’t be read, no times are offered, so nobody books over an event the plugin couldn’t see.
+* Changes you make in your calendar (moving or deleting an appointment) are mirrored on your site and the visitor is told.
+* Site Health checks, an email if a calendar connection breaks, and a log of recent problems.
 
-* Stripe's terms: https://stripe.com/legal/ssa — privacy policy: https://stripe.com/privacy
+= Looks like your site =
 
-Microsoft Graph (optional, only when you connect an Outlook / Microsoft 365 account) is used to list your calendars and read the start, end and free/busy status of events in the calendars you choose, for the dates visitors are viewing. Nothing is written to Microsoft and no visitor data is sent to it.
+* Matches your theme automatically, block or classic: fonts, colors, buttons, fields and corners.
+* Appearance settings with a live preview inside your theme, per-block overrides, shortcode attributes and CSS variables.
+* Fast: no libraries, loaded only on pages that show the calendar, and it works with page caching.
+* Keyboard and screen-reader friendly.
 
-* Microsoft's terms: https://www.microsoft.com/servicesagreement — privacy statement: https://privacy.microsoft.com/privacystatement
+= Private by design =
+
+* Your bookings stay in your WordPress database and your own calendar. There is no third-party booking service in between.
+* Calendar passwords, tokens and feed links are encrypted at rest.
+* Retention setting, WordPress personal-data export and erase, CSV export.
+
+Built by [Jeremy Anderson Tech](https://jeremyanderson.tech). Development happens on [GitHub](https://github.com/CptNope/WordPress-Calendar-Sync-Plugin).
+
+== External services ==
+
+This plugin connects only to the calendar and payment services you set up yourself, using your own accounts and credentials. Nothing is sent to the plugin’s author.
+
+**Google Calendar** (when you connect Google). The plugin uses Google’s OAuth and Calendar APIs to read free/busy times for the calendars you choose, list your calendars, and create, move and delete appointment events.
+* Sent when a visitor views the booking calendar: the time range shown and the IDs of the calendars to check (from your server to Google).
+* Sent when a visitor books: the appointment time and the name, email address, phone number and answers the visitor entered, which become an event in your calendar (and, if enabled, a guest invitation emailed by Google).
+* Terms: https://policies.google.com/terms — Privacy: https://policies.google.com/privacy
+
+**Microsoft Graph / Outlook** (when you connect Outlook or Microsoft 365). Used to list your calendars, read the start, end and free/busy status of events in the calendars you choose, and, if Outlook is your booking calendar, create, move and cancel appointment events (with the visitor’s name, email and details, and a Teams meeting when enabled).
+* Terms: https://www.microsoft.com/servicesagreement — Privacy: https://privacy.microsoft.com/privacystatement
+
+**CalDAV servers** (when you connect iCloud, Fastmail, Nextcloud, Zoho, Yahoo, mailbox.org or another CalDAV server). The plugin signs in with the user name and app-specific password you enter, reads events in the date range being viewed, and, if a CalDAV calendar is your booking calendar, creates, updates and deletes appointment events containing the visitor’s details. Each provider’s own terms and privacy policy apply, for example Apple: https://www.apple.com/legal/internet-services/icloud/ and https://www.apple.com/legal/privacy/
+
+**iCal feeds** (when you add a feed link). The plugin downloads the feed you added (at most every 10 minutes) from the address you entered. No visitor data is sent. The feed provider’s terms apply.
+
+**Stripe** (only when you add Stripe keys and give an appointment type a price). Processes payments on Stripe’s hosted Checkout page. When a visitor books a paid appointment, your server sends Stripe the price, currency, appointment name and time, and the visitor’s email address; the visitor enters payment details directly on Stripe. Stripe sends payment notifications back to your site. Refunds are requested from Stripe when a paid booking is cancelled under your refund policy.
+* Terms: https://stripe.com/legal/ssa — Privacy: https://stripe.com/privacy
 
 == Installation ==
 
 1. Install and activate the plugin, then open Appointments → Settings.
-2. Follow the on-screen steps to create a Google OAuth client (Web application) and paste in the client ID and secret.
-3. Publish your OAuth app to "In production" in Google Cloud (apps in Testing lose access after 7 days).
-4. Click Connect Google Calendar, choose your calendars and hours, and save.
-5. Add the Appointment Booking block or the `[anderson_booking]` shortcode to a page.
+2. Connect at least one calendar: Google Calendar (follow the on-screen steps to create your own Google client), Outlook / Microsoft 365, or an iCloud / CalDAV account with an app-specific password. Add iCal feed links for any calendars that should only block times.
+3. Under “Where bookings go”, choose the calendar new appointments are added to, and set your hours.
+4. Add the Appointment Booking block or the `[jat_booking]` shortcode to a page.
+
+Moving from Anderson Appointment Booking? Install and activate JAT Calendar Sync: your settings, appointment types, bookings, calendar connections and booking pages carry over automatically, and the old plugin is switched off.
 
 == Frequently Asked Questions ==
 
+= Is it really free? =
+
+Yes. Every feature, including calendar sync for every service, payments, reminders, rescheduling and theme matching, is in the free plugin. There is no paid version.
+
+= Which calendar should bookings go to? =
+
+Any Google, Outlook / Microsoft 365 or CalDAV calendar you can write to. iCal feeds are read-only, so they can block times but can’t receive bookings.
+
 = Can visitors see my events? =
 
-No. Only free/busy blocks are read from conflict calendars, and visitors only see open start times.
+No. Only busy times are used, and visitors only see open start times.
 
-= What happens if Google is unreachable? =
+= What happens if a calendar can’t be reached? =
 
-No times are offered until it is reachable again, so nobody can book over an event the plugin couldn't see.
+No times are offered until it can be checked again, so nobody books over an event the plugin couldn’t see. iCal feeds keep their last copy for up to 6 hours if the feed is briefly unreachable.
 
-= Why did booking stop after a week? =
+= I work shifts. Can booking follow my schedule? =
+
+Yes. Add your schedule (for example Sling’s calendar link as an iCal feed) and choose it under “Open booking only as far as”. Booking opens only up to your last posted shift, optionally through the end of that week, with free time kept before and after each shift. When the next schedule is posted, those days open automatically.
+
+= Why did Google booking stop after a week? =
 
 Your Google OAuth app is in Testing mode. Publish it to In production in Google Cloud and connect again.
 
+= iCloud says my password is wrong =
+
+iCloud, Fastmail and Yahoo need an app-specific password, not your normal password. Create one in your account’s security settings and use that.
+
 = Can I make it match my site? =
 
-By default it does: it uses your theme's fonts, button and field styles, colors and corner radius. Fine-tune it under Appointments → Settings → Appearance (with a live preview), per block in the editor, with shortcode attributes, or with CSS variables such as `--aab-accent` and `--aab-radius`.
+By default it does: it uses your theme’s fonts, button and field styles, colors and corner radius. Fine-tune it under Appointments → Settings → Appearance (with a live preview), per block in the editor, with shortcode attributes, or with CSS variables such as `--jatcs-accent` and `--jatcs-radius`.
 
-= My vacation is in Google Calendar but people can still book =
+= My vacation is in my calendar but people can still book =
 
-All-day events are marked "Free" in Google Calendar by default, so they don't block times. Set the event to "Busy", or add the dates under Appointments → Settings → Days off.
+All-day events are often marked “Free”, so they don’t block times. Set them to “Busy”, or add the dates under Appointments → Settings → Days off.
 
 = My host disables WP-Cron. Does anything break? =
 
-Booking works, but reminders and syncing with changes made in Google Calendar need the hourly task. Add a server cron job that requests wp-cron.php every few minutes. Tools → Site Health tells you if the task isn't running.
-
-= Can visitors reschedule? =
-
-Yes. Every email links to a page where they can pick a new time (the same calendar, with their current slot treated as free) or cancel. The Google Calendar event is moved in place, so the Meet link stays the same. You can stop online changes within N hours of the appointment and limit how many times one booking can move.
-
-= Can I offer different kinds of appointments? =
-
-Yes. Under Appointments → Appointment types, add as many as you like, each with its own length, start-time spacing, hours, location, video setting and questions. Visitors pick a type first. Use type="…" in the shortcode, or the block setting, to show just one.
+Booking works, but reminders and syncing with changes made in your calendar need the hourly task. Add a server cron job that requests wp-cron.php every few minutes. Tools → Site Health tells you if the task isn’t running.
 
 = Can I charge for appointments? =
 
-Yes. Add your Stripe keys under Appointments → Settings → Payments and give an appointment type a price. Visitors pay on Stripe's secure checkout page; the time is held for 30 minutes while they pay, and the booking is confirmed only once the payment succeeds. When you cancel, the visitor is refunded in full; when they cancel, they're refunded if it's before the cut-off you set.
-
-= My work meetings are in Outlook. Can they block times? =
-
-Yes. Connect Outlook / Microsoft 365 under Appointments → Settings and choose which of its calendars to check. Busy, tentative and out-of-office events (including recurring meetings) block times. Bookings are still created in Google Calendar.
-
-= Does it work with shift schedules like Sling? =
-
-Yes. Subscribe to your schedule's calendar feed in Google Calendar, tick it under "Also check for conflicts" so shifts block their times, and choose it under "Open booking only as far as". Visitors can then only book up to your last posted shift (or the end of that week), so nobody books a time that later becomes a shift. By default an hour before and after each shift stays free too (change it next to the setting). Google refreshes subscribed calendars every few hours, so a newly posted week opens a little later, never early.
+Yes. Add your Stripe keys under Appointments → Settings → Payments and give an appointment type a price. The time is held for 30 minutes while the visitor pays, and the booking is confirmed only once the payment succeeds.
 
 = Does it work with page caching? =
 
-Yes. Times are loaded through the REST API when the page opens, so cached pages still show current availability.
+Yes. Times are loaded when the page opens, so cached pages still show current availability.
+
+== Screenshots ==
+
+1. The booking calendar in a block theme, matching the site’s fonts and colors.
+2. Picking an appointment type and a time.
+3. Calendar connections: Google, Outlook, iCloud / CalDAV and iCal feeds.
+4. Where bookings go, and shift-work mode.
+5. Appearance settings with a live preview in your theme.
+
+== Upgrade Notice ==
+
+= 2.0.0 =
+Anderson Appointment Booking is now JAT Calendar Sync, with Outlook, iCloud, CalDAV and iCal feed support. Settings, bookings and connections move over automatically.
 
 == Changelog ==
+
+= 2.0.0 =
+* New name: JAT Calendar Sync (formerly Anderson Appointment Booking). Existing sites move over automatically: settings, appointment types, bookings, Google and Outlook connections, booking pages, emailed links and Stripe webhooks all keep working, and the old plugin is deactivated.
+* New: iCloud, Fastmail, Nextcloud, Zoho, Yahoo, mailbox.org and any CalDAV calendar, for busy times and as the booking calendar.
+* New: iCal (ICS) feeds as calendars that block times or set your work schedule, with full recurring-event support (time zones, exceptions, cancellations).
+* New: Outlook / Microsoft 365 as the booking calendar, with Microsoft Teams links for work and school accounts.
+* New: one “Where bookings go” setting across every connected service; the work-schedule calendar can be any of them.
+* New: Site Health now checks that every calendar that blocks times can actually be read.
+* License changed to GPLv2 or later.
 
 = 1.5.0 =
 * New: Open booking only as far as your posted work schedule (Sling, When I Work, Deputy or any calendar of shifts). Booking opens up to your last posted shift, optionally through the end of that week, and new weeks open automatically when the schedule reaches Google Calendar. If nothing is posted, or the schedule can't be read, nothing can be booked.

@@ -1,5 +1,5 @@
-/* Anderson Appointment Booking – settings screen. */
-.aab-admin .aab-card {
+/* JAT Calendar Sync – settings screen. */
+.jatcs-admin .jatcs-card {
 	max-width: 880px;
 	margin: 16px 0;
 	padding: 4px 24px 16px;
@@ -8,16 +8,16 @@
 	border-radius: 4px;
 }
 
-.aab-admin .aab-card h2 {
+.jatcs-admin .jatcs-card h2 {
 	margin-top: 1em;
 }
 
-.aab-connection {
+.jatcs-connection {
 	padding-left: 22px;
 	position: relative;
 }
 
-.aab-connection::before {
+.jatcs-connection::before {
 	content: "";
 	position: absolute;
 	left: 4px;
@@ -28,61 +28,61 @@
 	background: #c3c4c7;
 }
 
-.aab-connection--on::before {
+.jatcs-connection--on::before {
 	background: #00a32a;
 }
 
-.aab-steps {
+.jatcs-steps {
 	margin: 12px 0 16px;
 }
 
-.aab-steps summary {
+.jatcs-steps summary {
 	cursor: pointer;
 	font-weight: 600;
 }
 
-.aab-steps ol {
+.jatcs-steps ol {
 	margin-top: 10px;
 }
 
-.aab-steps li {
+.jatcs-steps li {
 	margin-bottom: 8px;
 }
 
-.aab-copy {
+.jatcs-copy {
 	display: flex;
 	gap: 6px;
 	margin-top: 6px;
 }
 
-.aab-calendar-list label {
+.jatcs-calendar-list label {
 	display: block;
 	margin-bottom: 6px;
 }
 
-.aab-error {
+.jatcs-error {
 	color: #b32d2e;
 }
 
-.aab-status--confirmed {
+.jatcs-status--confirmed {
 	color: #00a32a;
 }
 
-.aab-status--cancelled {
+.jatcs-status--cancelled {
 	color: #8c8f94;
 	text-decoration: line-through;
 }
 
-.aab-cancel-link {
+.jatcs-cancel-link {
 	color: #b32d2e;
 }
 
 /* Appearance --------------------------------------------------------------- */
-.aab-admin .aab-card--wide {
+.jatcs-admin .jatcs-card--wide {
 	max-width: 1280px;
 }
 
-.aab-appearance {
+.jatcs-appearance {
 	display: grid;
 	grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
 	gap: 28px;
@@ -90,41 +90,41 @@
 }
 
 @media (max-width: 1100px) {
-	.aab-appearance {
+	.jatcs-appearance {
 		grid-template-columns: minmax(0, 1fr);
 	}
 }
 
-.aab-control {
+.jatcs-control {
 	margin: 0 0 18px;
 	padding: 0;
 	border: 0;
 }
 
-.aab-control legend,
-.aab-control__label,
-.aab-css summary {
+.jatcs-control legend,
+.jatcs-control__label,
+.jatcs-css summary {
 	display: block;
 	margin-bottom: 6px;
 	font-weight: 600;
 }
 
-.aab-css summary {
+.jatcs-css summary {
 	cursor: pointer;
 }
 
-.aab-choice {
+.jatcs-choice {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 	margin-bottom: 4px;
 }
 
-.aab-hint {
+.jatcs-hint {
 	color: #646970;
 }
 
-.aab-swatch {
+.jatcs-swatch {
 	display: inline-block;
 	width: 18px;
 	height: 18px;
@@ -133,24 +133,24 @@
 	vertical-align: middle;
 }
 
-.aab-custom-accent,
-.aab-custom-bg {
+.jatcs-custom-accent,
+.jatcs-custom-bg {
 	margin: 6px 0 0 24px;
 }
 
-.aab-custom-accent.is-off,
-.aab-custom-bg.is-off {
+.jatcs-custom-accent.is-off,
+.jatcs-custom-bg.is-off {
 	opacity: 0.55;
 }
 
-.aab-palette {
+.jatcs-palette {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
 	margin-top: 8px;
 }
 
-.aab-swatch--pick {
+.jatcs-swatch--pick {
 	width: 24px;
 	height: 24px;
 	padding: 0;
@@ -158,19 +158,19 @@
 	cursor: pointer;
 }
 
-.aab-swatch--pick:focus-visible {
+.jatcs-swatch--pick:focus-visible {
 	outline: 2px solid #2271b1;
 	outline-offset: 2px;
 }
 
-.aab-appearance__preview {
+.jatcs-appearance__preview {
 	position: sticky;
 	top: 46px;
 	align-self: start;
 	min-width: 0;
 }
 
-.aab-preview-bar {
+.jatcs-preview-bar {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -179,13 +179,13 @@
 	color: #646970;
 }
 
-.aab-preview-sizes .button.is-pressed {
+.jatcs-preview-sizes .button.is-pressed {
 	background: #f0f0f1;
 	border-color: #8c8f94;
 	color: #1d2327;
 }
 
-.aab-preview-frame {
+.jatcs-preview-frame {
 	max-width: 100%;
 	margin: 0 auto;
 	border: 1px solid #dcdcde;
@@ -194,7 +194,7 @@
 	transition: max-width 0.2s;
 }
 
-.aab-preview-frame iframe {
+.jatcs-preview-frame iframe {
 	display: block;
 	width: 100%;
 	height: 520px;
@@ -202,40 +202,40 @@
 	background: #fff;
 }
 
-.aab-inline-forms {
+.jatcs-inline-forms {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
 }
 
-.aab-log td {
+.jatcs-log td {
 	vertical-align: top;
 }
 
-.aab-log-clear {
+.jatcs-log-clear {
 	margin-top: 10px;
 }
 
 /* Appointment types ---------------------------------------------------------- */
-.aab-types-intro {
+.jatcs-types-intro {
 	max-width: 760px;
 	margin: 12px 0 16px;
 }
 
-.aab-types-table {
+.jatcs-types-table {
 	max-width: 1100px;
 }
 
-.aab-types-table td {
+.jatcs-types-table td {
 	vertical-align: middle;
 }
 
-.aab-order {
+.jatcs-order {
 	white-space: nowrap;
 	text-align: right;
 }
 
-.aab-pill {
+.jatcs-pill {
 	display: inline-block;
 	margin-left: 6px;
 	padding: 1px 8px;
@@ -245,21 +245,21 @@
 	font-size: 12px;
 }
 
-.aab-code {
+.jatcs-code {
 	user-select: all;
 }
 
-.aab-type-hours.is-off {
+.jatcs-type-hours.is-off {
 	opacity: 0.5;
 }
 
-.aab-questions {
+.jatcs-questions {
 	display: grid;
 	gap: 10px;
 	max-width: 880px;
 }
 
-.aab-question {
+.jatcs-question {
 	display: grid;
 	grid-template-columns: minmax(0, 2fr) minmax(140px, 1fr);
 	gap: 8px 16px;
@@ -269,36 +269,36 @@
 	background: #f6f7f7;
 }
 
-.aab-question label {
+.jatcs-question label {
 	display: block;
 	margin-bottom: 4px;
 	font-weight: 600;
 }
 
-.aab-question__main input,
-.aab-question select,
-.aab-question textarea {
+.jatcs-question__main input,
+.jatcs-question select,
+.jatcs-question textarea {
 	width: 100%;
 	max-width: none;
 }
 
-.aab-question__options {
+.jatcs-question__options {
 	grid-column: 1 / -1;
 	display: none;
 }
 
-.aab-question[data-kind="select"] .aab-question__options {
+.jatcs-question[data-kind="select"] .jatcs-question__options {
 	display: block;
 }
 
-.aab-question__actions {
+.jatcs-question__actions {
 	grid-column: 1 / -1;
 	display: flex;
 	align-items: center;
 	gap: 16px;
 }
 
-.aab-question__actions label {
+.jatcs-question__actions label {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
@@ -306,35 +306,35 @@
 	font-weight: normal;
 }
 
-.aab-question__remove {
+.jatcs-question__remove {
 	margin-left: auto !important;
 }
 
 @media (max-width: 782px) {
-	.aab-question {
+	.jatcs-question {
 		grid-template-columns: minmax(0, 1fr);
 	}
 }
 
-.aab-question:first-child .aab-question__up {
+.jatcs-question:first-child .jatcs-question__up {
 	visibility: hidden;
 }
 
-.aab-inline-check {
+.jatcs-inline-check {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
 	margin-left: 10px;
 }
 
-.aab-status--error {
+.jatcs-status--error {
 	color: #b32d2e;
 }
 
-.aab-status--awaiting_payment {
+.jatcs-status--awaiting_payment {
 	color: #996800;
 }
 
-.aab-status--expired {
+.jatcs-status--expired {
 	color: #8c8f94;
 }
