@@ -25,6 +25,17 @@ final class JATCS_Google {
 	const API            = 'https://www.googleapis.com/calendar/v3';
 
 	/**
+	 * Where one account's piece of data is stored: the constant's name for the site owner,
+	 * with the current host's suffix for anyone else.
+	 *
+	 * @param string $key One of the *_OPTION / *_KEY constants.
+	 * @return string
+	 */
+	private static function k( $key ) {
+		return $key . JATCS_Hosts::suffix();
+	}
+
+	/**
 	 * Narrowest scopes that cover reading busy times, listing calendars and writing booking events.
 	 *
 	 * @return string[]
@@ -62,7 +73,7 @@ final class JATCS_Google {
 	 * @return bool
 	 */
 	public static function is_connected() {
-		$data = get_option( self::TOKEN_OPTION, array() );
+		$data = get_option( self::k( self::TOKEN_OPTION ), array() );
 		return ! empty( $data['refresh_token'] ) && '' !== JATCS_Crypto::decrypt( $data['refresh_token'] );
 	}
 
@@ -72,7 +83,7 @@ final class JATCS_Google {
 	 * @return array{email:string,connected_at:int}
 	 */
 	public static function account() {
-		$data = get_option( self::TOKEN_OPTION, array() );
+		$data = get_option( self::k( self::TOKEN_OPTION ), array() );
 		return array(
 			'email'        => isset( $data['email'] ) ? (string) $data['email'] : '',
 			'connected_at' => isset( $data['connected_at'] ) ? (int) $data['connected_at'] : 0,
@@ -130,8 +141,7 @@ final class JATCS_Google {
 			return new WP_Error( 'jatcs_scopes', __( 'Some calendar permissions were not granted. Connect again and leave every permission checked.', 'jat-calendar-sync' ) );
 		}
 
-		update_option(
-			self::TOKEN_OPTION,
+		update_option( self::k( self::TOKEN_OPTION ),
 			array(
 				'refresh_token' => JATCS_Crypto::encrypt( $response['refresh_token'] ),
 				'email'         => '',
@@ -140,16 +150,16 @@ final class JATCS_Google {
 			false
 		);
 		self::cache_access_token( $response );
-		delete_option( self::ERROR_OPTION );
-		delete_transient( self::CALENDARS_KEY );
+		delete_option( self::k( self::ERROR_OPTION ) );
+		delete_transient( self::k( self::CALENDARS_KEY ) );
 
 		// Record which account was connected (the primary calendar's ID is its email address).
 		// calendarList (not /calendars) so the calendarlist.readonly scope is enough.
 		$primary = self::request( 'GET', '/users/me/calendarList/primary' );
 		if ( ! is_wp_error( $primary ) && ! empty( $primary['id'] ) ) {
-			$data          = get_option( self::TOKEN_OPTION, array() );
+			$data          = get_option( self::k( self::TOKEN_OPTION ), array() );
 			$data['email'] = sanitize_text_field( $primary['id'] );
-			update_option( self::TOKEN_OPTION, $data, false );
+			update_option( self::k( self::TOKEN_OPTION ), $data, false );
 		}
 		return true;
 	}
@@ -158,7 +168,7 @@ final class JATCS_Google {
 	 * Revoke and forget the connection.
 	 */
 	public static function disconnect() {
-		$data  = get_option( self::TOKEN_OPTION, array() );
+		$data  = get_option( self::k( self::TOKEN_OPTION ), array() );
 		$token = ! empty( $data['refresh_token'] ) ? JATCS_Crypto::decrypt( $data['refresh_token'] ) : '';
 		if ( '' !== $token ) {
 			wp_remote_post(
@@ -169,10 +179,10 @@ final class JATCS_Google {
 				)
 			);
 		}
-		delete_option( self::TOKEN_OPTION );
-		delete_option( self::ERROR_OPTION );
-		delete_transient( self::ACCESS_KEY );
-		delete_transient( self::CALENDARS_KEY );
+		delete_option( self::k( self::TOKEN_OPTION ) );
+		delete_option( self::k( self::ERROR_OPTION ) );
+		delete_transient( self::k( self::ACCESS_KEY ) );
+		delete_transient( self::k( self::CALENDARS_KEY ) );
 	}
 
 	/**
@@ -215,7 +225,7 @@ final class JATCS_Google {
 			return;
 		}
 		$ttl = isset( $response['expires_in'] ) ? max( 60, (int) $response['expires_in'] - 120 ) : 3000;
-		set_transient( self::ACCESS_KEY, JATCS_Crypto::encrypt( $response['access_token'] ), $ttl );
+		set_transient( self::k( self::ACCESS_KEY ), JATCS_Crypto::encrypt( $response['access_token'] ), $ttl );
 	}
 
 	/**
@@ -226,12 +236,12 @@ final class JATCS_Google {
 	 */
 	public static function access_token( $force = false ) {
 		if ( ! $force ) {
-			$cached = JATCS_Crypto::decrypt( (string) get_transient( self::ACCESS_KEY ) );
+			$cached = JATCS_Crypto::decrypt( (string) get_transient( self::k( self::ACCESS_KEY ) ) );
 			if ( '' !== $cached ) {
 				return $cached;
 			}
 		}
-		$data    = get_option( self::TOKEN_OPTION, array() );
+		$data    = get_option( self::k( self::TOKEN_OPTION ), array() );
 		$refresh = ! empty( $data['refresh_token'] ) ? JATCS_Crypto::decrypt( $data['refresh_token'] ) : '';
 		if ( '' === $refresh ) {
 			return new WP_Error( 'jatcs_not_connected', __( 'Google Calendar is not connected.', 'jat-calendar-sync' ) );
@@ -247,9 +257,8 @@ final class JATCS_Google {
 			$data = $response->get_error_data();
 			if ( is_array( $data ) && isset( $data['oauth_error'] ) && 'invalid_grant' === $data['oauth_error'] ) {
 				// The grant was revoked or expired: booking is offline until the owner reconnects.
-				$first = ! get_option( self::ERROR_OPTION );
-				update_option(
-					self::ERROR_OPTION,
+				$first = ! get_option( self::k( self::ERROR_OPTION ) );
+				update_option( self::k( self::ERROR_OPTION ),
 					array(
 						'message' => $response->get_error_message(),
 						'time'    => time(),
@@ -264,7 +273,7 @@ final class JATCS_Google {
 			return $response;
 		}
 		self::cache_access_token( $response );
-		delete_option( self::ERROR_OPTION );
+		delete_option( self::k( self::ERROR_OPTION ) );
 		return (string) $response['access_token'];
 	}
 
@@ -310,7 +319,7 @@ final class JATCS_Google {
 
 			if ( 401 === $code && ! $refreshed ) {
 				// Access token expired early or was revoked: refresh once and retry.
-				delete_transient( self::ACCESS_KEY );
+				delete_transient( self::k( self::ACCESS_KEY ) );
 				$refreshed = true;
 				--$attempt;
 				continue;
@@ -379,6 +388,26 @@ final class JATCS_Google {
 	 * Tell the owner by email that booking went offline (once per outage).
 	 */
 	private static function alert_owner() {
+		$host = JATCS_Hosts::current();
+		if ( '' !== $host ) {
+			// A person's connection broke: tell whoever runs the site (the person can't fix it in wp-admin).
+			$to = JATCS_Hosts::run( '', array( 'JATCS_Bookings', 'notify_email' ) );
+			if ( '' !== $to ) {
+				$site = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+				wp_mail(
+					$to,
+					/* translators: 1: site name, 2: person's name */
+					sprintf( __( '[%1$s] %2$s’s booking calendar is offline: reconnect Google Calendar', 'jat-calendar-sync' ), $site, JATCS_Hosts::name( $host ) ),
+					sprintf(
+						/* translators: 1: person's name, 2: People screen URL */
+						__( "Google stopped accepting this site's access to %1\$s's calendar. Their booking calendar is hidden on the site until it is reconnected.\n\nMake them a new connect link here: %2\$s", 'jat-calendar-sync' ),
+						JATCS_Hosts::name( $host ),
+						JATCS_Admin_Hosts::url( array( 'edit' => $host ) )
+					)
+				);
+			}
+			return;
+		}
 		$to = JATCS_Bookings::notify_email();
 		if ( '' === $to ) {
 			return;
@@ -414,7 +443,7 @@ final class JATCS_Google {
 	 * @return string
 	 */
 	public static function calendar_timezone( $calendar_id ) {
-		$key    = 'jatcs_caltz_' . md5( $calendar_id );
+		$key    = 'jatcs_caltz_' . md5( $calendar_id . JATCS_Hosts::suffix() ); // 'primary' is a different calendar for each host.
 		$cached = get_transient( $key );
 		if ( is_string( $cached ) ) {
 			return $cached;
@@ -432,7 +461,7 @@ final class JATCS_Google {
 	 * @return array<int,array{id:string,summary:string,primary:bool,writable:bool}>|WP_Error
 	 */
 	public static function calendars( $refresh = false ) {
-		$cached = get_transient( self::CALENDARS_KEY );
+		$cached = get_transient( self::k( self::CALENDARS_KEY ) );
 		if ( ! $refresh && is_array( $cached ) ) {
 			return $cached;
 		}
@@ -459,7 +488,7 @@ final class JATCS_Google {
 			$page = isset( $result['nextPageToken'] ) ? $result['nextPageToken'] : null;
 		} while ( $page && ++$guard < 10 );
 
-		set_transient( self::CALENDARS_KEY, $out, 10 * MINUTE_IN_SECONDS );
+		set_transient( self::k( self::CALENDARS_KEY ), $out, 10 * MINUTE_IN_SECONDS );
 		return $out;
 	}
 

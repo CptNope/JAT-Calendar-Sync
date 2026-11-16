@@ -17,7 +17,8 @@ Based on the [competitive analysis](research/competitive-analysis.md). Principle
 ### 2.1: Payments and links
 - [ ] Coupons and deposits for paid types.
 - [ ] Optional Jitsi / Zoom link for CalDAV booking calendars (no built-in video there today).
-- [ ] Several accounts per service (two Google or two CalDAV accounts).
+- [x] Several Google accounts: People, each with their own Google Calendar, types and booking calendar (2.1.0).
+- [ ] Several accounts for Outlook and CalDAV.
 
 ### 1.6: Smarter scheduling
 - [ ] "Pack my day" option: prefer slots adjacent to existing meetings to avoid fragmented days.

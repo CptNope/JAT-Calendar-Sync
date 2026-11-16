@@ -135,6 +135,7 @@ final class JATCS_Frontend {
 		$atts = array(
 			'heading' => isset( $attributes['heading'] ) ? (string) $attributes['heading'] : '',
 			'type'    => isset( $attributes['type'] ) ? (string) $attributes['type'] : '',
+			'host'    => isset( $attributes['host'] ) ? (string) $attributes['host'] : '',
 		);
 		foreach ( array_keys( self::style_attributes() ) as $key ) {
 			$atts[ $key ] = isset( $attributes[ $key ] ) ? (string) $attributes[ $key ] : '';
@@ -143,6 +144,9 @@ final class JATCS_Frontend {
 		$atts['background'] = isset( $attributes['surface'] ) ? (string) $attributes['surface'] : '';
 
 		$html = self::render( $atts );
+		if ( '' === $html ) {
+			return ''; // A person who isn't set up yet: no empty block on the page.
+		}
 		return function_exists( 'get_block_wrapper_attributes' )
 			? '<div ' . get_block_wrapper_attributes() . '>' . $html . '</div>'
 			: $html;
@@ -154,6 +158,8 @@ final class JATCS_Frontend {
 	 * Style attributes are optional and override Appointments → Settings → Appearance:
 	 * [jat_booking heading="Book a call" accent="#0b5fff" buttons="plugin" radius="round" density="compact" background="#ffffff" headings="inherit"]
 	 * Show one appointment type only with type="its-id" (IDs are listed under Appointments → Appointment types).
+	 * Show one person's calendar with host="their-slug" (Appointments → People). It renders nothing until
+	 * that person's Google Calendar is connected and they have a visible appointment type.
 	 *
 	 * @param array|string $atts Attributes.
 	 * @return string
@@ -163,6 +169,7 @@ final class JATCS_Frontend {
 			array(
 				'heading'    => '',
 				'type'       => '',
+				'host'       => '',
 				'accent'     => '',
 				'background' => '',
 				'buttons'    => '',
@@ -223,6 +230,20 @@ final class JATCS_Frontend {
 	 * @return string
 	 */
 	public static function render( array $atts, $demo = false, array $extra = array() ) {
+		$host = isset( $atts['host'] ) ? sanitize_key( (string) $atts['host'] ) : '';
+		if ( '' !== $host && ! $demo ) {
+			// Someone else's calendar: shown only once they can actually be booked.
+			if ( ! JATCS_Hosts::ready( $host ) ) {
+				return '';
+			}
+			return JATCS_Hosts::run(
+				$host,
+				static function () use ( $atts, $demo, $extra ) {
+					$atts['host'] = '';
+					return self::render( $atts, $demo, $extra );
+				}
+			);
+		}
 		++self::$instance;
 
 		/**

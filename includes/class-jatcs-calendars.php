@@ -112,6 +112,9 @@ final class JATCS_Calendars {
 	 * @return bool
 	 */
 	public static function ready() {
+		if ( '' !== JATCS_Hosts::current() && 'google' !== self::booking_service() ) {
+			return false; // A host's bookings go to their own Google Calendar.
+		}
 		switch ( self::booking_service() ) {
 			case 'google':
 				return JATCS_Google::is_connected();
@@ -153,6 +156,11 @@ final class JATCS_Calendars {
 					);
 				}
 			}
+		}
+		if ( '' !== JATCS_Hosts::current() ) {
+			return $writable_only ? array_values( array_filter( $out, static function ( $c ) {
+				return $c['writable'];
+			} ) ) : $out; // Hosts connect Google only.
 		}
 		if ( JATCS_Microsoft::is_connected() ) {
 			$cals = JATCS_Microsoft::calendars();
@@ -252,7 +260,7 @@ final class JATCS_Calendars {
 				$groups['caldav'][] = (string) $url;
 			}
 		}
-		foreach ( JATCS_Feeds::all() as $id => $feed ) {
+		foreach ( '' === JATCS_Hosts::current() ? JATCS_Feeds::all() : array() as $id => $feed ) {
 			if ( ! empty( $feed['block'] ) ) {
 				$groups['ics'][] = (string) $id;
 			}
@@ -276,7 +284,7 @@ final class JATCS_Calendars {
 	 * @return string
 	 */
 	public static function fingerprint() {
-		return md5( wp_json_encode( array( self::blocking(), JATCS_Feeds::version() ) ) );
+		return md5( wp_json_encode( array( JATCS_Hosts::current(), self::blocking(), JATCS_Feeds::version() ) ) );
 	}
 
 	/**

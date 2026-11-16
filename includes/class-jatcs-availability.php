@@ -141,6 +141,26 @@ final class JATCS_Availability {
 	 */
 	public static function slots( $from, $to, $fresh = false, $type = null, $exclude = null ) {
 		$type = self::resolve_type( $type );
+		// A type's times are its host's: their calendars, their bookings, their daily cap.
+		return JATCS_Hosts::run(
+			JATCS_Hosts::of_type( $type ),
+			static function () use ( $from, $to, $fresh, $type, $exclude ) {
+				return self::host_slots( $from, $to, $fresh, $type, $exclude );
+			}
+		);
+	}
+
+	/**
+	 * Open slots for the current host (see slots()).
+	 *
+	 * @param string     $from    First date.
+	 * @param string     $to      Last date.
+	 * @param bool       $fresh   Bypass the busy-time cache.
+	 * @param array|null $type    Appointment type.
+	 * @param array|null $exclude A booking being moved.
+	 * @return array<string,int[]>|WP_Error
+	 */
+	private static function host_slots( $from, $to, $fresh, $type, $exclude ) {
 		if ( ! $type ) {
 			return new WP_Error( 'jatcs_no_types', __( 'No appointment types are available.', 'jat-calendar-sync' ) );
 		}

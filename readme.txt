@@ -4,7 +4,7 @@ Tags: appointment booking, booking calendar, google calendar, outlook calendar, 
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -92,6 +92,10 @@ Yes. Every feature, including calendar sync for every service, payments, reminde
 
 Any Google, Outlook / Microsoft 365 or CalDAV calendar you can write to. iCal feeds are read-only, so they can block times but can’t receive bookings.
 
+= Can two people be booked separately? =
+
+Yes. Add them under Appointments → People. Each connects their own Google Calendar (through a private link you send them), gets their own appointment types, and their calendar is placed with `[jat_booking host="their-slug"]`. It shows nothing until they are connected.
+
 = Can visitors see my events? =
 
 No. Only busy times are used, and visitors only see open start times.
@@ -142,10 +146,22 @@ Yes. Times are loaded when the page opens, so cached pages still show current av
 
 == Upgrade Notice ==
 
+= 2.1.0 =
+Book people separately: add people under Appointments → People, each with their own Google Calendar. Sites without people work exactly as before.
+
 = 2.0.0 =
 Anderson Appointment Booking is now JAT Calendar Sync, with Outlook, iCloud, CalDAV and iCal feed support. Settings, bookings and connections move over automatically. The move is one-way: take a backup first if you might go back.
 
 == Changelog ==
+
+= 2.1.0 =
+* New: People. Add the people visitors can book separately (Appointments → People). Each connects their own Google account and chooses where their bookings go and which of their calendars block times; booking notices go to their own address.
+* New: each person gets a private connect link that works once, for 7 days, without a WordPress login. They pick their Google account and allow access; nothing else to set up.
+* New: appointment types belong to a person ("Who is booked"). Times come from that person's calendars and bookings, two people can be booked at the same time, and their daily cap is their own.
+* New: `[jat_booking host="slug"]` and the block's `host` attribute show one person's calendar. It renders nothing until that person's Google Calendar is connected and they have a visible type, so it can be placed before they are set up.
+* New: `jatcs_host_ready( $slug )` for themes that show a booking section only once it works.
+* New: a "With" column in the Bookings list when people have been added. If a person's Google access stops working, the site owner is emailed with a link to make them a new connect link.
+* The site owner's own setup is unchanged and stays the default; uninstalling now also revokes every person's Google access.
 
 = 2.0.0 =
 * New name: JAT Calendar Sync (formerly Anderson Appointment Booking). Existing sites move over automatically: settings, appointment types, bookings, Google and Outlook connections, booking pages, emailed links and Stripe webhooks all keep working, and the old plugin is deactivated.

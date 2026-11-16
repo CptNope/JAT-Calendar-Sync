@@ -3,7 +3,7 @@
  * Plugin Name:       JAT Calendar Sync
  * Plugin URI:        https://github.com/CptNope/JAT-Calendar-Sync
  * Description:       Free appointment booking that syncs with Google Calendar, Outlook / Microsoft 365, iCloud and any CalDAV or iCal calendar, matches your theme and never double-books.
- * Version:           2.0.0
+ * Version:           2.1.0
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Jeremy Anderson
@@ -40,7 +40,7 @@ if ( defined( 'JATCS_VERSION' ) ) {
 	return;
 }
 
-define( 'JATCS_VERSION', '2.0.0' );
+define( 'JATCS_VERSION', '2.1.0' );
 define( 'JATCS_FILE', __FILE__ );
 define( 'JATCS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'JATCS_URL', plugin_dir_url( __FILE__ ) );
@@ -55,6 +55,7 @@ unset( $jatcs_constant );
 
 require_once JATCS_DIR . 'includes/class-jatcs-crypto.php';
 require_once JATCS_DIR . 'includes/class-jatcs-settings.php';
+require_once JATCS_DIR . 'includes/class-jatcs-hosts.php';
 require_once JATCS_DIR . 'includes/class-jatcs-types.php';
 require_once JATCS_DIR . 'includes/class-jatcs-style.php';
 require_once JATCS_DIR . 'includes/class-jatcs-google.php';
@@ -73,6 +74,7 @@ require_once JATCS_DIR . 'includes/class-jatcs-frontend.php';
 require_once JATCS_DIR . 'includes/class-jatcs-maintenance.php';
 require_once JATCS_DIR . 'includes/class-jatcs-admin.php';
 require_once JATCS_DIR . 'includes/class-jatcs-admin-types.php';
+require_once JATCS_DIR . 'includes/class-jatcs-admin-hosts.php';
 require_once JATCS_DIR . 'includes/class-jatcs-legacy.php';
 require_once JATCS_DIR . 'includes/class-jatcs-plugin.php';
 

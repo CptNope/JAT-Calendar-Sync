@@ -18,23 +18,32 @@ foreach ( (array) get_option( 'active_plugins', array() ) as $jatcs_active ) {
 
 $jatcs_settings = get_option( 'jatcs_settings', array() );
 
-// Revoke the Google grant so no token outlives the plugin.
+// Revoke every Google grant (the site owner's and each person's) so no token outlives the plugin.
 require_once __DIR__ . '/includes/class-jatcs-crypto.php';
-$jatcs_google = get_option( 'jatcs_google', array() );
-if ( ! empty( $jatcs_google['refresh_token'] ) ) {
-	$jatcs_token = JATCS_Crypto::decrypt( $jatcs_google['refresh_token'] );
-	if ( '' !== $jatcs_token ) {
-		wp_remote_post(
-			'https://oauth2.googleapis.com/revoke',
-			array(
-				'timeout' => 10,
-				'body'    => array( 'token' => $jatcs_token ),
-			)
-		);
-	}
+$jatcs_suffixes = array( '' );
+foreach ( array_keys( (array) get_option( 'jatcs_hosts', array() ) ) as $jatcs_host ) {
+	$jatcs_suffixes[] = '__' . sanitize_key( (string) $jatcs_host );
+	delete_option( 'jatcs_invite_of_' . sanitize_key( (string) $jatcs_host ) );
 }
-delete_option( 'jatcs_google' );
-delete_option( 'jatcs_google_error' );
+foreach ( $jatcs_suffixes as $jatcs_suffix ) {
+	$jatcs_google = get_option( 'jatcs_google' . $jatcs_suffix, array() );
+	if ( ! empty( $jatcs_google['refresh_token'] ) ) {
+		$jatcs_token = JATCS_Crypto::decrypt( $jatcs_google['refresh_token'] );
+		if ( '' !== $jatcs_token ) {
+			wp_remote_post(
+				'https://oauth2.googleapis.com/revoke',
+				array(
+					'timeout' => 10,
+					'body'    => array( 'token' => $jatcs_token ),
+				)
+			);
+		}
+	}
+	delete_option( 'jatcs_google' . $jatcs_suffix );
+	delete_option( 'jatcs_google_error' . $jatcs_suffix );
+}
+// People are sign-ins too (their tokens are gone above): always removed.
+delete_option( 'jatcs_hosts' );
 delete_option( 'jatcs_busy_generation' );
 delete_option( 'jatcs_log' );
 delete_option( 'jatcs_ms' );

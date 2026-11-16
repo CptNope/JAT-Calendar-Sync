@@ -172,6 +172,24 @@ final class JATCS_Bookings {
 	 * @return array|WP_Error Booking.
 	 */
 	public static function create( $start, array $visitor, $type = null ) {
+		$type = is_array( $type ) ? $type : JATCS_Types::first();
+		return JATCS_Hosts::run(
+			JATCS_Hosts::of_type( $type ),
+			static function () use ( $start, $visitor, $type ) {
+				return self::host_create( $start, $visitor, $type );
+			}
+		);
+	}
+
+	/**
+	 * create() for the current host.
+	 *
+	 * @param int        $start   Unix start time.
+	 * @param array      $visitor Visitor details.
+	 * @param array|null $type    Appointment type.
+	 * @return array|WP_Error
+	 */
+	private static function host_create( $start, array $visitor, $type ) {
 		$visitor = wp_parse_args(
 			$visitor,
 			array(
@@ -251,7 +269,7 @@ final class JATCS_Bookings {
 	 */
 	private static function acquire_lock( $start ) {
 		global $wpdb;
-		$name = '_jatcs_lock_' . (int) $start;
+		$name = '_jatcs_lock_' . (int) $start . JATCS_Hosts::suffix(); // Two people can be booked at the same time.
 		$now  = time();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- atomic lock; must bypass the options cache.
@@ -278,7 +296,7 @@ final class JATCS_Bookings {
 	private static function release_lock( $start ) {
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$wpdb->delete( $wpdb->options, array( 'option_name' => '_jatcs_lock_' . (int) $start ) );
+		$wpdb->delete( $wpdb->options, array( 'option_name' => '_jatcs_lock_' . (int) $start . JATCS_Hosts::suffix() ) );
 	}
 
 	/**
@@ -372,6 +390,7 @@ final class JATCS_Bookings {
 						'_jatcs_meet'        => JATCS_Types::wants_meet( $type ) ? 1 : 0,
 						'_jatcs_status'      => $status,
 						'_jatcs_calendar_id' => (string) JATCS_Settings::get( 'booking_calendar' ),
+						'_jatcs_host'        => JATCS_Hosts::current(),
 						'_jatcs_cancel_hash' => self::hash_token( $token ),
 						// Kept (encrypted) so later emails can include the manage link too.
 						'_jatcs_cancel_enc'  => JATCS_Crypto::encrypt( $token ),
@@ -398,6 +417,21 @@ final class JATCS_Bookings {
 	 * @return array|WP_Error Booking.
 	 */
 	public static function finalize( $post_id ) {
+		return JATCS_Hosts::run(
+			JATCS_Hosts::of_booking( $post_id ),
+			static function () use ( $post_id ) {
+				return self::host_finalize( $post_id );
+			}
+		);
+	}
+
+	/**
+	 * finalize() for the booking's host.
+	 *
+	 * @param int $post_id Booking ID.
+	 * @return array|WP_Error
+	 */
+	private static function host_finalize( $post_id ) {
 		if ( ! self::acquire_named( 'fin_' . $post_id, 120 ) ) {
 			return new WP_Error( 'jatcs_busy', __( 'This booking is being confirmed. Refresh in a moment.', 'jat-calendar-sync' ), array( 'status' => 409 ) );
 		}
@@ -475,6 +509,22 @@ final class JATCS_Bookings {
 	 * @return array|WP_Error Updated booking.
 	 */
 	public static function reschedule( $id, $start ) {
+		return JATCS_Hosts::run(
+			JATCS_Hosts::of_booking( $id ),
+			static function () use ( $id, $start ) {
+				return self::host_reschedule( $id, $start );
+			}
+		);
+	}
+
+	/**
+	 * reschedule() for the booking's host.
+	 *
+	 * @param int $id    Booking ID.
+	 * @param int $start New start.
+	 * @return array|WP_Error
+	 */
+	private static function host_reschedule( $id, $start ) {
 		$booking = self::get( $id );
 		if ( ! $booking ) {
 			return new WP_Error( 'jatcs_not_found', __( 'Booking not found.', 'jat-calendar-sync' ), array( 'status' => 404 ) );
@@ -548,6 +598,22 @@ final class JATCS_Bookings {
 	 * @return true|WP_Error
 	 */
 	public static function cancel( $id, $by ) {
+		return JATCS_Hosts::run(
+			JATCS_Hosts::of_booking( $id ),
+			static function () use ( $id, $by ) {
+				return self::host_cancel( $id, $by );
+			}
+		);
+	}
+
+	/**
+	 * cancel() for the booking's host.
+	 *
+	 * @param int    $id Booking ID.
+	 * @param string $by Who.
+	 * @return true|WP_Error
+	 */
+	private static function host_cancel( $id, $by ) {
 		$booking = self::get( $id );
 		if ( ! $booking ) {
 			return new WP_Error( 'jatcs_not_found', __( 'Booking not found.', 'jat-calendar-sync' ) );
@@ -660,9 +726,10 @@ final class JATCS_Bookings {
 				),
 			)
 		);
-		$out = array();
+		$out  = array();
+		$host = JATCS_Hosts::current();
 		foreach ( $ids as $id ) {
-			if ( (int) $id === (int) $exclude || ! self::holds_slot( $id ) ) {
+			if ( (int) $id === (int) $exclude || ! self::holds_slot( $id ) || JATCS_Hosts::of_booking( $id ) !== $host ) {
 				continue;
 			}
 			$start = (int) get_post_meta( $id, '_jatcs_start', true );
@@ -706,8 +773,9 @@ final class JATCS_Bookings {
 			)
 		);
 		$counts = array();
+		$host   = JATCS_Hosts::current();
 		foreach ( $ids as $id ) {
-			if ( (int) $id === (int) $exclude || ! self::holds_slot( $id ) ) {
+			if ( (int) $id === (int) $exclude || ! self::holds_slot( $id ) || JATCS_Hosts::of_booking( $id ) !== $host ) {
 				continue;
 			}
 			$date            = (string) get_post_meta( $id, '_jatcs_date', true );
@@ -1016,6 +1084,20 @@ final class JATCS_Bookings {
 	 * @param array $booking Booking.
 	 */
 	public static function email_reminder( array $booking ) {
+		return JATCS_Hosts::run(
+			JATCS_Hosts::of_booking( $booking ),
+			static function () use ( $booking ) {
+				return self::host_email_reminder( $booking );
+			}
+		);
+	}
+
+	/**
+	 * email_reminder() for the booking's host.
+	 *
+	 * @param array $booking Booking.
+	 */
+	private static function host_email_reminder( array $booking ) {
 		$lines = array_merge(
 			array(
 				/* translators: %s: visitor name */
@@ -1040,6 +1122,22 @@ final class JATCS_Bookings {
 	 * @param string $by      'visitor' or 'calendar'.
 	 */
 	public static function email_rescheduled( array $booking, $old, $by = 'calendar' ) {
+		return JATCS_Hosts::run(
+			JATCS_Hosts::of_booking( $booking ),
+			static function () use ( $booking, $old, $by ) {
+				return self::host_email_rescheduled( $booking, $old, $by );
+			}
+		);
+	}
+
+	/**
+	 * email_rescheduled() for the booking's host.
+	 *
+	 * @param array  $booking Booking.
+	 * @param int    $old     Old start.
+	 * @param string $by      Who moved it.
+	 */
+	private static function host_email_rescheduled( array $booking, $old, $by = 'calendar' ) {
 		$lines = array_merge(
 			array(
 				/* translators: %s: visitor name */

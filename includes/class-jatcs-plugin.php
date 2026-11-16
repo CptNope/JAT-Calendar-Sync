@@ -27,6 +27,7 @@ final class JATCS_Plugin {
 		if ( is_admin() ) {
 			JATCS_Admin::init();
 			JATCS_Admin_Types::init();
+			JATCS_Admin_Hosts::init();
 		}
 	}
 

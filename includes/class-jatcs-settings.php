@@ -115,6 +115,7 @@ final class JATCS_Settings {
 			if ( ! is_array( self::$cache['hours'] ) ) {
 				self::$cache['hours'] = self::defaults()['hours'];
 			}
+			self::$cache = JATCS_Hosts::overlay( self::$cache );
 		}
 		return self::$cache;
 	}
@@ -160,6 +161,9 @@ final class JATCS_Settings {
 	 * @param array $settings Settings.
 	 */
 	public static function save( array $settings ) {
+		if ( '' !== JATCS_Hosts::current() ) {
+			return; // Settings seen through a host's eyes are never written back as the site's.
+		}
 		update_option( self::OPTION, $settings, false );
 		self::$cache = null;
 	}

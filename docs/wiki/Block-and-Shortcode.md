@@ -24,6 +24,7 @@ The block also supports the editor's text and background color, font size, line 
 ```
 [jat_booking]
 [jat_booking heading="Book a call" type="consult"]
+[jat_booking host="kaitlyn"]
 [jat_booking accent="#1f6a2b" radius="square" density="compact"]
 ```
 
@@ -31,6 +32,7 @@ The block also supports the editor's text and background color, font size, line 
 | --- | --- | --- |
 | `heading` | Text | Heading above the calendar |
 | `type` | A type ID | Show only that type (unknown or hidden IDs fall back to all types) |
+| `host` | A person's slug | Show that person's types and times (see [People](People)). Renders nothing until they can be booked |
 | `accent` | A hex color | Accent color |
 | `background` | `none`, `theme`, or a hex color | Calendar background |
 | `buttons` | `theme`, `plugin` | Use theme buttons and fields, or the calendar's own |

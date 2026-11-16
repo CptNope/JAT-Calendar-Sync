@@ -11,6 +11,7 @@
 
 **Use**
 - [Appointment Types and Questions](Appointment-Types-and-Questions)
+- [People](People)
 - [Availability Rules](Availability-Rules)
 - [Shift-Work Mode](Shift-Work-Mode)
 - [Payments with Stripe](Payments-with-Stripe)
