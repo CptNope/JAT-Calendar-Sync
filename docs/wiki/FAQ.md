@@ -15,7 +15,7 @@
 | **Does it work with page caching or a CDN?** | Yes. Times are loaded live when the page opens. |
 | **Does it work on multisite?** | Yes, per site. Each site connects its own calendars. |
 | **Can I have several booking pages?** | Yes, and each can show one type or all types. |
-| **Can two people be booked separately?** | Not yet: one site has one booking calendar. Several accounts per service is on the roadmap. |
+| **Can two people be booked separately?** | Yes, since 2.1: add them under Appointments → People. Each connects their own Google Calendar and gets their own types and booking calendar. See [People](People). |
 | **Is my data sent to the plugin author?** | No. The plugin only talks to the services you connect, using your own credentials. |
 | **Where are bookings stored?** | In your WordPress database (Appointments → Bookings) and as events in your calendar. |
 | **How do I export bookings?** | Appointments → Bookings → **Export CSV**. |

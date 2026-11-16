@@ -46,6 +46,10 @@
 		"type": {
 			"type": "string",
 			"default": ""
+		},
+		"host": {
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {

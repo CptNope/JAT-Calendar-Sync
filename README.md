@@ -61,6 +61,7 @@ Built for solo professionals and small businesses who live in Google Calendar: c
 | **Availability** | Live busy times from any mix of Google, Outlook / Microsoft 365, CalDAV (iCloud, Fastmail, Nextcloud…) calendars and iCal feeds; weekly hours with breaks, days off, buffers before and after, minimum notice, booking window, daily cap |
 | **Shift-work mode** | Booking opens only as far as your posted work schedule (any calendar or feed), optionally through that Sunday, with free time kept before and after every shift; new weeks open automatically |
 | **Appointment types** | Each with its own length, start-time spacing, hours, location, Google Meet setting, price and booking questions; visitors pick a type, then a time |
+| **People** | Book several people separately: each connects their own Google Calendar (through a private one-time link, no WordPress login) and has their own types, booking calendar and notices; `[jat_booking host="slug"]` shows nothing until they're set up ([People](https://github.com/CptNope/JAT-Calendar-Sync/wiki/People)) |
 | **Booking questions** | Short answer, long answer, dropdown, checkbox; required or optional; answers go to the Google event, emails, booking record and CSV |
 | **Payments** | Stripe Checkout per type, the slot held while paying, confirmation after payment only, automatic refunds by policy |
 | **Self-service** | One link in every email to reschedule (same calendar, own slot treated as free) or cancel, with a cut-off and a reschedule limit |

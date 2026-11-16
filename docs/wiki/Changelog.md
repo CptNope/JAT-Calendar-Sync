@@ -19,10 +19,13 @@ timeline
         : Booking follows a posted schedule
     2.0 : Renamed JAT Calendar Sync
         : CalDAV, iCal feeds, Outlook bookings
+    2.1 : People
+        : Each person their own Google Calendar
 ```
 
 | Version | Highlights |
 | --- | --- |
+| **2.1.0** | **People**: book several people separately, each with their own Google Calendar, types, booking calendar and notices. Private one-time connect links (no WordPress login). `[jat_booking host="slug"]` shows nothing until that person is set up; `jatcs_host_ready()` for themes. |
 | **2.0.0** | Renamed **JAT Calendar Sync** (GPLv2 or later) with automatic migration. iCloud, Fastmail, Nextcloud and any CalDAV calendar (read and write). iCal feeds with full recurring-event support. Outlook as the booking calendar with Teams links (write access opt-in). One "Where bookings go" setting across services. Site Health checks every blocking calendar can be read. Feeds over 5 MB or cut off are refused; failed feeds back off for 5 minutes. |
 | 1.5.0 | Shift-work mode: booking opens only as far as a posted work schedule, with free time kept around each shift. |
 | 1.4.2 | A second copy in another folder no longer causes a fatal error; deleting an extra copy no longer disconnects Google. |

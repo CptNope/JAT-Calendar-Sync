@@ -62,6 +62,7 @@ final class JATCS_Types {
 			'questions'    => array(),
 			'active'       => 1,
 			'price'        => 0, // Minor units (cents); 0 = free.
+			'host'         => '', // Who is booked ('' = the site owner; see JATCS_Hosts).
 		);
 	}
 
@@ -106,16 +107,17 @@ final class JATCS_Types {
 	}
 
 	/**
-	 * Types visitors can book.
+	 * Types visitors can book, of the current host (see JATCS_Hosts).
 	 *
 	 * @return array[]
 	 */
 	public static function active() {
+		$host = JATCS_Hosts::current();
 		return array_values(
 			array_filter(
 				self::all(),
-				static function ( $t ) {
-					return ! empty( $t['active'] );
+				static function ( $t ) use ( $host ) {
+					return ! empty( $t['active'] ) && JATCS_Hosts::of_type( $t ) === $host;
 				}
 			)
 		);
@@ -312,6 +314,7 @@ final class JATCS_Types {
 		$t['notes']       = empty( $in['notes'] ) ? 0 : 1;
 		$t['active']      = empty( $in['active'] ) ? 0 : 1;
 		$t['price']       = isset( $in['price'] ) ? JATCS_Stripe::to_minor( $in['price'], JATCS_Payments::currency() ) : 0;
+		$t['host']        = isset( $in['host'] ) && JATCS_Hosts::exists( sanitize_key( $in['host'] ) ) ? sanitize_key( $in['host'] ) : '';
 
 		$t['custom_hours'] = empty( $in['custom_hours'] ) ? 0 : 1;
 		foreach ( JATCS_Settings::weekdays() as $day ) {

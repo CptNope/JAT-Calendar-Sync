@@ -63,7 +63,7 @@ final class JATCS_Maintenance {
 			'reminded'  => 0,
 			'deleted'   => 0,
 		);
-		if ( JATCS_Calendars::ready() ) {
+		if ( JATCS_Hosts::any_connected() ) {
 			$stats             = array_merge( $stats, self::sync() );
 			$stats['reminded'] = self::reminders();
 		}
@@ -133,7 +133,13 @@ final class JATCS_Maintenance {
 			if ( ! $b || '' === $b['event_id'] ) {
 				continue;
 			}
-			$event = JATCS_Calendars::event_state( $b['calendar_id'], $b['event_id'] );
+			// Read it with the account of the person it was booked with.
+			$event = JATCS_Hosts::run(
+				JATCS_Hosts::of_booking( $id ),
+				static function () use ( $b ) {
+					return JATCS_Calendars::event_state( $b['calendar_id'], $b['event_id'] );
+				}
+			);
 			++$out['synced'];
 
 			if ( is_wp_error( $event ) ) {

@@ -134,7 +134,8 @@ final class JATCS_Admin_Types {
 		}
 
 		$type = $result['type'];
-		if ( ! $type['active'] ) {
+		// The site owner keeps at least one bookable type; a host may have none (that hides them).
+		if ( ! $type['active'] && '' === $type['host'] ) {
 			$others = array_filter(
 				JATCS_Types::active(),
 				static function ( $t ) use ( $type ) {
@@ -293,13 +294,16 @@ final class JATCS_Admin_Types {
 						'jatcs_move_type_' . $t['id']
 					);
 				};
-				$code       = '[jat_booking type="' . $t['id'] . '"]';
+				$code       = '' !== JATCS_Hosts::of_type( $t ) ? '[jat_booking host="' . JATCS_Hosts::of_type( $t ) . '" type="' . $t['id'] . '"]' : '[jat_booking type="' . $t['id'] . '"]';
 	?>
 				<tr>
 					<td>
 						<strong><a href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( $t['name'] ); ?></a></strong>
 						<?php if ( empty( $t['active'] ) ) : ?>
 							<span class="jatcs-pill"><?php esc_html_e( 'Hidden', 'jat-calendar-sync' ); ?></span>
+						<?php endif; ?>
+						<?php if ( '' !== JATCS_Hosts::of_type( $t ) ) : ?>
+							<span class="jatcs-pill"><?php echo esc_html( JATCS_Hosts::name( JATCS_Hosts::of_type( $t ) ) ); ?></span>
 						<?php endif; ?>
 						<?php if ( '' !== $t['description'] ) : ?>
 							<br><span class="description"><?php echo esc_html( wp_trim_words( $t['description'], 16 ) ); ?></span>
@@ -427,6 +431,20 @@ final class JATCS_Admin_Types {
 							</p>
 						</td>
 					</tr>
+					<?php if ( JATCS_Hosts::all() ) : ?>
+					<tr>
+						<th scope="row"><label for="jatcs-type-host"><?php esc_html_e( 'Who is booked', 'jat-calendar-sync' ); ?></label></th>
+						<td>
+							<select id="jatcs-type-host" name="type[host]">
+								<option value="" <?php selected( '', $type['host'] ); ?>><?php echo esc_html( JATCS_Hosts::name( '' ) ); ?></option>
+								<?php foreach ( JATCS_Hosts::all() as $slug => $host ) : ?>
+									<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $slug, $type['host'] ); ?>><?php echo esc_html( $host['name'] ); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<p class="description"><?php esc_html_e( 'Times come from this person’s calendars and bookings go to their calendar. A person’s types show only where their calendar is placed (for example [jat_booking host="their-slug"]).', 'jat-calendar-sync' ); ?></p>
+						</td>
+					</tr>
+					<?php endif; ?>
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Visible', 'jat-calendar-sync' ); ?></th>
 						<td><label><input type="checkbox" name="type[active]" value="1" <?php checked( $type['active'] ); ?>> <?php esc_html_e( 'Visitors can book this type', 'jat-calendar-sync' ); ?></label></td>

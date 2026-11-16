@@ -379,6 +379,10 @@ final class JATCS_Admin {
 	 * OAuth redirect target.
 	 */
 	public static function oauth_callback() {
+		// A person's own sign-in (Appointments → People), possibly from their connect link.
+		if ( JATCS_Admin_Hosts::host_callback() ) {
+			return;
+		}
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You do not have permission to do that.', 'jat-calendar-sync' ), 403 );
 		}
@@ -678,15 +682,21 @@ final class JATCS_Admin {
 	 * @return array
 	 */
 	public static function columns( $columns ) {
-		return array(
-			'cb'           => isset( $columns['cb'] ) ? $columns['cb'] : '',
-			'title'        => __( 'Booking', 'jat-calendar-sync' ),
-			'jatcs_when'   => __( 'When', 'jat-calendar-sync' ),
-			'jatcs_type'   => __( 'Type', 'jat-calendar-sync' ),
-			'jatcs_paid'   => __( 'Payment', 'jat-calendar-sync' ),
-			'jatcs_email'  => __( 'Email', 'jat-calendar-sync' ),
-			'jatcs_status' => __( 'Status', 'jat-calendar-sync' ),
-			'jatcs_links'  => __( 'Links', 'jat-calendar-sync' ),
+		$with = JATCS_Hosts::all() ? array( 'jatcs_host' => __( 'With', 'jat-calendar-sync' ) ) : array();
+		return array_merge(
+			array(
+				'cb'         => isset( $columns['cb'] ) ? $columns['cb'] : '',
+				'title'      => __( 'Booking', 'jat-calendar-sync' ),
+				'jatcs_when' => __( 'When', 'jat-calendar-sync' ),
+			),
+			$with,
+			array(
+				'jatcs_type'   => __( 'Type', 'jat-calendar-sync' ),
+				'jatcs_paid'   => __( 'Payment', 'jat-calendar-sync' ),
+				'jatcs_email'  => __( 'Email', 'jat-calendar-sync' ),
+				'jatcs_status' => __( 'Status', 'jat-calendar-sync' ),
+				'jatcs_links'  => __( 'Links', 'jat-calendar-sync' ),
+			)
 		);
 	}
 
@@ -702,6 +712,9 @@ final class JATCS_Admin {
 			return;
 		}
 		switch ( $column ) {
+			case 'jatcs_host':
+				echo esc_html( JATCS_Hosts::name( JATCS_Hosts::of_booking( $b ) ) );
+				break;
 			case 'jatcs_type':
 				echo esc_html( $b['type_name'] );
 				break;

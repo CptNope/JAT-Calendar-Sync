@@ -226,6 +226,7 @@ final class JATCS_Rest {
 		if ( is_wp_error( $booking ) ) {
 			return $booking;
 		}
+		JATCS_Hosts::enter( JATCS_Hosts::of_booking( $booking ) );
 		if ( ! JATCS_Calendars::ready() ) {
 			return self::unavailable();
 		}
@@ -274,10 +275,6 @@ final class JATCS_Rest {
 		if ( self::rate_limited( 'avail', 300, HOUR_IN_SECONDS ) ) {
 			return new WP_Error( 'jatcs_rate', __( 'Too many requests. Wait a few minutes and try again.', 'jat-calendar-sync' ), array( 'status' => 429 ) );
 		}
-		if ( ! JATCS_Calendars::ready() ) {
-			return self::unavailable();
-		}
-
 		$exclude = null;
 		if ( (int) $request['booking'] > 0 ) {
 			// Rescheduling: show times as if this booking weren't there, using its own type.
@@ -291,6 +288,10 @@ final class JATCS_Rest {
 			if ( is_wp_error( $type ) ) {
 				return $type;
 			}
+		}
+		JATCS_Hosts::enter( $exclude ? JATCS_Hosts::of_booking( $exclude ) : JATCS_Hosts::of_type( $type ) );
+		if ( ! JATCS_Calendars::ready() ) {
+			return self::unavailable();
 		}
 
 		$slots = JATCS_Availability::slots( $from, $to, false, $type, $exclude );
@@ -339,6 +340,7 @@ final class JATCS_Rest {
 		if ( is_wp_error( $type ) ) {
 			return $type;
 		}
+		JATCS_Hosts::enter( JATCS_Hosts::of_type( $type ) );
 		if ( empty( $type['notes'] ) ) {
 			$notes = '';
 		}
