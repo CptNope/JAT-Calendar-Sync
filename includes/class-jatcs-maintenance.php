@@ -173,6 +173,8 @@ final class JATCS_Maintenance {
 				JATCS_Availability::bust_cache();
 				if ( $start !== $b['start'] ) {
 					JATCS_Bookings::email_rescheduled( JATCS_Bookings::get( $id ), $b['start'], 'calendar' );
+					/** This action is documented in includes/class-jatcs-bookings.php (a move made in the calendar itself). */
+					do_action( 'jatcs_booking_rescheduled', JATCS_Bookings::get( $id ), $b['start'] );
 				}
 				++$out['moved'];
 			}

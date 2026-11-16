@@ -162,6 +162,7 @@ Anderson Appointment Booking is now JAT Calendar Sync, with Outlook, iCloud, Cal
 * New: `jatcs_host_ready( $slug )` for themes that show a booking section only once it works.
 * New: a "With" column in the Bookings list when people have been added. If a person's Google access stops working, the site owner is emailed with a link to make them a new connect link.
 * The site owner's own setup is unchanged and stays the default; uninstalling now also revokes every person's Google access.
+* `jatcs_booking_rescheduled` now also fires when a booking is moved in the calendar itself (found by the hourly check), so other plugins (a CRM, for example) can follow every move.
 
 = 2.0.0 =
 * New name: JAT Calendar Sync (formerly Anderson Appointment Booking). Existing sites move over automatically: settings, appointment types, bookings, Google and Outlook connections, booking pages, emailed links and Stripe webhooks all keep working, and the old plugin is deactivated.
